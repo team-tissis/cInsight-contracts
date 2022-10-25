@@ -68,6 +68,13 @@ contract SbtImp {
         public
         view
         returns (bool)
+    /** メモ: @shion
+     * https://solidity-by-example.org/signature/
+     * _hash：keccack(msg, nonce, ...) 署名時に用いるメッセージハッシュ
+     * _singnature：{r, s, v} 署名されたメッセージ．r)0-32byte目，s)32-64byte目，v)65byte目
+     * ecrecover：メッセージハッシュと署名されたメッセージから公開鍵を復元する関数
+     * 最後は solidity example では公開鍵を直接比較して検証しているが，今回はそれにハッシュをかけたものを用いて検証している．
+     */
     {
         require(_signature.length == 65, "INVALID");
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
