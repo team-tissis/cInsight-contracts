@@ -31,6 +31,7 @@ contract SbtImp {
         emit Transfer(address(0), _address, _tokenId);
     }
 
+
     function burn(uint256 _tokenId) external  {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
@@ -43,7 +44,7 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
         sbtstruct.baseURI = _newBaseURI;
-    } 
+    }
 
     function setContractOwner(address _newContactOwner) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
