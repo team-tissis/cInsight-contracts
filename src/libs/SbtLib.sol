@@ -15,11 +15,11 @@ library SbtLib {
     }
 
     // get struct stored at posititon
+    //https://solidity-by-example.org/app/write-to-any-slot/
     function sbtStorage() internal pure returns (SbtStruct storage sbtstruct) {
         /** メモ: @shion
          * slot: storageは32バイトの領域を確保するが，その領域をslotと呼ぶ
-         * この関数は，sbtstructに明示的なslot idを与えている．
-         * 詳細不明．
+         * positionのstrunctを取得する
          */
         bytes32 position = SBT_STRUCT_POSITION;
         assembly {
