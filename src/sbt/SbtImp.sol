@@ -15,10 +15,9 @@ contract SbtImp {
 
     uint8[6] referralRate = [0, 0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5, 6
     bool initialized = false;
-    uint8 last_updated_month;
+    uint last_updated_month;
 
     function init_imp() external{
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(initialized == false, "INITIATED ALREADY");
         last_updated_month = DateTime.getMonth(block.timestamp);
         initialized = true;
