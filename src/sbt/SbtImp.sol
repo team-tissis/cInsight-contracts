@@ -13,7 +13,14 @@ contract SbtImp {
     event ContractOwnerChanged(address _newOwner);
     event ValidatorChanged(bytes32 _newValidator);
 
-    int[5] ;
+    uint8[6] referralRate = [0, 0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5, 6
+    uint8 last_updated_month;
+
+    function init_imp() external{
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.contractOwner == address(0), "INITIATED ALREADY");
+
+    }
 
     // 0x731133e9
     function mint(
@@ -58,21 +65,15 @@ contract SbtImp {
     }
 
     // chaininsight functions
-    function today() private view returns (uint256) {
-    return block.timestamp / 1 days;
-    }
 
-    function setReferral(address user_address) internal {
+    function updateReferral(address user_address) public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
         require(DateTime.getDay(block.timestamp) == 1);
-
-        if (sbtstruct.grade[user_address] == 1){
-            sbtstruct.referral[user_address] += 1;
-        }
-
+        sbtstruct.referral[user_address] += referralRate[sbtstruct.grade[user_address]-1];
     }
 
+    function update
 
     // functions for frontend
     function addFavos(address user_from, address user_to, uint8 favo) external {
@@ -103,6 +104,11 @@ contract SbtImp {
     function getGrade(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.grade[user_address];
+    }
+
+    function getReferral(address user_address) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.referral[user_address];
     }
 
     function verify(bytes32 _hash, bytes memory _signature)
