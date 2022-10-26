@@ -13,7 +13,7 @@ contract SbtImp {
     event ContractOwnerChanged(address _newOwner);
     event ValidatorChanged(bytes32 _newValidator);
 
-    uint8[6] referralRate = [0, 0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5, 6
+    uint8[6] referralRate = [0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5
     bool initialized = false;
     uint last_updated_month;
 
@@ -71,6 +71,12 @@ contract SbtImp {
 
         require(DateTime.getMonth(block.timestamp) != last_updated_month);
         sbtstruct.referral[user_address] += referralRate[sbtstruct.grade[user_address]-1];
+    }
+
+    function addStar(address user_address, uint8 star) external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(star > 0, "INVALID ARGUMENT");
+        sbtstruct.star[user_address] += star;
     }
 
     // functions for frontend
