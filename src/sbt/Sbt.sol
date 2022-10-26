@@ -77,6 +77,31 @@ contract Sbt {
         return address(uint160(_tokenId));
     }
 
+    function getFavo(address user_address) external view returns (uint8){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.favo[user_address];
+    }
+
+    function getReceivedFavo(address user_address) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.received_favo[user_address];
+    }
+
+    function getMaki(address user_address) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.maki[user_address];
+    }
+
+    function getGrade(address user_address) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.grade[user_address];
+    }
+
+    function getReferral(address user_address) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.referral[user_address];
+    }
+
 // utility function from openzeppelin
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
