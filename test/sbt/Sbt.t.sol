@@ -3,8 +3,8 @@
 pragma solidity 0.8.16;
 
 import "forge-std/Test.sol";
-import "../Sbt.sol";
-import "../SbtImp.sol";
+import "./../../src/sbt/Sbt.sol";
+import "./../../src/sbt/SbtImp.sol";
 
 contract SbtTest is Test {
     address owner = address(420);

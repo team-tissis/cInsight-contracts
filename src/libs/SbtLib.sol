@@ -12,10 +12,10 @@ library SbtLib {
         bytes32 validator;
         mapping(address => uint8) favo;
         mapping(address => uint16) received_favo;
-        mapping(address => uint8) star;
         mapping(address => uint16) maki;
         mapping(address => uint8) grade;
         mapping(address => uint8) referral;
+        mapping(address => mapping (string => uint8)) stars;
         mapping(bytes4 => bool) interfaces;
     }
 
