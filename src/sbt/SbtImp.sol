@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
+import "./../libs/DateTime.sol";
 
 contract SbtImp {
     event Transfer(
@@ -11,6 +12,8 @@ contract SbtImp {
     );
     event ContractOwnerChanged(address _newOwner);
     event ValidatorChanged(bytes32 _newValidator);
+
+    int[5] ;
 
     // 0x731133e9
     function mint(
@@ -61,7 +64,13 @@ contract SbtImp {
 
     function setReferral(address user_address) internal {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.referral[user_address] = block.timestamp
+
+        require(DateTime.getDay(block.timestamp) == 1);
+
+        if (sbtstruct.grade[user_address] == 1){
+            sbtstruct.referral[user_address] += 1;
+        }
+
     }
 
 
