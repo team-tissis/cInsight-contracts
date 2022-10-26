@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./SbtLib.sol";
+import "./../libs/SbtLib.sol";
 
 contract SbtImp {
     event Transfer(
@@ -14,30 +14,19 @@ contract SbtImp {
 
     // 0x731133e9
     function mint(
-        address _address,
-        uint256 _tokenId,
-        uint256 _salt,
-        bytes calldata _signature
+        address _address
     ) external {
-        bytes32 _messagehash = keccak256(
-            abi.encode(msg.sender, _address, _tokenId, _salt)
-        );
-        require(verify(_messagehash, _signature), "INVALID");
+        require(_address != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.owners[_tokenId] = _address;
-        unchecked {
-            sbtstruct.balances[_address]++;
-        }
-        emit Transfer(address(0), _address, _tokenId);
+        require(sbtstruct.maki[_address] == 0, "Already minted");
+        emit Transfer(address(0), _address, uint256(uint160(_address)));
     }
 
-
-    function burn(uint256 _tokenId) external  {
+    function burn(address _address) external  {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
-        address currentOwner = sbtstruct.owners[_tokenId];
-        delete sbtstruct.owners[_tokenId];
-        emit Transfer(currentOwner, address(0), _tokenId);
+        delete sbtstruct.maki[_address];
+        emit Transfer(_address, address(0), uint256(uint160(_address)));
     }
 
     function setBaseUri(string memory _newBaseURI) external {

@@ -10,8 +10,11 @@ library SbtLib {
         string symbol;
         string baseURI;
         bytes32 validator;
+        mapping(address => uint8) favo_num;
+        mapping(address => uint16) received_favos;
+        mapping(address => uint16) maki;
+        mapping(address => uint16) grade;
         mapping(bytes4 => bool) interfaces;
-        mapping(address => uint256) balances;
     }
 
     // get struct stored at posititon

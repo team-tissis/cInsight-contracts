@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./SbtLib.sol";
+import "./../libs/SbtLib.sol";
 
 contract Sbt {
     function init(
@@ -73,7 +73,7 @@ contract Sbt {
             );
     }
 
-    function ownerOf(uint256 _tokenId) external view returns (address) {
+    function ownerOf(uint256 _tokenId) external pure returns (address) {
         return address(uint160(_tokenId));
     }
 
