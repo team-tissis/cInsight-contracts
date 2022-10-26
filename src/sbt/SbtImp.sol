@@ -57,6 +57,7 @@ contract SbtImp {
     // chaininsight functions
     function addFavos(address user_from, address user_to, uint8 favo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == user_from, "USER ONLY");
         require(favo > 0);
         uint8 remain_favos = sbtstruct.favo[user_from] - favo;
         require(remain_favos >= 0);
