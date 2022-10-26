@@ -55,12 +55,23 @@ contract SbtImp {
     }
 
     // chaininsight functions
+    function today() private view returns (uint256) {
+    return block.timestamp / 1 days;
+    }
+
+    function setReferral(address user_address) internal {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.referral[user_address] = block.timestamp
+    }
+
+
+    // functions for frontend
     function addFavos(address user_from, address user_to, uint8 favo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == user_from, "USER ONLY");
-        require(favo > 0);
+        require(favo > 0, "INVALID ARGUMENT");
         uint8 remain_favos = sbtstruct.favo[user_from] - favo;
-        require(remain_favos >= 0);
+        require(remain_favos >= 0, "INVALID ARGUMENT");
         sbtstruct.favo[user_from] = remain_favos;
         sbtstruct.received_favo[user_to] += favo;
     }
@@ -84,7 +95,6 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.grade[user_address];
     }
-
 
     function verify(bytes32 _hash, bytes memory _signature)
         public

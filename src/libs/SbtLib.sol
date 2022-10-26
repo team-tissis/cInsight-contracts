@@ -14,6 +14,7 @@ library SbtLib {
         mapping(address => uint16) received_favo;
         mapping(address => uint16) maki;
         mapping(address => uint16) grade;
+        mapping(address => uint8) referral;
         mapping(bytes4 => bool) interfaces;
     }
 
