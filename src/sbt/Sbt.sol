@@ -84,7 +84,7 @@ contract Sbt {
 
     function getReceivedFavo(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.received_favo[user_address];
+        return sbtstruct.receivedFavo[user_address];
     }
 
     function getMaki(address user_address) external view returns (uint16){

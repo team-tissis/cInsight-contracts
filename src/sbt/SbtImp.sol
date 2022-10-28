@@ -37,13 +37,13 @@ contract SbtImp {
     ) external {
         require(_address != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.maki_list[sbtstruct.address2index[_address]] == 0, "Already minted");
+        require(sbtstruct.makiList[sbtstruct.address2index[_address]] == 0, "Already minted");
         emit Transfer(address(0), _address, uint256(uint160(_address)));
     }
 
     function burn(address _address) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        delete sbtstruct.maki_list[sbtstruct.address2index[_address]];
+        delete sbtstruct.makiList[sbtstruct.address2index[_address]];
         emit Transfer(_address, address(0), uint256(uint160(_address)));
     }
 
@@ -79,21 +79,21 @@ contract SbtImp {
         //TODO: グレードの更新
         _update_rate(sbtstruct);
 
-        delete sbtstruct.favo_list;
-        delete sbtstruct.referral_list;
+        delete sbtstruct.favoList;
+        delete sbtstruct.referralList;
     }
 
     function _update_rate(SbtLib.SbtStruct storage sbtstruct) internal {
-        for (uint i=0; i < sbtstruct.rate_list.length; i++){
-            sbtstruct.rate_list[i] = sbtstruct.maki_list[i] * 2 + sbtstruct.rate_list[i];
+        for (uint i=0; i < sbtstruct.rateList.length; i++){
+            sbtstruct.rateList[i] = sbtstruct.makiList[i] * 2 + sbtstruct.rateList[i];
         }
     }
 
     function _update_grade(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint32[] memory rate_sorted = QuickSort.sort(sbtstruct.rate_list);
+        uint32[] memory rate_sorted = QuickSort.sort(sbtstruct.rateList);
 
-        for (uint i=0; i < sbtstruct.grade_list.length; i++){
-            if (i <= sbtstruct.grade_list.length / 20){
+        for (uint i=0; i < sbtstruct.gradeList.length; i++){
+            if (i <= sbtstruct.gradeList.length / 20){
                 sbtstruct.grade = rate_sorted[i];
             }
         }
@@ -109,8 +109,8 @@ contract SbtImp {
 
     function addMaxStar(address user_address, string memory tag, uint8 star) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        if (sbtstruct.maxstar_map[user_address][tag] > star){
-            sbtstruct.maxstar_map[user_address][tag] = star;
+        if (sbtstruct.maxstarMap[user_address][tag] > star){
+            sbtstruct.maxstarMap[user_address][tag] = star;
         }
     }
 
@@ -120,10 +120,10 @@ contract SbtImp {
         require(favo > 0, "INVALID ARGUMENT");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint8 remain_favos = sbtstruct.favo_list[sbtstruct.address2index[user_from]] - favo;
-        require(remain_favos >= 0, "INVALID ARGUMENT");
-        sbtstruct.favo_list[sbtstruct.address2index[user_from]] = remain_favos;
-        sbtstruct.received_favo_list[sbtstruct.address2index[user_to]] += favo;
+        uint8 remainFavos = sbtstruct.favoList[sbtstruct.address2index[user_from]] - favo;
+        require(remainFavos >= 0, "INVALID ARGUMENT");
+        sbtstruct.favoList[sbtstruct.address2index[user_from]] = remainFavos;
+        sbtstruct.receivedFavoList[sbtstruct.address2index[user_to]] += favo;
     }
 
 
