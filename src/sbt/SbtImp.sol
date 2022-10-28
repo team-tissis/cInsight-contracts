@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
 import "./../libs/DateTime.sol";
+import "./../libs/QuickSort.sol";
 
 contract SbtImp {
     modifier onlyOwner() {
@@ -36,13 +37,13 @@ contract SbtImp {
     ) external {
         require(_address != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.maki[sbtstruct.address2index[_address]] == 0, "Already minted");
+        require(sbtstruct.maki_list[sbtstruct.address2index[_address]] == 0, "Already minted");
         emit Transfer(address(0), _address, uint256(uint160(_address)));
     }
 
     function burn(address _address) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        delete sbtstruct.maki[sbtstruct.address2index[_address]];
+        delete sbtstruct.maki_list[sbtstruct.address2index[_address]];
         emit Transfer(_address, address(0), uint256(uint160(_address)));
     }
 
@@ -69,11 +70,33 @@ contract SbtImp {
     }
 
     // chaininsight functions
-    function month_init(address user_address) public {
+    function month_init() public {
         require(DateTime.getMonth(block.timestamp) != last_updated_month);
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        
 
+        //TODO: 薪の付与
+
+        //TODO: グレードの更新
+        _update_rate(sbtstruct);
+
+        delete sbtstruct.favo_list;
+        delete sbtstruct.referral_list;
+    }
+
+    function _update_rate(SbtLib.SbtStruct storage sbtstruct) internal {
+        for (uint i=0; i < sbtstruct.rate_list.length; i++){
+            sbtstruct.rate_list[i] = sbtstruct.maki_list[i] * 2 + sbtstruct.rate_list[i];
+        }
+    }
+
+    function _update_grade(SbtLib.SbtStruct storage sbtstruct) internal {
+        uint32[] memory rate_sorted = QuickSort.sort(sbtstruct.rate_list);
+
+        for (uint i=0; i < sbtstruct.grade_list.length; i++){
+            if (i <= sbtstruct.grade_list.length / 20){
+                sbtstruct.grade = rate_sorted[i];
+            }
+        }
     }
 
     function addTag(string memory tag) external onlyOwner{
@@ -84,21 +107,23 @@ contract SbtImp {
         delete tags[tag_id];
     }
 
-    function addStar(address user_address, string memory tag, uint8 star) external {
+    function addMaxStar(address user_address, string memory tag, uint8 star) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(star > 0, "INVALID ARGUMENT");
-        sbtstruct.stars[user_address][tag] += star;
+        if (sbtstruct.maxstar_map[user_address][tag] > star){
+            sbtstruct.maxstar_map[user_address][tag] = star;
+        }
     }
 
     // functions for frontend
     function addFavos(address user_from, address user_to, uint8 favo) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == user_from, "USER ONLY");
         require(favo > 0, "INVALID ARGUMENT");
-        uint8 remain_favos = sbtstruct.favo[user_from] - favo;
+
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        uint8 remain_favos = sbtstruct.favo_list[sbtstruct.address2index[user_from]] - favo;
         require(remain_favos >= 0, "INVALID ARGUMENT");
-        sbtstruct.favo[user_from] = remain_favos;
-        sbtstruct.received_favo[user_to] += favo;
+        sbtstruct.favo_list[sbtstruct.address2index[user_from]] = remain_favos;
+        sbtstruct.received_favo_list[sbtstruct.address2index[user_to]] += favo;
     }
 
 

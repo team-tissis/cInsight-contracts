@@ -11,12 +11,13 @@ library SbtLib {
         string baseURI;
         bytes32 validator;
         mapping(address => uint16) address2index;
-        uint8[] favo;
-        uint16[] received_favo;
-        uint16[] maki;
-        uint8[] grade;
-        uint8[] referral; // リファラルした回数
-        mapping(address => mapping (string => uint8)) stars;
+        uint8[] favo_list;
+        uint16[] received_favo_list;
+        uint16[] maki_list;
+        uint8[] grade_list;
+        uint32[] rate_list;
+        uint8[] referral_list; // リファラルした回数
+        mapping(address => mapping (string => uint8)) maxstar_map; // 各ユーザーの各ジャンルタグの最大のスター数
         mapping(bytes4 => bool) interfaces;
     }
 
