@@ -5,6 +5,12 @@ import "./../libs/SbtLib.sol";
 import "./../libs/DateTime.sol";
 
 contract SbtImp {
+    modifier onlyOwner() {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
+        _;
+    }
+
     event Transfer(
         address indexed _from,
         address indexed _to,
@@ -14,6 +20,7 @@ contract SbtImp {
     event ValidatorChanged(bytes32 _newValidator);
 
     uint8[6] referralRate = [0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5
+    string[] tags = ["L1", "L2", "defi", "nft", "gamefi", "zero knowleade"];
     bool initialized = false;
     uint last_updated_month;
 
@@ -29,33 +36,29 @@ contract SbtImp {
     ) external {
         require(_address != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.maki[_address] == 0, "Already minted");
+        require(sbtstruct.maki[sbtstruct.address2index[_address]] == 0, "Already minted");
         emit Transfer(address(0), _address, uint256(uint160(_address)));
     }
 
-    function burn(address _address) external  {
+    function burn(address _address) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
-        delete sbtstruct.maki[_address];
+        delete sbtstruct.maki[sbtstruct.address2index[_address]];
         emit Transfer(_address, address(0), uint256(uint160(_address)));
     }
 
-    function setBaseUri(string memory _newBaseURI) external {
+    function setBaseUri(string memory _newBaseURI) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
         sbtstruct.baseURI = _newBaseURI;
     }
 
-    function setContractOwner(address _newContactOwner) external {
+    function setContractOwner(address _newContactOwner) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
         sbtstruct.contractOwner = _newContactOwner;
         emit ContractOwnerChanged(_newContactOwner);
     }
 
-    function setValidator(bytes32 _newValidator) external {
+    function setValidator(bytes32 _newValidator) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
         sbtstruct.validator = _newValidator;
         emit ValidatorChanged(_newValidator);
     }
@@ -66,17 +69,25 @@ contract SbtImp {
     }
 
     // chaininsight functions
-    function updateReferral(address user_address) public {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
+    function month_init(address user_address) public {
         require(DateTime.getMonth(block.timestamp) != last_updated_month);
-        sbtstruct.referral[user_address] += referralRate[sbtstruct.grade[user_address]-1];
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        
+
     }
 
-    function addStar(address user_address, uint8 star) external {
+    function addTag(string memory tag) external onlyOwner{
+        tags.push(tag);
+    }
+
+    function removeTag(uint tag_id) external onlyOwner{
+        delete tags[tag_id];
+    }
+
+    function addStar(address user_address, string memory tag, uint8 star) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(star > 0, "INVALID ARGUMENT");
-        sbtstruct.star[user_address] += star;
+        sbtstruct.stars[user_address][tag] += star;
     }
 
     // functions for frontend
