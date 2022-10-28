@@ -79,27 +79,27 @@ contract Sbt {
 
     function getFavo(address user_address) external view returns (uint8){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.favo[user_address];
+        return sbtstruct.favoList[sbtstruct.address2index[user_address]];
     }
 
     function getReceivedFavo(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.receivedFavo[user_address];
+        return sbtstruct.receivedFavoList[sbtstruct.address2index[user_address]];
     }
 
     function getMaki(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.maki[user_address];
+        return sbtstruct.makiList[sbtstruct.address2index[user_address]];
     }
 
     function getGrade(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.grade[user_address];
+        return sbtstruct.gradeList[sbtstruct.address2index[user_address]];
     }
 
     function getReferral(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referral[user_address];
+        return sbtstruct.referralList[sbtstruct.address2index[user_address]];
     }
 
 // utility function from openzeppelin

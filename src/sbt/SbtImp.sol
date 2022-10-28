@@ -90,11 +90,17 @@ contract SbtImp {
     }
 
     function _update_grade(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint32[] memory rate_sorted = QuickSort.sort(sbtstruct.rateList);
+
+        uint16[] memory rateSortedIndex;
+        for (uint16 i=0; i < sbtstruct.rateList.length; i++){
+            rateSortedIndex[i] = i;
+        }
+
+        rateSortedIndex = QuickSort.sort(sbtstruct.rateList, rateSortedIndex);
 
         for (uint i=0; i < sbtstruct.gradeList.length; i++){
-            if (i <= sbtstruct.gradeList.length / 20){
-                sbtstruct.grade = rate_sorted[i];
+            if (i <= rateSortedIndex[i] / 20){
+                //TODO
             }
         }
     }
