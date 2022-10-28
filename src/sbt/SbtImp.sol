@@ -75,9 +75,10 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
         //TODO: 薪の付与
+        
 
-        //TODO: グレードの更新
         _update_rate(sbtstruct);
+        _update_grade(sbtstruct);
 
         delete sbtstruct.favoList;
         delete sbtstruct.referralList;
