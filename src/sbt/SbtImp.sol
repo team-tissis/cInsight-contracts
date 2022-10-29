@@ -77,8 +77,8 @@ contract SbtImp {
 
         _addMakiForDoneFavo(sbtstruct);
         
-        _update_rate(sbtstruct);
-        _update_grade(sbtstruct);
+        _updateRate(sbtstruct);
+        _updateGrade(sbtstruct);
 
         delete sbtstruct.favoList;
         delete sbtstruct.referralList;
@@ -92,13 +92,13 @@ contract SbtImp {
         }
     }
 
-    function _update_rate(SbtLib.SbtStruct storage sbtstruct) internal {
+    function _updateRate(SbtLib.SbtStruct storage sbtstruct) internal {
         for (uint i=0; i < sbtstruct.rateList.length; i++){
             sbtstruct.rateList[i] = sbtstruct.makiList[i] + sbtstruct.rateList[i] / 4;
         }
     }
 
-    function _update_grade(SbtLib.SbtStruct storage sbtstruct) internal {
+    function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
 
         uint16[] memory rateSortedIndex;
         for (uint16 i=0; i < sbtstruct.rateList.length; i++){
@@ -156,8 +156,7 @@ contract SbtImp {
         }
 
         sbtstruct.favoList[sbtstruct.address2index[user_from]] = addFavoNum;
-        // makiの計算
-        sbtstruct.makiList[sbtstruct.address2index[user_to]] += favo;
+        sbtstruct.makiList[sbtstruct.address2index[user_to]] += favo; // makiの計算
     }
 
 
