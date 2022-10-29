@@ -22,20 +22,35 @@ contract SbtImp {
 
 
     // 0x731133e9
-    function mint(
-        address minter 
-    ) external {
-        require(minter != address(0));
+    function mint() public payable{
+        require(msg.sender != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.grades[minter] == 0, "Already minted");
-        _mint(sbtstruct, minter);
-        emit Transfer(address(0), minter, sbtstruct.mintIndex);
+
+        require(sbtstruct.grades[msg.sender] == 0, "Already minted");
+        _mint(sbtstruct);
+        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
-    function _mint(SbtLib.SbtStruct storage sbtstruct, address minter) internal {
+    function mintWithReferral() public payable{
+        require(msg.sender != address(0));
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
+        require(sbtstruct.grades[msg.sender] == 0, "Already minted");
+        _mint(sbtstruct);
+        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+    }
+
+    function _mint(SbtLib.SbtStruct storage sbtstruct) internal {
+        uint costForMint = 0.01 ether;
+        require(msg.value >= costForMint, "Need to send more ETH.");
+
         sbtstruct.mintIndex += 1;
-        sbtstruct.owners[sbtstruct.mintIndex] = minter;
-        sbtstruct.grades[minter] = 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
+        sbtstruct.grades[msg.sender] = 1;
+
+        if (msg.value > costForMint) {
+            payable(msg.sender).transfer(msg.value - costForMint);
+        }
     }
 
     function burn(uint _tokenId) external {
@@ -127,7 +142,7 @@ contract SbtImp {
 
         // TODO: referralRateのサイズを大きくしたときの挙動
         for (uint i = 0; i < _referralRate.length; i++){
-                sbtstruct.referralRate[i] = _referralRate[i];
+            sbtstruct.referralRate[i] = _referralRate[i];
         }
     }
 
@@ -239,34 +254,15 @@ contract SbtImp {
         sbtstruct.makis[userTo] += favo; // makiの計算
     }
 
-    function reffer(address userTo) external {
-
-    }
-
-    function verify(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        returns (bool)
-    {
-        /** メモ: @shion
-         * https://solidity-by-example.org/signature/
-         * _hash：keccack(msg, nonce, ...) 署名時に用いるメッセージハッシュ
-         * _singnature：{r, s, v} 署名されたメッセージ．r)0-32byte目，s)32-64byte目，v)65byte目
-         * ecrecover：メッセージハッシュと署名されたメッセージから公開鍵を復元する関数
-         * 最後は solidity example では公開鍵を直接比較して検証しているが，今回はそれにハッシュをかけたものを用いて検証している．
-         */
-        require(_signature.length == 65, "INVALID");
+    function refer(address userTo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        bytes32 _r;
-        bytes32 _s;
-        uint8 _v;
-        assembly {
-            _r := mload(add(_signature, 32))
-            _s := mload(add(_signature, 64))
-            _v := byte(0, mload(add(_signature, 96)))
+        require(sbtstruct.referrals[msg.sender] <= sbtstruct.referralRate[sbtstruct.grades[msg.sender]], "REFFER LIMIT EXCEEDED");
+
+        //TODO: 同じアカウントをリファラルした場合の処理
+        address[] memory referralAccounts = sbtstruct.referralAccountList[msg.sender];
+        for (uint i = 0; i < referralAccounts.length; i++){
+            require(referralAccounts[i] != userTo, "THIS USER HAS ALREADY REFFERD");
         }
-        return
-            keccak256(abi.encodePacked(ecrecover(_hash, _v, _r, _s))) ==
-            sbtstruct.validator;
+        sbtstruct.referralAccountList[msg.sender].push(userTo);
     }
 }
