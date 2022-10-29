@@ -20,6 +20,7 @@ contract Sbt {
         sbtstruct.validator = _validator;
         sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
         sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
+
     }
 
     mapping(bytes4 => address) public implementations;
@@ -73,38 +74,9 @@ contract Sbt {
             );
     }
 
-    function ownerOf(uint256 _tokenId) external pure returns (address) {
-        return address(uint160(_tokenId));
-    }
-
-    function getFavo(address user_address) external view returns (uint8){
+    function ownerOf(uint256 _tokenId) external view returns (address) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.favoList[sbtstruct.address2index[user_address]];
-    }
-
-    function getMaki(address user_address) external view returns (uint16){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.makiList[sbtstruct.address2index[user_address]];
-    }
-
-    function getGrade(address user_address) external view returns (uint16){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.gradeList[sbtstruct.address2index[user_address]];
-    }
-
-    function getRate(address user_address) external view returns (uint32){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.rateList[sbtstruct.address2index[user_address]];
-    }
-
-    function getReferral(address user_address) external view returns (uint16){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referralList[sbtstruct.address2index[user_address]];
-    }
-
-    function getMaxstarMap(address user_address, string memory tag) external view returns (uint16){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.maxstarMap[user_address][tag];
+        return sbtstruct.owners[_tokenId];
     }
 
     // utility function from openzeppelin

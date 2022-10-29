@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface ISbt {
     /**
      * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
@@ -13,3 +14,4 @@ interface ISbt {
      * @dev Returns the number of tokens in ``owner``'s account.
      */
     function balanceOf(address owner) external view returns (uint256 balance);
+}

@@ -10,16 +10,21 @@ library SbtLib {
         string symbol;
         string baseURI;
         bytes32 validator;
-        mapping(address => uint16) address2index;
-        uint8[] favoList; // favoした回数
-        uint16[] makiList;
-        uint8[] gradeList;
-        uint32[] rateList;
-        uint8[] referralList; // リファラルした回数
-        uint8[] nftPointsList; // nft付与権限
-
-        mapping(address => mapping (string => uint8)) maxstarMap; // 各ユーザーの各ジャンルタグの最大のスター数
         mapping(bytes4 => bool) interfaces;
+
+        mapping(uint => address) owners; // token_id -> address
+        mapping(address => uint) favos; // favoした回数
+        mapping(address => uint) makis;
+        mapping(address => uint) grades; 
+        mapping(address => uint) rates;
+        mapping(address => uint) referrals; // リファラルした回数
+        mapping(address => uint) nftPoints; // nft付与権限数
+        uint16 mintIndex;
+        uint16 burnNum;
+        uint16 favoNum;
+        uint8[] referralRate; // grade 1, 2, 3, 4, 5
+        uint8 lastUpdatedMonth;
+
     }
 
     // get struct stored at posititon
@@ -27,7 +32,7 @@ library SbtLib {
     function sbtStorage() internal pure returns (SbtStruct storage sbtstruct) {
         /** メモ: @shion
          * slot: storageは32バイトの領域を確保するが，その領域をslotと呼ぶ
-         * positionのstrunctを取得する
+         * positionのstrunctを参照する
          */
         bytes32 position = SBT_STRUCT_POSITION;
         assembly {

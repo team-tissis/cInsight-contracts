@@ -20,32 +20,39 @@ contract SbtImp {
     event ContractOwnerChanged(address _newOwner);
     event ValidatorChanged(bytes32 _newValidator);
 
-    // string[] tags = ["L1", "L2", "defi", "nft", "gamefi", "zero knowleade"];
-    uint8 favoNum = 20;
-    uint8[5] referralRate = [0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5
-    bool initialized = false;
-    uint last_updated_month;
-
-    function init_imp() external{
-        require(initialized == false, "INITIATED ALREADY");
-        last_updated_month = DateTime.getMonth(block.timestamp);
-        initialized = true;
-    }
 
     // 0x731133e9
     function mint(
-        address _address
+        address minter 
     ) external {
-        require(_address != address(0));
+        require(minter != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.makiList[sbtstruct.address2index[_address]] == 0, "Already minted");
-        emit Transfer(address(0), _address, uint256(uint160(_address)));
+        require(sbtstruct.grades[minter] == 0, "Already minted");
+        _mint(sbtstruct, minter);
+        emit Transfer(address(0), minter, sbtstruct.mintIndex);
     }
 
-    function burn(address _address) external onlyOwner {
+    function _mint(SbtLib.SbtStruct storage sbtstruct, address minter) internal {
+        sbtstruct.mintIndex += 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = minter;
+        sbtstruct.grades[minter] = 1;
+    }
+
+    function burn(uint _tokenId) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        delete sbtstruct.makiList[sbtstruct.address2index[_address]];
-        emit Transfer(_address, address(0), uint256(uint160(_address)));
+        require(msg.sender == sbtstruct.owners[_tokenId], "SBT OWNER ONLY");
+        address currentOwner = sbtstruct.owners[_tokenId];
+
+        delete sbtstruct.owners[_tokenId];
+        sbtstruct.grades[msg.sender] = 0;
+        sbtstruct.favos[msg.sender] = 0;
+        sbtstruct.makis[msg.sender] = 0;
+        sbtstruct.rates[msg.sender] = 0;
+        sbtstruct.referrals[msg.sender] = 0;
+        sbtstruct.nftPoints[msg.sender] = 0;
+        sbtstruct.burnNum += 1;
+
+        emit Transfer(currentOwner, address(0), _tokenId);
     }
 
     function setBaseUri(string memory _newBaseURI) external onlyOwner {
@@ -59,93 +66,166 @@ contract SbtImp {
         emit ContractOwnerChanged(_newContactOwner);
     }
 
+    function getValidator() external view returns (bytes32) {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.validator;
+    }
+    
     function setValidator(bytes32 _newValidator) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.validator = _newValidator;
         emit ValidatorChanged(_newValidator);
     }
 
-    function getValidator() external view returns (bytes32) {
+    function getFavo(address _address) external view returns (uint){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.validator;
+        return sbtstruct.favos[_address];
+    }
+
+    function getMaki(address _address) external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.makis[_address];
+    }
+
+    function getGrade(address _address) external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.grades[_address];
+    }
+
+    function getRate(address _address) external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.rates[_address];
+    }
+
+    function getReferral(address _address) external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.referrals[_address];
+    }
+
+    function getNftPoint(address _address) external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.nftPoints[_address];
+    }
+    
+    function getFavoNum() external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.favoNum;
+    }
+
+    function setFavoNum(uint8 _favoNum) external onlyOwner{
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.favoNum = _favoNum;
+    }
+
+    function getReferralRate() external view returns (uint8[] memory){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.referralRate;
+    }
+
+    function setReferralRate(uint8[] memory _referralRate) external onlyOwner {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
+        // TODO: referralRateのサイズを大きくしたときの挙動
+        for (uint i = 0; i < _referralRate.length; i++){
+                sbtstruct.referralRate[i] = _referralRate[i];
+        }
+    }
+
+    function getLastUpdatedMonth() external view returns (uint){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.lastUpdatedMonth;
     }
 
     // chaininsight functions
-    function month_init() public {
-        require(DateTime.getMonth(block.timestamp) != last_updated_month);
+    function imp_init() external onlyOwner{
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.favoNum = 20;
+        sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
+
+        uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
+        for (uint i = 0; i < 5; i++){
+            sbtstruct.referralRate.push(_referralRate[i]);
+        }
+    }
+
+    function month_init() public {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth);
 
         _addMakiForDoneFavo(sbtstruct);
         
         _updateRate(sbtstruct);
         _updateGrade(sbtstruct);
 
-        delete sbtstruct.favoList;
-        delete sbtstruct.referralList;
+        // burn されたアカウントも代入計算を行なっている．
+        // TODO: sstore 0->0 はガス代がかなり安いらしいが，より良い実装はありうる．
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++){
+            address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
+            sbtstruct.favos[_address] = 0;
+            sbtstruct.referrals[_address] = 0;
+        }
     }
 
     function _addMakiForDoneFavo(SbtLib.SbtStruct storage sbtstruct) internal {
-        for (uint i=0; i < sbtstruct.rateList.length; i++){
-            if (sbtstruct.favoList[i] == favoNum){
-                sbtstruct.makiList[i] += 5;
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++){
+            address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
+
+            if (sbtstruct.favos[_address] == sbtstruct.favoNum){
+                sbtstruct.makis[_address] += 5;
             }
         }
     }
 
     function _updateRate(SbtLib.SbtStruct storage sbtstruct) internal {
-        for (uint i=0; i < sbtstruct.rateList.length; i++){
-            sbtstruct.rateList[i] = sbtstruct.makiList[i] + sbtstruct.rateList[i] / 4;
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++){
+            address _address = sbtstruct.owners[i];
+
+            sbtstruct.rates[_address] = sbtstruct.makis[_address] + sbtstruct.rates[_address] / 4;
         }
     }
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
 
-        uint16[] memory rateSortedIndex;
-        for (uint16 i=0; i < sbtstruct.rateList.length; i++){
-            rateSortedIndex[i] = i;
+        uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint16[] memory rateSortedIndex = new uint16[](accountNum);
+        uint32[] memory rateArray = new uint32[](accountNum);
+
+        uint count;
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++){
+            address _address = sbtstruct.owners[i];
+            if (_address != address(0)){
+                count += 1;
+                rateSortedIndex[count] = uint16(i);
+                rateArray[count] = uint32(sbtstruct.rates[_address]);
+            }
         }
+        rateSortedIndex = QuickSort.sort(rateArray, rateSortedIndex);
 
-        rateSortedIndex = QuickSort.sort(sbtstruct.rateList, rateSortedIndex);
-
-        for (uint i=0; i < sbtstruct.gradeList.length; i++){
-            if (i <= sbtstruct.gradeList.length / 20){ // 上位 5%
-                sbtstruct.gradeList[rateSortedIndex[i]] = 5;
-            } else if (i <= sbtstruct.gradeList.length / 5){ // 上位 20%
-                sbtstruct.gradeList[rateSortedIndex[i]] = 4;
-            } else if (i <= sbtstruct.gradeList.length / 5 * 2){ // 上位 40%
-                sbtstruct.gradeList[rateSortedIndex[i]] = 3;
-            } else if (i <= sbtstruct.gradeList.length / 5 * 4){ // 上位 80%
-                sbtstruct.gradeList[rateSortedIndex[i]] = 2;
+        // burnされていない account 中の上位 x %を計算.
+        for (uint i=0; i < accountNum; i++){
+            if (i <= accountNum / 20){ // 上位 5%
+                sbtstruct.grades[sbtstruct.owners[rateSortedIndex[i]]] = 5;
+            } else if (i <= accountNum / 5){ // 上位 20%
+                sbtstruct.grades[sbtstruct.owners[rateSortedIndex[i]]] = 4;
+            } else if (i <= accountNum / 5 * 2){ // 上位 40%
+                sbtstruct.grades[sbtstruct.owners[rateSortedIndex[i]]] = 3;
+            } else if (i <= accountNum / 5 * 4){ // 上位 80%
+                sbtstruct.grades[sbtstruct.owners[rateSortedIndex[i]]] = 2;
             } else{
-                sbtstruct.gradeList[rateSortedIndex[i]] = 1;
+                sbtstruct.grades[sbtstruct.owners[rateSortedIndex[i]]] = 1;
             }
         }
     }
 
-    // function addTag(string memory tag) external onlyOwner{
-    //     tags.push(tag);
-    // }
-
-    // function removeTag(uint tag_id) external onlyOwner{
-    //     delete tags[tag_id];
-    // }
-
-    // function addMaxStar(address user_address, string memory tag, uint8 star) external {
-    //     SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-    //     if (sbtstruct.maxstarMap[user_address][tag] > star){
-    //         sbtstruct.maxstarMap[user_address][tag] = star;
-    //     }
-    // }
-
     // functions for frontend
-    function addFavos(address user_from, address user_to, uint8 favo) external {
-        require(msg.sender == user_from, "USER ONLY");
+    function addFavos(address userTo, uint8 favo) external {
         require(favo > 0, "INVALID ARGUMENT");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint8 addFavoNum;
+        require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
-        uint8 remainFavo = favoNum - sbtstruct.favoList[sbtstruct.address2index[user_from]];
+        uint addFavoNum;
+        uint remainFavo = sbtstruct.favoNum - sbtstruct.favos[msg.sender];
         require(remainFavo >= 0, "INVALID ARGUMENT");
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
@@ -155,10 +235,13 @@ contract SbtImp {
             addFavoNum = favo;
         }
 
-        sbtstruct.favoList[sbtstruct.address2index[user_from]] = addFavoNum;
-        sbtstruct.makiList[sbtstruct.address2index[user_to]] += favo; // makiの計算
+        sbtstruct.favos[msg.sender] = addFavoNum;
+        sbtstruct.makis[userTo] += favo; // makiの計算
     }
 
+    function reffer(address userTo) external {
+
+    }
 
     function verify(bytes32 _hash, bytes memory _signature)
         public
