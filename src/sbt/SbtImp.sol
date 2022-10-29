@@ -20,8 +20,9 @@ contract SbtImp {
     event ContractOwnerChanged(address _newOwner);
     event ValidatorChanged(bytes32 _newValidator);
 
-    uint8[6] referralRate = [0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5
-    string[] tags = ["L1", "L2", "defi", "nft", "gamefi", "zero knowleade"];
+    // string[] tags = ["L1", "L2", "defi", "nft", "gamefi", "zero knowleade"];
+    uint8 favoNum = 20;
+    uint8[5] referralRate = [0, 0, 1, 3, 5]; // grade 1, 2, 3, 4, 5
     bool initialized = false;
     uint last_updated_month;
 
@@ -74,9 +75,8 @@ contract SbtImp {
         require(DateTime.getMonth(block.timestamp) != last_updated_month);
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        //TODO: 薪の付与
+        _addMakiForDoneFavo(sbtstruct);
         
-
         _update_rate(sbtstruct);
         _update_grade(sbtstruct);
 
@@ -84,9 +84,17 @@ contract SbtImp {
         delete sbtstruct.referralList;
     }
 
+    function _addMakiForDoneFavo(SbtLib.SbtStruct storage sbtstruct) internal {
+        for (uint i=0; i < sbtstruct.rateList.length; i++){
+            if (sbtstruct.favoList[i] == favoNum){
+                sbtstruct.makiList[i] += 5;
+            }
+        }
+    }
+
     function _update_rate(SbtLib.SbtStruct storage sbtstruct) internal {
         for (uint i=0; i < sbtstruct.rateList.length; i++){
-            sbtstruct.rateList[i] = sbtstruct.makiList[i] * 2 + sbtstruct.rateList[i];
+            sbtstruct.rateList[i] = sbtstruct.makiList[i] + sbtstruct.rateList[i] / 4;
         }
     }
 
@@ -100,26 +108,34 @@ contract SbtImp {
         rateSortedIndex = QuickSort.sort(sbtstruct.rateList, rateSortedIndex);
 
         for (uint i=0; i < sbtstruct.gradeList.length; i++){
-            if (i <= rateSortedIndex[i] / 20){
-                //TODO
+            if (i <= sbtstruct.gradeList.length / 20){ // 上位 5%
+                sbtstruct.gradeList[rateSortedIndex[i]] = 5;
+            } else if (i <= sbtstruct.gradeList.length / 5){ // 上位 20%
+                sbtstruct.gradeList[rateSortedIndex[i]] = 4;
+            } else if (i <= sbtstruct.gradeList.length / 5 * 2){ // 上位 40%
+                sbtstruct.gradeList[rateSortedIndex[i]] = 3;
+            } else if (i <= sbtstruct.gradeList.length / 5 * 4){ // 上位 80%
+                sbtstruct.gradeList[rateSortedIndex[i]] = 2;
+            } else{
+                sbtstruct.gradeList[rateSortedIndex[i]] = 1;
             }
         }
     }
 
-    function addTag(string memory tag) external onlyOwner{
-        tags.push(tag);
-    }
+    // function addTag(string memory tag) external onlyOwner{
+    //     tags.push(tag);
+    // }
 
-    function removeTag(uint tag_id) external onlyOwner{
-        delete tags[tag_id];
-    }
+    // function removeTag(uint tag_id) external onlyOwner{
+    //     delete tags[tag_id];
+    // }
 
-    function addMaxStar(address user_address, string memory tag, uint8 star) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        if (sbtstruct.maxstarMap[user_address][tag] > star){
-            sbtstruct.maxstarMap[user_address][tag] = star;
-        }
-    }
+    // function addMaxStar(address user_address, string memory tag, uint8 star) external {
+    //     SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+    //     if (sbtstruct.maxstarMap[user_address][tag] > star){
+    //         sbtstruct.maxstarMap[user_address][tag] = star;
+    //     }
+    // }
 
     // functions for frontend
     function addFavos(address user_from, address user_to, uint8 favo) external {
@@ -127,10 +143,21 @@ contract SbtImp {
         require(favo > 0, "INVALID ARGUMENT");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint8 remainFavos = sbtstruct.favoList[sbtstruct.address2index[user_from]] - favo;
-        require(remainFavos >= 0, "INVALID ARGUMENT");
-        sbtstruct.favoList[sbtstruct.address2index[user_from]] = remainFavos;
-        sbtstruct.receivedFavoList[sbtstruct.address2index[user_to]] += favo;
+        uint8 addFavoNum;
+
+        uint8 remainFavo = favoNum - sbtstruct.favoList[sbtstruct.address2index[user_from]];
+        require(remainFavo >= 0, "INVALID ARGUMENT");
+
+        // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
+        if (remainFavo <= favo){
+            addFavoNum = remainFavo;
+        } else{
+            addFavoNum = favo;
+        }
+
+        sbtstruct.favoList[sbtstruct.address2index[user_from]] = addFavoNum;
+        // makiの計算
+        sbtstruct.makiList[sbtstruct.address2index[user_to]] += favo;
     }
 
 

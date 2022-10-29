@@ -82,11 +82,6 @@ contract Sbt {
         return sbtstruct.favoList[sbtstruct.address2index[user_address]];
     }
 
-    function getReceivedFavo(address user_address) external view returns (uint16){
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.receivedFavoList[sbtstruct.address2index[user_address]];
-    }
-
     function getMaki(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.makiList[sbtstruct.address2index[user_address]];
@@ -97,12 +92,22 @@ contract Sbt {
         return sbtstruct.gradeList[sbtstruct.address2index[user_address]];
     }
 
+    function getRate(address user_address) external view returns (uint32){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.rateList[sbtstruct.address2index[user_address]];
+    }
+
     function getReferral(address user_address) external view returns (uint16){
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.referralList[sbtstruct.address2index[user_address]];
     }
 
-// utility function from openzeppelin
+    function getMaxstarMap(address user_address, string memory tag) external view returns (uint16){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.maxstarMap[user_address][tag];
+    }
+
+    // utility function from openzeppelin
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";

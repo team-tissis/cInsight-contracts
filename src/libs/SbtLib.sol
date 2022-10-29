@@ -11,15 +11,14 @@ library SbtLib {
         string baseURI;
         bytes32 validator;
         mapping(address => uint16) address2index;
-        uint8[] favoList;
-        uint16[] receivedFavoList;
+        uint8[] favoList; // favoした回数
         uint16[] makiList;
         uint8[] gradeList;
         uint32[] rateList;
         uint8[] referralList; // リファラルした回数
-        uint8[] nftPointsList; // リファラルした回数
+        uint8[] nftPointsList; // nft付与権限
 
-        mapping(address => mapping (string => uint8)) maxstar_map; // 各ユーザーの各ジャンルタグの最大のスター数
+        mapping(address => mapping (string => uint8)) maxstarMap; // 各ユーザーの各ジャンルタグの最大のスター数
         mapping(bytes4 => bool) interfaces;
     }
 
