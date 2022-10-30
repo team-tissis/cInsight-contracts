@@ -282,22 +282,10 @@ contract SbtImp {
 
     function refer(address userTo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(
-            sbtstruct.referrals[msg.sender] <=
-                sbtstruct.referralRate[sbtstruct.grades[msg.sender]],
-            "REFFER LIMIT EXCEEDED"
-        );
-
-        //TODO: 同じアカウントをリファラルした場合の処理
-        address[] memory referralAccounts = sbtstruct.referralAccountList[
-            msg.sender
-        ];
-        for (uint i = 0; i < referralAccounts.length; i++) {
-            require(
-                referralAccounts[i] != userTo,
-                "THIS USER HAS ALREADY REFFERD"
-            );
-        }
-        sbtstruct.referralAccountList[msg.sender].push(userTo);
+        require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
+        require(sbtstruct.referralMap[userTo] == address(0), "THIS USER HAS ALREADY REFFERD");
+        require(sbtstruct.referrals[msg.sender] <= sbtstruct.referralRate[sbtstruct.grades[msg.sender]], "REFFER LIMIT EXCEEDED");
+        sbtstruct.referralMap[userTo] = msg.sender;
+        sbtstruct.referrals[msg.sender] += 1;
     }
 }
