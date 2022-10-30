@@ -31,12 +31,10 @@ contract SbtImp {
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
-    function mintWithReferral() public payable{
-        require(msg.sender != address(0));
+    function mintWithReferral(address referrer) public payable{
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
         require(sbtstruct.grades[msg.sender] == 0, "Already minted");
-        _mint(sbtstruct);
+        _mintWithReferral(sbtstruct, referrer);
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
@@ -47,6 +45,25 @@ contract SbtImp {
         sbtstruct.mintIndex += 1;
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
+    }
+
+    function _mintWithReferral(SbtLib.SbtStruct storage sbtstruct, address referrer) internal {
+        uint costForMint = 0.01 ether;
+        uint incentiveForReferrer = 0.005 ether;
+        require(msg.value >= costForMint, "Need to send more ETH.");
+
+        address[] memory referralAccounts = sbtstruct.referralAccountList[referrer];
+        bool refFlag = false;
+        for (uint i = 0; i < referralAccounts.length; i++){
+            refFlag = refFlag || (referralAccounts[i] == msg.sender);
+        }
+        require(refFlag, "INVALID ACCOUNT");
+
+        sbtstruct.mintIndex += 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
+        sbtstruct.grades[msg.sender] = 1;
+
+        payable(referrer).transfer(incentiveForReferrer);
 
         if (msg.value > costForMint) {
             payable(msg.sender).transfer(msg.value - costForMint);
