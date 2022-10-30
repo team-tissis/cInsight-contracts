@@ -4,11 +4,11 @@ pragma solidity ^0.8.16;
 import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
-contract SkinNFT is ISkinNft, ERC721A {
+contract SkinNft is ISkinNft, ERC721A {
     constructor() ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN") {}
 
-    address public sbtInterfaceAddress;
-    mapping(address => uint) freemintQuantity;
+    address sbtInterfaceAddress;
+    mapping(address => uint256) public freemintQuantity;
 
     function init(address sbtAddress) external {
         require(
@@ -21,6 +21,14 @@ contract SkinNFT is ISkinNft, ERC721A {
     function mint(uint256 quantity) external payable {
         // `_mint`'s second argument now takes in a `quantity`, not a `tokenId`.
         _mint(msg.sender, quantity);
+    }
+
+    function getFreemintQuantity(address _address)
+        external
+        view
+        returns (uint256)
+    {
+        return freemintQuantity[_address];
     }
 
     function setFreemintQuantity(address _address, uint256 quantity) external {

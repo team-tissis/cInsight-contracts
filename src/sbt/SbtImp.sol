@@ -19,7 +19,6 @@ contract SbtImp {
         uint256 indexed _tokenId
     );
     event ContractOwnerChanged(address _newOwner);
-    event ValidatorChanged(bytes32 _newValidator);
 
     // 0x731133e9
     function mint() public payable {
@@ -101,17 +100,6 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.contractOwner = _newContactOwner;
         emit ContractOwnerChanged(_newContactOwner);
-    }
-
-    function getValidator() external view returns (bytes32) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.validator;
-    }
-
-    function setValidator(bytes32 _newValidator) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.validator = _newValidator;
-        emit ValidatorChanged(_newValidator);
     }
 
     function getFavo(address _address) external view returns (uint) {
