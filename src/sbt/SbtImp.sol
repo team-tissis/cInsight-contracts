@@ -45,6 +45,10 @@ contract SbtImp {
         sbtstruct.mintIndex += 1;
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
+
+        if (msg.value > costForMint) {
+            payable(msg.sender).transfer(msg.value - costForMint);
+        }
     }
 
     function _mintWithReferral(SbtLib.SbtStruct storage sbtstruct, address referrer) internal {
