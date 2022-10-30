@@ -19,7 +19,7 @@ library SbtLib {
         mapping(address => uint) rates;
         mapping(address => uint) referrals; // リファラルした回数
         mapping(address => uint) nftPoints; // nft付与権限数
-        mapping(address => address[]) referralAccountList; // referralした人を格納
+        mapping(address => address) referralMap; // mapping(to => from)
         uint16 mintIndex;
         uint16 burnNum;
         uint16 favoNum;
