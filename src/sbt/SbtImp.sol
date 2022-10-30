@@ -95,7 +95,7 @@ contract SbtImp {
     }
 
     // chaininsight functions
-    function imp_init() external onlyOwner {
+    function impInit() external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.favoNum = 20;
         sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
@@ -107,7 +107,7 @@ contract SbtImp {
         }
     }
 
-    function month_init() public {
+    function monthInit() public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(
             DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth
