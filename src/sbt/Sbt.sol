@@ -2,8 +2,9 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
+import "./ISbt.sol";
 
-contract Sbt {
+contract Sbt is ISbt{
     function init(
         address _contractOwner,
         string calldata _name,
@@ -80,6 +81,7 @@ contract Sbt {
     }
 
     // utility function from openzeppelin
+
 
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
