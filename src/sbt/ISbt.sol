@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.8.16;
 interface ISbt {
-    /**
-     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
-     */
-    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
 
-    /**
-     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
-     */
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-
-    /**
-     * @dev Returns the number of tokens in ``owner``'s account.
-     */
-    function balanceOf(address owner) external view returns (uint256 balance);
+    function getNftPoints(address user_address) external view returns (uint8);
+    function setNftPoints(address user_address, uint256 nftPoints) public;
 }
