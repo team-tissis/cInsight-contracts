@@ -26,20 +26,20 @@ contract SbtImp {
         require(msg.sender != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        require(sbtstruct.grades[msg.sender] == 0, "Already minted");
+        require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
         _mint(sbtstruct);
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
     function mintWithReferral(address referrer) public payable{
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.grades[msg.sender] == 0, "Already minted");
+        require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
         _mintWithReferral(sbtstruct, referrer);
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
     function _mint(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint costForMint = 0.01 ether;
+        uint costForMint = 20 ether;
         require(msg.value >= costForMint, "Need to send more ETH.");
 
         sbtstruct.mintIndex += 1;
@@ -52,16 +52,11 @@ contract SbtImp {
     }
 
     function _mintWithReferral(SbtLib.SbtStruct storage sbtstruct, address referrer) internal {
-        uint costForMint = 0.01 ether;
-        uint incentiveForReferrer = 0.005 ether;
+        uint costForMint = 15 ether;
+        uint incentiveForReferrer = 10 ether;
         require(msg.value >= costForMint, "Need to send more ETH.");
 
-        address[] memory referralAccounts = sbtstruct.referralAccountList[referrer];
-        bool refFlag = false;
-        for (uint i = 0; i < referralAccounts.length; i++){
-            refFlag = refFlag || (referralAccounts[i] == msg.sender);
-        }
-        require(refFlag, "INVALID ACCOUNT");
+        require(sbtstruct.referralMap[msg.sender] == referrer, "INVALID ACCOUNT");
 
         sbtstruct.mintIndex += 1;
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
@@ -277,13 +272,10 @@ contract SbtImp {
 
     function refer(address userTo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
+        require(sbtstruct.referralMap[userTo] == address(0), "THIS USER HAS ALREADY REFFERD");
         require(sbtstruct.referrals[msg.sender] <= sbtstruct.referralRate[sbtstruct.grades[msg.sender]], "REFFER LIMIT EXCEEDED");
-
-        //TODO: 同じアカウントをリファラルした場合の処理
-        address[] memory referralAccounts = sbtstruct.referralAccountList[msg.sender];
-        for (uint i = 0; i < referralAccounts.length; i++){
-            require(referralAccounts[i] != userTo, "THIS USER HAS ALREADY REFFERD");
-        }
-        sbtstruct.referralAccountList[msg.sender].push(userTo);
+        sbtstruct.referralMap[userTo] = msg.sender;
+        sbtstruct.referrals[msg.sender] += 1;
     }
 }
