@@ -80,6 +80,13 @@ contract Sbt is ISbt{
         return sbtstruct.owners[_tokenId];
     }
 
+    function getNftPoints(address user_address) external view returns (uint) {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.nftPoints[user_address];
+    }
+
+
+
     // utility function from openzeppelin
 
 
