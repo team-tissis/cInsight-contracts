@@ -210,7 +210,7 @@ contract SbtImp {
             address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
 
             if (sbtstruct.favos[_address] == sbtstruct.favoNum) {
-                sbtstruct.makis[_address] += 5;
+                sbtstruct.makis[_address] += 10;
             }
         }
     }
@@ -289,7 +289,45 @@ contract SbtImp {
         }
 
         sbtstruct.favos[msg.sender] = addFavoNum;
-        sbtstruct.makis[userTo] += favo; // makiの計算
+
+        // makiの計算
+        uint upperBound = 5;
+        (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
+
+        if (connectFlag && _dist < upperBound){
+            sbtstruct.makis[userTo] = _dist;
+        } else{
+            sbtstruct.makis[userTo] = upperBound;
+        }
+    }
+
+    function _distance(address node1, address node2) internal view returns (uint, bool){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
+        uint _dist1;
+        uint _dist2;
+        bool connectFlag = false;
+
+        while (node1 != address(0)){
+            if(node1 == node2){
+                connectFlag = true;
+                break;
+            } 
+            else {
+                while (node2 != address(0)){
+                    node2 = sbtstruct.referralMap[node2];
+                    _dist2 += 1;
+                    if(node1 == node2){
+                        connectFlag = true;
+                        break;
+                    }                   
+                }
+                node1 = sbtstruct.referralMap[node1];
+                _dist1 += 1;
+                _dist2 = 0;
+            }
+        }
+        return (_dist1 + _dist2, connectFlag);
     }
 
     function refer(address userTo) external {
