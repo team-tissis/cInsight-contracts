@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
-contract SkinNFT is ISkinNft, ERC721A {
+contract SkinNft is ISkinNft, ERC721A {
     constructor() ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN") {}
 
     address public sbtInterfaceAddress;
