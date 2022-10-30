@@ -312,4 +312,13 @@ contract SbtImp {
         }
         sbtstruct.referralAccountList[msg.sender].push(userTo);
     }
+
+    function refer(address userTo) external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
+        require(sbtstruct.referralMap[userTo] == address(0), "THIS USER HAS ALREADY REFFERD");
+        require(sbtstruct.referrals[msg.sender] <= sbtstruct.referralRate[sbtstruct.grades[msg.sender]], "REFFER LIMIT EXCEEDED");
+        sbtstruct.referralMap[userTo] = msg.sender;
+        sbtstruct.referrals[msg.sender] += 1;
+    }
 }
