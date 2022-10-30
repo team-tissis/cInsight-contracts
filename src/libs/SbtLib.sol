@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
+import "./../skinnft/ISkinNft.sol";
 
 library SbtLib {
     bytes32 constant SBT_STRUCT_POSITION = keccak256("chaininsight");
@@ -11,11 +12,10 @@ library SbtLib {
         string baseURI;
         bytes32 validator;
         mapping(bytes4 => bool) interfaces;
-
         mapping(uint => address) owners; // token_id -> address
         mapping(address => uint) favos; // favoした回数
         mapping(address => uint) makis;
-        mapping(address => uint) grades; 
+        mapping(address => uint) grades;
         mapping(address => uint) rates;
         mapping(address => uint) referrals; // リファラルした回数
         mapping(address => uint) nftPoints; // nft付与権限数
@@ -24,8 +24,10 @@ library SbtLib {
         uint16 burnNum;
         uint16 favoNum;
         uint8[] referralRate; // grade 1, 2, 3, 4, 5
+        uint8[] nftNumRate; // grade 1, 2, 3, 4, 5
         uint8 lastUpdatedMonth;
-
+        address nftAddress;
+        ISkinNft skinNft;
     }
 
     // get struct stored at posititon

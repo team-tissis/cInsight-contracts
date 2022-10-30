@@ -2,15 +2,16 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
-import "./ISbt.sol";
+import "./../skinnft/ISkinNft.sol";
 
-contract Sbt is ISbt{
+contract Sbt {
     function init(
         address _contractOwner,
         string calldata _name,
         string calldata _symbol,
         string calldata _baseURI,
-        bytes32 _validator
+        bytes32 _validator,
+        address _nftAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.contractOwner == address(0), "INITIATED ALREADY");
@@ -19,9 +20,10 @@ contract Sbt is ISbt{
         sbtstruct.symbol = _symbol;
         sbtstruct.baseURI = _baseURI;
         sbtstruct.validator = _validator;
+        sbtstruct.nftAddress = _nftAddress;
+        sbtstruct.skinNft = ISkinNft(_nftAddress);
         sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
         sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
-
     }
 
     mapping(bytes4 => address) public implementations;
@@ -85,10 +87,7 @@ contract Sbt is ISbt{
         return sbtstruct.nftPoints[user_address];
     }
 
-
-
     // utility function from openzeppelin
-
 
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
