@@ -51,6 +51,18 @@ contract SbtTest is Test {
         assertEq(sbt.supportsInterface(0x5b5e139f), true);
     }
 
+    function testSetFreemintQuantity() public {
+        assertEq(skinNft.getFreemintQuantity(address(0xBEEF)), 0);
+        vm.prank(owner);
+        address(sbt).call(
+            abi.encodeWithSignature(
+                "setFreemintQuantity(address,uint256)",
+                address(0xBEEF),
+                uint256(2)
+            )
+        );
+        assertEq(skinNft.getFreemintQuantity(address(0xBEEF)), 2);
+    }
     // function testMint() public {
     //     bytes32 _messagehash = keccak256(
     //         abi.encode(validator, address(0xBEEF), uint256(0), uint256(0))
