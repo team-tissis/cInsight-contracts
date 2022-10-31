@@ -5,10 +5,15 @@ import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
 contract SkinNft is ISkinNft, ERC721A {
-    constructor() ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN") {}
+    string baseURI;
+
+    constructor(string memory _baseURI)
+        ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
+    {
+        baseURI = _baseURI;
+    }
 
     address sbtAddress;
-    string baseURI;
     mapping(address => uint256) public freemintQuantity;
     mapping(address => uint256) public _icon;
 

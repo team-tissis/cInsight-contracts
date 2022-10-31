@@ -18,7 +18,7 @@ contract SbtTest is Test {
         // admin = vm.addr(admin);
         sbt = new Sbt();
         imp = new SbtImp();
-        skinNft = new SkinNft();
+        skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
 
         sbt.init(admin, "ChainInsight", "SBT", "example://", address(skinNft));
 
@@ -84,5 +84,6 @@ contract SbtTest is Test {
 
         vm.expectRevert(bytes("THE TOKEN IS OWNED BY OTHER PERSON"));
         skinNft.setIcon(1);
+        skinNft.tokenURI(1);
     }
 }

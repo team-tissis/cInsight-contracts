@@ -19,7 +19,7 @@ contract SbtTest is Test {
 
         sbt = new Sbt();
         imp = new SbtImp();
-        skinNft = new SkinNft();
+        skinNft = new SkinNft("");
 
         sbt.init(owner, "ChainInsight", "SBT", "example://", address(skinNft));
         skinNft.init(address(sbt));
