@@ -46,6 +46,8 @@ contract SbtTest is Test {
 
     function testSetFreemintQuantity() public {
         address beef = address(0xBEEF);
+        address pork = address(409);
+        address noki = address(0x0909);
         assertEq(skinNft.getFreemintQuantity(beef), 0);
         vm.prank(admin);
         address(sbt).call(
@@ -55,28 +57,32 @@ contract SbtTest is Test {
                 uint256(2)
             )
         );
-        vm.prank(address(1));
-        assertEq(skinNft.getFreemintQuantity(beef), 2);
-        assertEq(skinNft.getFreemintQuantity(address(1)), 0);
 
-        vm.prank(beef);
-        skinNft.freeMint();
-        assertEq(skinNft.ownerOf(1), beef);
-        vm.prank(beef);
-        skinNft.setIcon(1);
-        assertEq(skinNft.getIcon(beef), 1);
-        vm.expectRevert(bytes("NOT FREEMINTABLE"));
-        skinNft.freeMint();
-
+        vm.prank(admin);
         address(sbt).call(
             abi.encodeWithSignature(
                 "setFreemintQuantity(address,uint256)",
-                address(beef),
+                address(pork),
                 uint256(2)
             )
         );
 
+        assertEq(skinNft.getFreemintQuantity(beef), 2);
+        assertEq(skinNft.getFreemintQuantity(address(1)), 0);
+        vm.prank(pork);
+        skinNft.freeMint();
+
+        vm.prank(noki);
+        vm.expectRevert(bytes("NOT FREEMINTABLE"));
+        skinNft.freeMint();
+
+        vm.startPrank(beef);
+        skinNft.freeMint();
+        assertEq(skinNft.ownerOf(1), pork);
+        skinNft.setIcon(3);
+        assertEq(skinNft.getIcon(beef), 3);
+
         vm.expectRevert(bytes("THE TOKEN IS OWNED BY OTHER PERSON"));
-        skinNft.setIcon(10);
+        skinNft.setIcon(1);
     }
 }
