@@ -44,7 +44,7 @@ contract SbtTest is Test {
         assertEq(sbt.supportsInterface(0x5b5e139f), true);
     }
 
-    function testSetFreemintQuantity() public {
+    function testMint() public {
         address beef = address(0xBEEF);
         address pork = address(409);
         address noki = address(0x0909);
@@ -85,5 +85,7 @@ contract SbtTest is Test {
         vm.expectRevert(bytes("THE TOKEN IS OWNED BY OTHER PERSON"));
         skinNft.setIcon(1);
         skinNft.tokenURI(1);
+
+        assertEq(skinNft.tokensOfOwner(beef), [2, 3]);
     }
 }

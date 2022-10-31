@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
+import "./ERC721AQueryable.sol";
 import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
-contract SkinNft is ISkinNft, ERC721A {
+contract SkinNft is ISkinNft, ERC721AQueryable {
     string baseURI;
 
     constructor(string memory _baseURI)
-        ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
+        ERC721AQueryable("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
     {
         baseURI = _baseURI;
     }
@@ -46,7 +47,7 @@ contract SkinNft is ISkinNft, ERC721A {
         address from,
         address to,
         uint256 tokenId
-    ) public payable override(ERC721A) {
+    ) public payable override(ERC721AQueryable) {
         require(_icon[from] != tokenId, "THE TOKEN IS SET TO YOUR ICON");
         super.transferFrom(from, to, tokenId);
     }
@@ -70,9 +71,9 @@ contract SkinNft is ISkinNft, ERC721A {
     function freeMint() external returns (uint256) {
         uint256 quantity = freemintQuantity[msg.sender];
         require(quantity != 0, "NOT FREEMINTABLE");
-        freemintQuantity[msg.sender] = 0;
         uint256 nextTokenId = _nextTokenId();
-        _mint(msg.sender, quantity);
+        _mint(msg.sender, freemintQuantity[msg.sender]);
+        freemintQuantity[msg.sender] = 0;
         return nextTokenId;
     }
 
@@ -92,7 +93,7 @@ contract SkinNft is ISkinNft, ERC721A {
         public
         view
         virtual
-        override
+        override(ERC721A)
         returns (string memory)
     {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();

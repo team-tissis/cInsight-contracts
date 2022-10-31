@@ -205,16 +205,16 @@ contract SbtImp {
             addFavoNum = favo;
         }
 
-        sbtstruct.favos[msg.sender] = addFavoNum;
+        sbtstruct.favos[msg.sender] += addFavoNum;
 
         // makiの計算
         uint upperBound = 5;
         (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            sbtstruct.makis[userTo] = _dist;
+            sbtstruct.makis[userTo] = _dist * favo;
         } else {
-            sbtstruct.makis[userTo] = upperBound;
+            sbtstruct.makis[userTo] = upperBound * favo;
         }
     }
 
