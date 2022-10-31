@@ -31,6 +31,12 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     /// @notice The max setable voting delay
     uint256 public constant MAX_VOTING_DELAY = 40_320; // About 1 week
 
+    /// @notice The min setable proposal threshold
+    uint256 public constant MIN_PROPOSAL_THRESHOLD = 1;
+
+    /// @notice The max setable voting threshold
+    uint256 public constant MAX_PROPOSAL_THRESHOLD = 5;
+
     /// @notice The maximum number of actions that can be included in a proposal
     uint256 public constant proposalMaxOperations = 10; // 10 actions
 
@@ -55,7 +61,8 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
         uint256 votingPeriod_,
-        uint256 votingDelay_
+        uint256 votingDelay_,
+        uint256 proposalThreshold_
     ) public {
         require(address(executorContract) == address(0), 'LogicV1::initialize: can only initialize once');
 
@@ -80,10 +87,16 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
             'LogicV1::initialize: invalid voting delay'
         );
 
+        require(
+            proposalThreshold_ >= MIN_PROPOSAL_THRESHOLD && votingDelay_ <= MAX_PROPOSAL_THRESHOLD,
+            'LogicV1::initialize: invalid voting delay'
+        );
+
         emit ExecutingGracePeriodSet(executingGracePeriod, executingGracePeriod_);
         emit ExecutingDelaySet(executingDelay, executingDelay_);
         emit VotingPeriodSet(votingPeriod, votingPeriod_);
         emit VotingDelaySet(votingDelay, votingDelay_);
+        emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
         executorContract = IChainInsightExecutor(executorContract_);
         admin = admin_;
@@ -92,14 +105,6 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         executingDelay = executingDelay_;
         votingPeriod = votingPeriod_;
         votingDelay = votingDelay_;
-    }
-
-    struct ProposalTemp {
-        uint256 totalSupply;
-        uint256 proposalThreshold;
-        uint256 latestProposalId;
-        uint256 startBlock;
-        uint256 endBlock;
     }
 
     /**
@@ -118,11 +123,10 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        ProposalTemp memory temp;
-
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
         require(
-            sbtstruct.grade[msg.sender] >= temp.proposalThreshold,
+            sbtstruct.grade[msg.sender] >= proposalThreshold,
             'LogicV1::propose: proposer must hold Bonfire SBT'
         );
 
@@ -136,9 +140,9 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         require(targets.length <= proposalMaxOperations, 'LogicV1::propose: too many actions');
 
         /// @notice Ensure that msg.sender currently does not have active or pending proposals
-        temp.latestProposalId = latestProposalIds[msg.sender];
-        if (temp.latestProposalId != 0) {
-            ProposalState proposersLatestProposalState = state(temp.latestProposalId);
+        uint256 latestProposalId = latestProposalIds[msg.sender];
+        if (latestProposalId != 0) {
+            ProposalState proposersLatestProposalState = state(latestProposalId);
             require(
                 proposersLatestProposalState != ProposalState.Active,
                 'LogicV1::propose: one live proposal per proposer, found an already active proposal'
@@ -149,23 +153,19 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
             );
         }
 
-        temp.startBlock = block.number + votingDelay;
-        temp.endBlock = temp.startBlock + votingPeriod;
-
         /// @notice ID of initial proposal is 1.
         proposalCount++;
         Proposal storage newProposal = proposals[proposalCount];
 
         newProposal.id = proposalCount;
         newProposal.proposer = msg.sender;
-        newProposal.proposalThreshold = temp.proposalThreshold;
         newProposal.eta = 0;
         newProposal.targets = targets;
         newProposal.values = values;
         newProposal.signatures = signatures;
         newProposal.calldatas = calldatas;
-        newProposal.startBlock = temp.startBlock;
-        newProposal.endBlock = temp.endBlock;
+        newProposal.startBlock = block.number + votingDelay;
+        newProposal.endBlock = newProposal.startBlock + votingPeriod;
         newProposal.forVotes = 0;
         newProposal.againstVotes = 0;
         newProposal.abstainVotes = 0;
@@ -184,7 +184,6 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
             calldatas,
             newProposal.startBlock,
             newProposal.endBlock,
-            newProposal.proposalThreshold,
             description
         );
 
@@ -478,6 +477,25 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         votingPeriod = newVotingPeriod;
 
         emit VotingPeriodSet(oldVotingPeriod, votingPeriod);
+    }
+
+    /**
+     * @notice Admin function for setting the proposal threshold
+     * @param newProposalThreshold new proposal threshold, in blocks
+     */
+    function _setProposalThreshold(uint256 newProposalThreshold) external {
+        require(
+            msg.sender == admin,
+            'LogicV1::_setProposalThreshold: admin only'
+        );
+        require(
+            newProposalThreshold >= MIN_PROPOSAL_THRESHOLD && newProposalThreshold <= MAX_PROPOSAL_THRESHOLD,
+            'LogicV1::_setVotingPeriod: invalid proposal threshold'
+        );
+        uint256 oldProposalThreshold = proposalThreshold;
+        proposalThreshold = newProposalThreshold;
+
+        emit ProposalThresholdSet(oldProposalThreshold, proposalThreshold);
     }
 
     /**

@@ -11,7 +11,6 @@ contract ChainInsightGovernanceEventsV1 {
         bytes[] calldatas,
         uint256 startBlock,
         uint256 endBlock,
-        uint256 proposalThreshold,
         string description
     );
 
@@ -40,6 +39,9 @@ contract ChainInsightGovernanceEventsV1 {
 
     /// @notice An event emitted when the voting delay is set
     event VotingDelaySet(uint256 oldVotingDelay, uint256 newVotingDelay);
+
+    /// @notice An event emitted when the proposal threshold is set
+    event ProposalThresholdSet(uint256 oldProposalThreshold, uint256 newProposalThreshold);
 
     /// @notice An event emitted when the voting period is set
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
@@ -79,11 +81,14 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
     /// @notice The delay before executing a proposal takes place, once queued
     uint256 public executingDelay;
 
+    /// @notice The duration of voting on a proposal, in blocks
+    uint256 public votingPeriod;
+
     /// @notice The delay before voting on a proposal may take place, once proposed, in blocks
     uint256 public votingDelay;
 
-    /// @notice The duration of voting on a proposal, in blocks
-    uint256 public votingPeriod;
+    /// @notice The threshold grade required to propose
+    uint256 public proposalThreshold;
 
     /// @notice The total number of proposals
     uint256 public proposalCount;
@@ -102,9 +107,6 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         uint256 id;
         /// @notice Creator of the proposal
         address proposer;
-
-        /// @notice The number of votes needed to create a proposal at the time of proposal creation. *DIFFERS from GovernerBravo
-        uint256 proposalThreshold;
 
         /// @notice The timestamp that the proposal will be available for execution, set once the vote succeeds
         uint256 eta;
