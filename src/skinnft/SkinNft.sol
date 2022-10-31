@@ -67,7 +67,7 @@ contract SkinNft is ISkinNft, ERC721A {
         freemintQuantity[_address] += quantity;
     }
 
-    function check_free_mintable(address _address)
+    function checkFreeMintable(address _address)
         external
         view
         returns (uint256)
@@ -75,7 +75,7 @@ contract SkinNft is ISkinNft, ERC721A {
         return freemintQuantity[_address];
     }
 
-    function free_mint() external returns (uint256) {
+    function freeMint() external returns (uint256) {
         uint256 quantity = freemintQuantity[msg.sender];
         require(quantity != 0, "NOT FREEMINTABLE");
         freemintQuantity[msg.sender] = 0;
