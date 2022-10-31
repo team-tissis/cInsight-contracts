@@ -31,6 +31,9 @@ contract ChainInsightGovernanceEventsV1 {
     /// @notice An event emitted when a proposal has been executed in the ChainInsightExecutor
     event ProposalExecuted(uint256 id);
 
+    /// @notice An event emitted when a proposal has been vetoed by vetoAddress
+    event ProposalVetoed(uint256 id);
+
     /// @notice An event emitted when the executing delay is set
     event ExecutingDelaySet(uint256 oldExecutingDelay, uint256 newExecutingDelay);
 
@@ -54,6 +57,12 @@ contract ChainInsightGovernanceEventsV1 {
 
     /// @notice Emitted when pendingAdmin is accepted, which means admin is updated
     event NewAdmin(address oldAdmin, address newAdmin);
+
+    /// @notice Emitted when pendingVetoer is changed.
+    event NewPendingVetoer(address oldPendingVetoer, address newPendingVetoer);
+
+    /// @notice Emitted when vetoer is changed
+    event NewVetoer(address oldVetoer, address newVetoer);
 }
 
 
@@ -75,6 +84,12 @@ contract ChainInsightGovernanceProxyStorage {
  * ChainInsightStorageVX.
  */
 contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
+    /// @notice Vetoer who has the ability to veto any proposal
+    address public vetoer;
+
+    /// @notice Pending new vetoer
+    address public pendingVetoer;
+
     /// @notice Grace period for which transactions are allowed to stay in queueTransactions
     uint256 public executingGracePeriod;
 
@@ -165,7 +180,8 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         Succeeded,
         Queued,
         Expired,
-        Executed
+        Executed,
+        Vetoed
     }
 }
 

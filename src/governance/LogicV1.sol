@@ -51,13 +51,13 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     /**
      * @notice Used to initialize the contract during delegator contructor
      * @param executorContract_ The address of the Executor
-     * @param admin_ The address of the admin
+     * @param vetoer_ The address allowed to unilaterally veto proposals
      * @param votingPeriod_ The initial voting period
      * @param votingDelay_ The initial voting delay
      */
     function initialize(
         address executorContract_,
-        address admin_,
+        address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
         uint256 votingPeriod_,
@@ -67,7 +67,6 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         require(address(executorContract) == address(0), 'LogicV1::initialize: can only initialize once');
 
         require(executorContract_ != address(0), 'LogicV1::initialize: invalid Executor address');
-        require(admin_ != address(0), 'LogicV1::initialize: invalid admin address');
 
         require(
             executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD && executingGracePeriod_ <= MAX_EXECUTING_GRACE_PERIOD,
@@ -99,7 +98,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
         executorContract = IChainInsightExecutor(executorContract_);
-        admin = admin_;
+        vetoer = vetoer_;
 
         executingGracePeriod = executingGracePeriod_;
         executingDelay = executingDelay_;
@@ -171,6 +170,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         newProposal.abstainVotes = 0;
         newProposal.canceled = false;
         newProposal.executed = false;
+        newProposal.vetoed = false;
 
         latestProposalIds[msg.sender] = newProposal.id;
 
@@ -283,6 +283,31 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     }
 
     /**
+     * @notice Vetoes a proposal only if sender is the vetoer and the proposal has not been executed.
+     * @param proposalId The id of the proposal to veto
+     */
+    function veto(uint256 proposalId) external {
+        require(vetoer != address(0), 'LogicV1::veto: veto power burned');
+        require(msg.sender == vetoer, 'LogicV1::veto: only vetoer');
+        require(state(proposalId) != ProposalState.Executed, 'LogicV1::veto: cannot veto executed proposal');
+
+        Proposal storage proposal = proposals[proposalId];
+
+        proposal.vetoed = true;
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            executorContract.cancelTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta
+            );
+        }
+
+        emit ProposalVetoed(proposalId);
+    }
+
+    /**
      * @notice Gets the receipt for a voter on a given proposal
      * @param proposalId the id of proposal
      * @param voter The address of the voter
@@ -301,7 +326,9 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         require(proposalCount >= proposalId, 'LogicV1::state: invalid proposal id');
 
         Proposal storage proposal = proposals[proposalId];
-        if (proposal.canceled) {
+        if (proposal.vetoed) {
+            return ProposalState.Vetoed;
+        } else if (proposal.canceled) {
             return ProposalState.Canceled;
 
         } else if (block.number <= proposal.startBlock) {
@@ -534,6 +561,47 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
 
         emit NewAdmin(oldAdmin, admin);
         emit NewPendingAdmin(oldPendingAdmin, pendingAdmin);
+    }
+
+    /**
+     * @notice Begins transition of vetoer. The newPendingVetoer must call _acceptVetoer to finalize the transfer.
+     * @param newPendingVetoer New Pending Vetoer
+     */
+    function _setPendingVetoer(address newPendingVetoer) public {
+        require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
+
+        emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
+
+        pendingVetoer = newPendingVetoer;
+    }
+
+    function _acceptVetoer() external {
+        require(msg.sender == pendingVetoer && msg.sender != address(0), 'LogicV1::veto: pending vetoer only');
+
+        // Update vetoer
+        emit NewVetoer(vetoer, pendingVetoer);
+        vetoer = pendingVetoer;
+
+        // Clear the pending value
+        emit NewPendingVetoer(pendingVetoer, address(0));
+        pendingVetoer = address(0);
+    }
+
+    /**
+     * @notice Burns veto priviledges
+     * @dev Vetoer function destroying veto power forever
+     */
+    function _burnVetoPower() public {
+        // Check caller is vetoer
+        require(msg.sender == vetoer, 'LogicV1::_burnVetoPower: vetoer only');
+
+        // Update vetoer to 0x0
+        emit NewVetoer(vetoer, address(0));
+        vetoer = address(0);
+
+        // Clear the pending value
+        emit NewPendingVetoer(pendingVetoer, address(0));
+        pendingVetoer = address(0);
     }
 
     function getChainIdInternal() internal view returns (uint256) {
