@@ -6,7 +6,7 @@ library SbtLib {
     bytes32 constant SBT_STRUCT_POSITION = keccak256("chaininsight");
 
     struct SbtStruct {
-        address contractOwner;
+        address admin;
         string name;
         string symbol;
         string baseURI;
@@ -27,7 +27,6 @@ library SbtLib {
         uint8[] nftNumRate; // grade 1, 2, 3, 4, 5
         uint8 lastUpdatedMonth;
         address nftAddress;
-        ISkinNft skinNft;
     }
 
     // get struct stored at posititon

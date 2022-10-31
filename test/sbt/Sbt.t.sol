@@ -21,14 +21,7 @@ contract SbtTest is Test {
         imp = new SbtImp();
         skinNft = new SkinNft();
 
-        sbt.init(
-            owner,
-            "ChainInsight",
-            "SBT",
-            "example://",
-            keccak256(abi.encodePacked(validator)),
-            address(skinNft)
-        );
+        sbt.init(owner, "ChainInsight", "SBT", "example://", address(skinNft));
         skinNft.init(address(sbt));
         bytes4[] memory sigs = new bytes4[](2);
         address[] memory impAddress = new address[](2);
@@ -43,7 +36,7 @@ contract SbtTest is Test {
     function testInit() public {
         assertEq(sbt.name(), "ChainInsight");
         assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.contractOwner(), owner);
+        assertEq(sbt.admin(), owner);
     }
 
     function testSupportsInterface() public {
@@ -92,17 +85,17 @@ contract SbtTest is Test {
     //     );
     // }
 
-    // function testSetContractOwner() public {
+    // function testSetadmin() public {
     //     address newOwner = address(3);
     //     vm.prank(owner);
     //     (, bytes memory result) = address(sbt).call(
-    //         abi.encodeWithSignature("setContractOwner(address)", newOwner)
+    //         abi.encodeWithSignature("setadmin(address)", newOwner)
     //     );
-    //     assertEq(sbt.contractOwner(), newOwner);
+    //     assertEq(sbt.admin(), newOwner);
 
     //     vm.expectRevert(bytes("OWNER ONLY"));
     //     address(sbt).call(
-    //         abi.encodeWithSignature("setContractOwner(address)", newOwner)
+    //         abi.encodeWithSignature("setadmin(address)", newOwner)
     //     );
     // }
 }

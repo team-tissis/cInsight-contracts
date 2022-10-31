@@ -9,7 +9,7 @@ import "./../skinnft/ISkinNft.sol";
 contract SbtImp {
     modifier onlyOwner() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
+        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
         _;
     }
 
@@ -91,7 +91,8 @@ contract SbtImp {
 
     function setFreemintQuantity(address _address, uint256 quantity) public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.skinNft.setFreemintQuantity(_address, quantity);
+        require(msg.sender == sbtstruct.admin, "ONLY ADMIN CAN SET FREEMINT");
+        ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, quantity);
     }
 
     // chaininsight functions
@@ -169,11 +170,11 @@ contract SbtImp {
             if (i <= accountNum / 20) {
                 // 上位 5%
                 sbtstruct.grades[_address] = 5;
-                sbtstruct.skinNft.setFreemintQuantity(_address, 2);
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, 2);
             } else if (i <= accountNum / 5) {
                 // 上位 20%
                 sbtstruct.grades[_address] = 4;
-                sbtstruct.skinNft.setFreemintQuantity(_address, 1);
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, 1);
             } else if (i <= (accountNum / 5) * 2) {
                 // 上位 40%
                 sbtstruct.grades[_address] = 3;
@@ -210,33 +211,36 @@ contract SbtImp {
         uint upperBound = 5;
         (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
-        if (connectFlag && _dist < upperBound){
+        if (connectFlag && _dist < upperBound) {
             sbtstruct.makis[userTo] = _dist;
-        } else{
+        } else {
             sbtstruct.makis[userTo] = upperBound;
         }
     }
 
-    function _distance(address node1, address node2) internal view returns (uint, bool){
+    function _distance(address node1, address node2)
+        internal
+        view
+        returns (uint, bool)
+    {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
         uint _dist1;
         uint _dist2;
         bool connectFlag = false;
 
-        while (node1 != address(0)){
-            if(node1 == node2){
+        while (node1 != address(0)) {
+            if (node1 == node2) {
                 connectFlag = true;
                 break;
-            } 
-            else {
-                while (node2 != address(0)){
+            } else {
+                while (node2 != address(0)) {
                     node2 = sbtstruct.referralMap[node2];
                     _dist2 += 1;
-                    if(node1 == node2){
+                    if (node1 == node2) {
                         connectFlag = true;
                         break;
-                    }                   
+                    }
                 }
                 node1 = sbtstruct.referralMap[node1];
                 _dist1 += 1;
@@ -249,8 +253,15 @@ contract SbtImp {
     function refer(address userTo) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
-        require(sbtstruct.referralMap[userTo] == address(0), "THIS USER HAS ALREADY REFFERD");
-        require(sbtstruct.referrals[msg.sender] <= sbtstruct.referralRate[sbtstruct.grades[msg.sender]], "REFFER LIMIT EXCEEDED");
+        require(
+            sbtstruct.referralMap[userTo] == address(0),
+            "THIS USER HAS ALREADY REFFERD"
+        );
+        require(
+            sbtstruct.referrals[msg.sender] <=
+                sbtstruct.referralRate[sbtstruct.grades[msg.sender]],
+            "REFFER LIMIT EXCEEDED"
+        );
         sbtstruct.referralMap[userTo] = msg.sender;
         sbtstruct.referrals[msg.sender] += 1;
     }

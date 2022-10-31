@@ -5,24 +5,19 @@ import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
 contract SkinNft is ISkinNft, ERC721A {
+    constructor() ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN") {}
+
+    address sbtAddress;
     string baseURI;
-
-    constructor(string memory _baseURI)
-        ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
-    {
-        baseURI = _baseURI;
-    }
-
-    address sbtInterfaceAddress;
     mapping(address => uint256) public freemintQuantity;
     mapping(address => uint256) public _icon;
 
-    function init(address sbtAddress) external {
+    function init(address _sbtAddress) external {
         require(
-            sbtInterfaceAddress == address(0),
+            sbtAddress == address(0),
             "The contract is already initialized"
         );
-        sbtInterfaceAddress = sbtAddress;
+        sbtAddress = _sbtAddress;
     }
 
     function mint(uint256 quantity) external payable {
@@ -47,7 +42,7 @@ contract SkinNft is ISkinNft, ERC721A {
         address to,
         uint256 tokenId
     ) public payable override(ERC721A) {
-        require(_icon[from] != tokneId, "THE TOKEN IS SET TO YOUR ICON");
+        require(_icon[from] != tokenId, "THE TOKEN IS SET TO YOUR ICON");
         super.transferFrom(from, to, tokenId);
     }
 
@@ -61,18 +56,10 @@ contract SkinNft is ISkinNft, ERC721A {
 
     function setFreemintQuantity(address _address, uint256 quantity) external {
         require(
-            msg.sender == sbtInterfaceAddress,
+            msg.sender == sbtAddress,
             "SET FREEMINT IS ONLY ALLOWED TO SBT CONTRACT"
         );
         freemintQuantity[_address] += quantity;
-    }
-
-    function checkFreeMintable(address _address)
-        external
-        view
-        returns (uint256)
-    {
-        return freemintQuantity[_address];
     }
 
     function freeMint() external returns (uint256) {
@@ -88,42 +75,33 @@ contract SkinNft is ISkinNft, ERC721A {
         return baseURI;
     }
 
-    function setBaseURI(string memory _newBaseURI) external onlyOwner {
+    function setBaseURI(string memory _newBaseURI) external {
+        require(
+            msg.sender == sbtAddress,
+            "setBaseURI is only allowed to SBT CONTRACT"
+        );
         baseURI = _newBaseURI;
     }
 
-    function tokenURI(uint256 _tokenId) external view returns (string memory) {
-        return string(abi.encodePacked(baseURI, toString(_tokenId), ".json"));
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+        return
+            bytes(baseURI).length != 0
+                ? string(abi.encodePacked(baseURI, _toString(tokenId), ".json"))
+                : "";
     }
 
     function withdraw() external {
         require(
-            msg.sender == sbtInterfaceAddress,
+            msg.sender == sbtAddress,
             "WITHDRAW IS ONLY ALLOWED TO SBT CONTRACT"
         );
-        payable(owner()).transfer(address(this).balance);
-    }
-
-    function toString(uint256 value) internal pure returns (string memory) {
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            unchecked {
-                digits++;
-                temp /= 10;
-            }
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            unchecked {
-                digits -= 1;
-                buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-                value /= 10;
-            }
-        }
-        return string(buffer);
+        payable(msg.sender).transfer(address(this).balance);
     }
 }

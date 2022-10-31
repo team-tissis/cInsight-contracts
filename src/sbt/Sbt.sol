@@ -7,28 +7,25 @@ import "./../skinnft/ISkinNft.sol";
 contract Sbt {
     modifier onlyOwner() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
+        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
         _;
     }
-    event ContractOwnerChanged(address _newOwner);
+    event adminChanged(address _newOwner);
 
     function init(
-        address _contractOwner,
+        address _admin,
         string calldata _name,
         string calldata _symbol,
         string calldata _baseURI,
-        bytes32 _validator,
         address _nftAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.contractOwner == address(0), "INITIATED ALREADY");
-        sbtstruct.contractOwner = _contractOwner;
+        require(sbtstruct.admin == address(0), "INITIATED ALREADY");
+        sbtstruct.admin = _admin;
         sbtstruct.name = _name;
         sbtstruct.symbol = _symbol;
         sbtstruct.baseURI = _baseURI;
-        sbtstruct.validator = _validator;
         sbtstruct.nftAddress = _nftAddress;
-        sbtstruct.skinNft = ISkinNft(_nftAddress);
         sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
         sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
     }
@@ -41,7 +38,7 @@ contract Sbt {
         address[] calldata _impAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
+        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
         require(_sigs.length == _impAddress.length, "INVALID LENGTH");
         for (uint256 i = 0; i < _sigs.length; i++) {
             unchecked {
@@ -50,9 +47,9 @@ contract Sbt {
         }
     }
 
-    function contractOwner() external view returns (address) {
+    function admin() external view returns (address) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.contractOwner;
+        return sbtstruct.admin;
     }
 
     // supportしているERCversionなど
@@ -94,10 +91,10 @@ contract Sbt {
         sbtstruct.baseURI = _newBaseURI;
     }
 
-    function setContractOwner(address _newContactOwner) external onlyOwner {
+    function setadmin(address _newContactOwner) external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.contractOwner = _newContactOwner;
-        emit ContractOwnerChanged(_newContactOwner);
+        sbtstruct.admin = _newContactOwner;
+        emit adminChanged(_newContactOwner);
     }
 
     function getFavo(address _address) external view returns (uint) {
