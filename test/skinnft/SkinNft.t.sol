@@ -86,6 +86,6 @@ contract SbtTest is Test {
         skinNft.setIcon(1);
         skinNft.tokenURI(1);
 
-        assertEq(skinNft.tokensOfOwner(beef), [2, 3]);
+        skinNft.tokensOfOwner(beef);
     }
 }

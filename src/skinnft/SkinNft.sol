@@ -2,14 +2,13 @@
 pragma solidity ^0.8.16;
 
 import "./ERC721AQueryable.sol";
-import "./ERC721A.sol";
 import "./ISkinNft.sol";
 
-contract SkinNft is ISkinNft, ERC721AQueryable {
+contract SkinNft is ERC721AQueryable, ISkinNft {
     string baseURI;
 
     constructor(string memory _baseURI)
-        ERC721AQueryable("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
+        ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
     {
         baseURI = _baseURI;
     }
@@ -47,7 +46,7 @@ contract SkinNft is ISkinNft, ERC721AQueryable {
         address from,
         address to,
         uint256 tokenId
-    ) public payable override(ERC721AQueryable) {
+    ) public payable override(IERC721A, ERC721A) {
         require(_icon[from] != tokenId, "THE TOKEN IS SET TO YOUR ICON");
         super.transferFrom(from, to, tokenId);
     }
@@ -87,20 +86,6 @@ contract SkinNft is ISkinNft, ERC721AQueryable {
             "setBaseURI is only allowed to SBT CONTRACT"
         );
         baseURI = _newBaseURI;
-    }
-
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override(ERC721A)
-        returns (string memory)
-    {
-        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-        return
-            bytes(baseURI).length != 0
-                ? string(abi.encodePacked(baseURI, _toString(tokenId), ".json"))
-                : "";
     }
 
     function withdraw() external {
