@@ -7,7 +7,7 @@ import "./../libs/QuickSort.sol";
 import "./../skinnft/ISkinNft.sol";
 
 contract SbtImp {
-    modifier onlyOwner() {
+    modifier onlyAdmin() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.admin, "OWNER ONLY");
         _;
@@ -19,42 +19,28 @@ contract SbtImp {
         uint256 indexed _tokenId
     );
 
-    function mint() public payable {
-        require(msg.sender != address(0));
+    function mint() public payable returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
+        require(msg.value >= sbtstruct.sbtPrice, "Need to send more ETH.");
+        require(msg.sender != address(0));
         require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
-        _mint(sbtstruct);
+        sbtstruct.mintIndex += 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
+        sbtstruct.grades[msg.sender] = 1;
+        if (msg.value > sbtstruct.sbtPrice) {
+            payable(msg.sender).transfer(msg.value - sbtstruct.sbtPrice);
+        }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+        return sbtstruct.mintIndex;
     }
 
     function mintWithReferral(address referrer) public payable {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
-        _mintWithReferral(sbtstruct, referrer);
-        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
-    }
-
-    function _mint(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint costForMint = 20 ether;
-        require(msg.value >= costForMint, "Need to send more ETH.");
-
-        sbtstruct.mintIndex += 1;
-        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
-        sbtstruct.grades[msg.sender] = 1;
-
-        if (msg.value > costForMint) {
-            payable(msg.sender).transfer(msg.value - costForMint);
-        }
-    }
-
-    function _mintWithReferral(
-        SbtLib.SbtStruct storage sbtstruct,
-        address referrer
-    ) internal {
-        uint costForMint = 15 ether;
-        uint incentiveForReferrer = 10 ether;
-        require(msg.value >= costForMint, "Need to send more ETH.");
+        require(
+            msg.value >= sbtstruct.sbtReferralPrice,
+            "Need to send more ETH."
+        );
 
         require(
             sbtstruct.referralMap[msg.sender] == referrer,
@@ -65,11 +51,14 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
 
-        payable(referrer).transfer(incentiveForReferrer);
+        payable(referrer).transfer(sbtstruct.sbtReferralIncentive);
 
-        if (msg.value > costForMint) {
-            payable(msg.sender).transfer(msg.value - costForMint);
+        if (msg.value > sbtstruct.sbtReferralPrice) {
+            payable(msg.sender).transfer(
+                msg.value - sbtstruct.sbtReferralPrice
+            );
         }
+        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
 
     function burn(uint _tokenId) external {
@@ -96,7 +85,7 @@ contract SbtImp {
     }
 
     // chaininsight functions
-    function impInit() external onlyOwner {
+    function impInit() external onlyAdmin {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.favoNum = 20;
         sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
@@ -258,8 +247,9 @@ contract SbtImp {
             "THIS USER HAS ALREADY REFFERD"
         );
         require(
-            sbtstruct.referrals[msg.sender] <=
-                sbtstruct.referralRate[sbtstruct.grades[msg.sender]],
+            sbtstruct.grades[msg.sender] > 0 &&
+                sbtstruct.referrals[msg.sender] <=
+                sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
             "REFFER LIMIT EXCEEDED"
         );
         sbtstruct.referralMap[userTo] = msg.sender;

@@ -28,6 +28,9 @@ contract Sbt {
         sbtstruct.nftAddress = _nftAddress;
         sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
         sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
+        sbtstruct.sbtPrice = 20 ether;
+        sbtstruct.sbtReferralPrice = 15 ether;
+        sbtstruct.sbtReferralIncentive = 10 ether;
     }
 
     mapping(bytes4 => address) public implementations;

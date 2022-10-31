@@ -8,35 +8,45 @@ import "./../../src/sbt/SbtImp.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
 contract SbtTest is Test {
-    address owner = address(420);
+    address admin = address(0xad000);
     address validator;
     Sbt internal sbt;
     SbtImp internal imp;
     SkinNft internal skinNft;
 
     function setUp() public {
-        validator = vm.addr(1);
-
         sbt = new Sbt();
         imp = new SbtImp();
-        skinNft = new SkinNft("");
+        skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
 
-        sbt.init(owner, "ChainInsight", "SBT", "example://", address(skinNft));
+        sbt.init(
+            admin,
+            "ChainInsight",
+            "SBT",
+            "https://thechaininsight.github.io/sbt/",
+            address(skinNft)
+        );
         skinNft.init(address(sbt));
-        bytes4[] memory sigs = new bytes4[](2);
-        address[] memory impAddress = new address[](2);
-        sigs[0] = bytes4(keccak256("mint(address,uint256,uint256,bytes)"));
-        sigs[1] = bytes4(keccak256("setFreemintQuantity(address,uint256)"));
+        bytes4[] memory sigs = new bytes4[](4);
+        address[] memory impAddress = new address[](4);
+        sigs[0] = bytes4(keccak256("mint()"));
+        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
+        sigs[2] = bytes4(keccak256("refer(address)"));
+        sigs[3] = bytes4(keccak256("impInit()"));
         impAddress[0] = address(imp);
         impAddress[1] = address(imp);
-        vm.prank(owner);
+        impAddress[2] = address(imp);
+        impAddress[3] = address(imp);
+        vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
+        vm.prank(admin);
+        address(sbt).call(abi.encodeWithSignature("impInit()"));
     }
 
     function testInit() public {
         assertEq(sbt.name(), "ChainInsight");
         assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.admin(), owner);
+        assertEq(sbt.admin(), admin);
     }
 
     function testSupportsInterface() public {
@@ -44,46 +54,26 @@ contract SbtTest is Test {
         assertEq(sbt.supportsInterface(0x5b5e139f), true);
     }
 
-    function testSetFreemintQuantity() public {
-        assertEq(skinNft.getFreemintQuantity(address(0xBEEF)), 0);
-        vm.prank(owner);
-        address(sbt).call(
-            abi.encodeWithSignature(
-                "setFreemintQuantity(address,uint256)",
-                address(0xBEEF),
-                uint256(2)
-            )
-        );
-        assertEq(skinNft.getFreemintQuantity(address(0xBEEF)), 2);
-    }
-    // function testMint() public {
-    //     bytes32 _messagehash = keccak256(
-    //         abi.encode(validator, address(0xBEEF), uint256(0), uint256(0))
-    //     );
-    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, _messagehash);
-    //     vm.prank(validator);
-    //     address(sbt).call(
-    //         abi.encodeWithSignature(
-    //             "mint(address,uint256,uint256,bytes)",
-    //             address(0xBEEF),
-    //             uint256(0),
-    //             uint256(0),
-    //             abi.encodePacked(r, s, v)
-    //         )
-    //     );
-    //     assertEq(sbt.tokenURI(0), "example://0.json");
+    function testMint() public {
+        address beef = address(0xBEEF);
+        address thisContract = address(this);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        assertEq(sbt.ownerOf(1), thisContract);
+        vm.prank(beef);
+        vm.expectRevert(bytes("Need to send more ETH"));
+        address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
 
-    //     vm.expectRevert(bytes("INVALID"));
-    //     address(sbt).call(
-    //         abi.encodeWithSignature(
-    //             "mint(address,uint256,uint256,bytes)",
-    //             address(0xBEEF),
-    //             uint256(999),
-    //             uint256(999),
-    //             abi.encodePacked(r, s, v)
-    //         )
-    //     );
-    // }
+        // test referral mint
+        payable(beef).transfer(20 ether);
+        console.log(address(sbt).balance);
+
+        vm.prank(thisContract);
+        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        vm.prank(beef);
+        address(sbt).call{value: 15 ether}(
+            abi.encodeWithSignature("mintWithReferral(address)", thisContract)
+        );
+    }
 
     // function testSetadmin() public {
     //     address newOwner = address(3);

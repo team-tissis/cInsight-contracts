@@ -12,7 +12,7 @@ library SbtLib {
         string baseURI;
         bytes32 validator;
         mapping(bytes4 => bool) interfaces;
-        mapping(uint => address) owners; // token_id -> address
+        mapping(uint256 => address) owners; // token_id -> address
         mapping(address => uint) favos; // favoした回数
         mapping(address => uint) makis;
         mapping(address => uint) grades;
@@ -27,6 +27,9 @@ library SbtLib {
         uint8[] nftNumRate; // grade 1, 2, 3, 4, 5
         uint8 lastUpdatedMonth;
         address nftAddress;
+        uint256 sbtPrice;
+        uint256 sbtReferralPrice;
+        uint256 sbtReferralIncentive;
     }
 
     // get struct stored at posititon
