@@ -18,9 +18,7 @@ contract SbtImp {
         address indexed _to,
         uint256 indexed _tokenId
     );
-    event ContractOwnerChanged(address _newOwner);
 
-    // 0x731133e9
     function mint() public payable {
         require(msg.sender != address(0));
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
@@ -91,78 +89,13 @@ contract SbtImp {
         emit Transfer(currentOwner, address(0), _tokenId);
     }
 
-    function setBaseUri(string memory _newBaseURI) external onlyOwner {
+    function setFreemintQuantity(address _address, uint256 quantity) public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.baseURI = _newBaseURI;
-    }
-
-    function setContractOwner(address _newContactOwner) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.contractOwner = _newContactOwner;
-        emit ContractOwnerChanged(_newContactOwner);
-    }
-
-    function getFavo(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.favos[_address];
-    }
-
-    function getMaki(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.makis[_address];
-    }
-
-    function getGrade(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.grades[_address];
-    }
-
-    function getRate(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.rates[_address];
-    }
-
-    function getReferral(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referrals[_address];
-    }
-
-    function getNftPoint(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.nftPoints[_address];
-    }
-
-    function getFavoNum() external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.favoNum;
-    }
-
-    function setFavoNum(uint8 _favoNum) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.favoNum = _favoNum;
-    }
-
-    function getReferralRate() external view returns (uint8[] memory) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referralRate;
-    }
-
-    function setReferralRate(uint8[] memory _referralRate) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
-        // TODO: referralRateのサイズを大きくしたときの挙動
-        for (uint i = 0; i < _referralRate.length; i++) {
-            sbtstruct.referralRate[i] = _referralRate[i];
-        }
-    }
-
-    function getLastUpdatedMonth() external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.lastUpdatedMonth;
+        sbtstruct.skinNft.setFreemintQuantity(_address, quantity);
     }
 
     // chaininsight functions
-    function imp_init() external onlyOwner {
+    function impInit() external onlyOwner {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.favoNum = 20;
         sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
@@ -174,7 +107,7 @@ contract SbtImp {
         }
     }
 
-    function month_init() public {
+    function monthInit() public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(
             DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth
@@ -198,7 +131,7 @@ contract SbtImp {
             address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
 
             if (sbtstruct.favos[_address] == sbtstruct.favoNum) {
-                sbtstruct.makis[_address] += 5;
+                sbtstruct.makis[_address] += 10;
             }
         }
     }
@@ -212,11 +145,6 @@ contract SbtImp {
                 sbtstruct.rates[_address] /
                 4;
         }
-    }
-
-    function setFreemintQuantity(address _address, uint256 quantity) public {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.skinNft.setFreemintQuantity(_address, quantity);
     }
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
@@ -277,7 +205,45 @@ contract SbtImp {
         }
 
         sbtstruct.favos[msg.sender] = addFavoNum;
-        sbtstruct.makis[userTo] += favo; // makiの計算
+
+        // makiの計算
+        uint upperBound = 5;
+        (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
+
+        if (connectFlag && _dist < upperBound){
+            sbtstruct.makis[userTo] = _dist;
+        } else{
+            sbtstruct.makis[userTo] = upperBound;
+        }
+    }
+
+    function _distance(address node1, address node2) internal view returns (uint, bool){
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
+        uint _dist1;
+        uint _dist2;
+        bool connectFlag = false;
+
+        while (node1 != address(0)){
+            if(node1 == node2){
+                connectFlag = true;
+                break;
+            } 
+            else {
+                while (node2 != address(0)){
+                    node2 = sbtstruct.referralMap[node2];
+                    _dist2 += 1;
+                    if(node1 == node2){
+                        connectFlag = true;
+                        break;
+                    }                   
+                }
+                node1 = sbtstruct.referralMap[node1];
+                _dist1 += 1;
+                _dist2 = 0;
+            }
+        }
+        return (_dist1 + _dist2, connectFlag);
     }
 
     function refer(address userTo) external {
