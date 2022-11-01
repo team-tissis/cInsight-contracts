@@ -27,7 +27,7 @@ library SbtLib {
         address nftAddress;
         uint16 mintIndex;
         uint16 burnNum;
-        uint16 favoNum;
+        uint16 monthlyDistributedFavoNum;
         uint8 gradeNum;
         uint8 lastUpdatedMonth;
         uint8 favoUseUpIncentive;

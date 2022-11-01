@@ -149,8 +149,9 @@ contract Sbt is ISbt {
     }
 
     // set functions
-    function setMonthlyDistributedFavoNum(uint256 _monthlyDistributedFavoNum)
-        external onlyAdmin
+    function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
+        external
+        onlyAdmin
     {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.monthlyDistributedFavoNum = _monthlyDistributedFavoNum;
@@ -160,23 +161,32 @@ contract Sbt is ISbt {
         uint8[] memory _referralRate,
         uint8[] memory _skinnftNumRate,
         uint8[] memory _gradeRate
-    ) external onlyAdmin{
+    ) external onlyAdmin {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint256 gradeNum = sbtstruct.gradeNum
+        uint256 gradeNum = sbtstruct.gradeNum;
         require(_referralRate.length == gradeNum, "INVALID LENGTH");
         require(_skinnftNumRate.length == gradeNum, "INVALID LENGTH");
         require(_gradeRate.length == gradeNum, "INVALID LENGTH");
-        sbtstruct.gradeNum = _referralRate.length
         for (uint256 i = 0; i < gradeNum; i++) {
             sbtstruct.referralRate[i] = _referralRate[i]; // referal rate. grade 1, 2, 3, 4, 5
-            sbtstruct.skinnftNumRate = _skinnftNumRate[i]; // allocated skinnft for each grade. grade 1, 2, 3, 4, 5
-            sbtstruct.gradeRate = _gradeRate[i]; // percentage of each grade. grade 1, 2, 3, 4, 5
+            sbtstruct.skinnftNumRate[i] = _skinnftNumRate[i]; // allocated skinnft for each grade. grade 1, 2, 3, 4, 5
+            sbtstruct.gradeRate[i] = _gradeRate[i]; // percentage of each grade. grade 1, 2, 3, 4, 5
         }
     }
 
-    function setSbtPrice(uint256 _sbtPrice, uint256 _sbtReferralPrice, uint256 _sbtReferralIncentive) external onlyAdmin{
-        require(_sbtReferralPrice>=_sbtReferralIncentive, "REFERRAL PRICE MUST BE BIGGER THAN REFERRAL INCENTIVE")
-        require(_sbtPrice>=_sbtReferralPrice, "SBT PRICE MUST BE BIGGER THAN REFERRAL PRICE")
+    function setSbtPrice(
+        uint256 _sbtPrice,
+        uint256 _sbtReferralPrice,
+        uint256 _sbtReferralIncentive
+    ) external onlyAdmin {
+        require(
+            _sbtReferralPrice >= _sbtReferralIncentive,
+            "REFERRAL PRICE MUST BE BIGGER THAN REFERRAL INCENTIVE"
+        );
+        require(
+            _sbtPrice >= _sbtReferralPrice,
+            "SBT PRICE MUST BE BIGGER THAN REFERRAL PRICE"
+        );
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.sbtPrice = _sbtPrice;
         sbtstruct.sbtReferralPrice = _sbtReferralPrice;
@@ -226,7 +236,10 @@ contract Sbt is ISbt {
     }
 
     function transferEth(uint256 ethValue, address _address) external {
-        require(msg.sender==address(this), "MSG sender must be this contract");
+        require(
+            msg.sender == address(this),
+            "MSG sender must be this contract"
+        );
         payable(_address).call{value: ethValue}("");
     }
 

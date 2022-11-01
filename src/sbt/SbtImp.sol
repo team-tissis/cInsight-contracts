@@ -30,7 +30,10 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
         if (msg.value > sbtstruct.sbtPrice) {
-            ISbt(address(this)).transferEth(msg.value - sbtstruct.sbtPrice, msg.sender);
+            ISbt(address(this)).transferEth(
+                msg.value - sbtstruct.sbtPrice,
+                msg.sender
+            );
             // payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
@@ -54,11 +57,15 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
 
-        ISbt(address(this)).transferEth(sbtstruct.sbtReferralIncentive, referrer);
+        ISbt(address(this)).transferEth(
+            sbtstruct.sbtReferralIncentive,
+            referrer
+        );
 
         if (msg.value > sbtstruct.sbtReferralPrice) {
             ISbt(address(this)).transferEth(
-                msg.value - sbtstruct.sbtReferralPrice, msg.sender
+                msg.value - sbtstruct.sbtReferralPrice,
+                msg.sender
             );
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
@@ -81,7 +88,6 @@ contract SbtImp {
         sbtstruct.makiMemorys[msg.sender] = 0;
         sbtstruct.makis[msg.sender] = 0;
         sbtstruct.referrals[msg.sender] = 0;
-        sbtstruct.nftPoints[msg.sender] = 0;
         sbtstruct.burnNum += 1;
 
         emit Transfer(currentOwner, address(0), _tokenId);
@@ -109,7 +115,8 @@ contract SbtImp {
     function monthInit() public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(
-            DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth, "monthInit is already executed for this month"
+            DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth,
+            "monthInit is already executed for this month"
         );
 
         _updatemaki(sbtstruct);
@@ -125,7 +132,9 @@ contract SbtImp {
                 sbtstruct.makiMemorys[_address] +
                 (sbtstruct.makis[_address] * sbtstruct.makiDecayRate) /
                 100;
-            if (sbtstruct.favos[_address] == sbtstruct.monthlyDistributedFavoNum) {
+            if (
+                sbtstruct.favos[_address] == sbtstruct.monthlyDistributedFavoNum
+            ) {
                 sbtstruct.makis[_address] += sbtstruct.favoUseUpIncentive;
             }
         }
@@ -151,12 +160,15 @@ contract SbtImp {
         // burnされていない account 中の上位 x %を計算.
         for (uint i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
-            for (uint j = 0; j < gradeNum, j++){
+            for (uint j = 0; j < gradeNum; j++) {
                 if (i * 100 > accountNum * sbtstruct.gradeRate[j])
-                // set grade
-                sbtstruct.grades[_address] = j + 1;
-                // set skin nft freemint 
-                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, sbtstruct.skinnftNumRate[j]);
+                    // set grade
+                    sbtstruct.grades[_address] = j + 1;
+                // set skin nft freemint
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
+                    _address,
+                    sbtstruct.skinnftNumRate[j]
+                );
                 // initialize referral and favos
                 sbtstruct.favos[_address] = 0;
                 sbtstruct.referrals[_address] = 0;
@@ -172,8 +184,12 @@ contract SbtImp {
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
         uint addmonthlyDistributedFavoNum;
-        require(sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender], "INVALID ARGUMENT");
-        uint remainFavo = sbtstruct.monthlyDistributedFavoNum - sbtstruct.favos[msg.sender];
+        require(
+            sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender],
+            "INVALID ARGUMENT"
+        );
+        uint remainFavo = sbtstruct.monthlyDistributedFavoNum -
+            sbtstruct.favos[msg.sender];
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
         if (remainFavo <= favo) {
