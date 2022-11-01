@@ -225,7 +225,7 @@ contract SbtImp {
         );
         require(
             sbtstruct.grades[msg.sender] >= 1 &&
-                sbtstruct.referrals[msg.sender] <=
+                sbtstruct.referrals[msg.sender] <
                 sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
             "REFER LIMIT EXCEEDED"
         );

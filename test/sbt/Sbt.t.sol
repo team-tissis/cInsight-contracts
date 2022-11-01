@@ -52,26 +52,52 @@ contract SbtTest is Test {
     }
 
     function testMint() public {
-        address beef = address(0xBEEF);
-        address thisContract = address(this);
+        address manA = address(0xa);
+        payable(manA).call{value: 40 ether}("");
+
+        address manB = address(0xb);
+        payable(manB).call{value: 40 ether}("");
+
+        address manC = address(0xc);
+        payable(manC).call{value: 40 ether}("");
+
+        address manD = address(0xd);
+        payable(manD).call{value: 40 ether}("");
+
+        address manE = address(0xe);
+        payable(manE).call{value: 40 ether}("");
+
+        address manF = address(0xf);
+        payable(manF).call{value: 40 ether}("");
+
+        address beef = address(0xbeef);
+        payable(beef).call{value: 40 ether}("");
+
+        vm.prank(manA);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
-        assertEq(sbt.ownerOf(1), thisContract);
-        vm.prank(beef);
-        vm.expectRevert(bytes("Need to send more ETH"));
-        address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
-        assertEq(address(sbt).balance, 20 ether);
+        assertEq(sbt.ownerOf(1), manA);
+        assertEq(20, manA.balance);
+        assertEq(20, address(sbt).balance);
 
-        // test referral mint
-        payable(beef).call{value: 20 ether}("");
+        vm.prank(manB);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        assertEq(sbt.ownerOf(2), manB);
+        // vm.prank(beef);
+        // vm.expectRevert(bytes("Need to send more ETH"));
+        // address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
+        // assertEq(address(sbt).balance, 20 ether);
 
-        vm.prank(thisContract);
-        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
-        vm.prank(beef);
-        address(sbt).call{value: 20 ether}(
-            abi.encodeWithSignature("mintWithReferral(address)", thisContract)
-        );
-        assertEq(address(sbt).balance, 25 ether);
-        assertEq(address(beef).balance, 5 ether);
+        // // test referral mint
+
+        // vm.prank(thisContract);
+        // address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        // vm.prank(beef);
+        // address(sbt).call{value: 20 ether}(
+        //     abi.encodeWithSignature("mintWithReferral(address)", thisContract)
+        // );
+
+        // assertEq(address(sbt).balance, 25 ether);
+        // assertEq(address(beef).balance, 5 ether);
     }
 
     // function testSetadmin() public {
