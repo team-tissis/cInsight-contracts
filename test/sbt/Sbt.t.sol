@@ -128,27 +128,24 @@ contract SbtTest is Test {
 
         //month init
         address(sbt).call(abi.encodeWithSignature("monthInit()"));
-        assertEq(sbt.makiOf(manA), 5);
-        sbt.gradeOf()
-
-
-
-        // vm.prank(beef);
-        // vm.expectRevert(bytes("Need to send more ETH"));
-        // address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
-        // assertEq(address(sbt).balance, 20 ether);
+        assertEq(sbt.makiOf(manA), 1);
+        assertEq(sbt.gradeOf(manA), 2);
+        assertEq(sbt.gradeOf(manB), 4);
+        assertEq(sbt.gradeOf(manC), 3);
+        assertEq(sbt.gradeOf(manD), 2);
+        assertEq(sbt.gradeOf(manE), 1);
 
         // // test referral mint
 
-        // vm.prank(thisContract);
-        // address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
-        // vm.prank(beef);
-        // address(sbt).call{value: 20 ether}(
-        //     abi.encodeWithSignature("mintWithReferral(address)", thisContract)
-        // );
+        vm.prank(manB);
+        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        vm.prank(beef);
+        address(sbt).call{value: 20 ether}(
+            abi.encodeWithSignature("mintWithReferral(address)", manB)
+        );
 
-        // assertEq(address(sbt).balance, 25 ether);
-        // assertEq(address(beef).balance, 5 ether);
+        assertEq(address(manB).balance, 30 ether);
+        assertEq(address(beef).balance, 25 ether);
     }
 
     // function testSetadmin() public {
