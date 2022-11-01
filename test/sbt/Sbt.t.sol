@@ -38,7 +38,6 @@ contract SbtTest is Test {
         impAddress[3] = address(imp);
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
-        vm.prank(admin);
     }
 
     function testInit() public {
