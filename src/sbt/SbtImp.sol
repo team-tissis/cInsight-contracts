@@ -115,43 +115,53 @@ contract SbtImp {
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
         uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint gradeNum = sbtstruct.gradeNum;
         uint16[] memory makiSortedIndex = new uint16[](accountNum);
         uint32[] memory makiArray = new uint32[](accountNum);
+        uint256[] memory gradeThreshold = new uint256[](gradeNum);
 
         uint count;
+        uint j;
         for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             if (_address != address(0)) {
-                count += 1;
                 makiSortedIndex[count] = uint16(i);
                 makiArray[count] = uint32(sbtstruct.makis[_address]);
+                count += 1;
             }
         }
         makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
-        uint256 gradeNum = sbtstruct.gradeNum;
-
+        gradeNum--;
+        for (j = 0; j < gradeNum; j++) {
+            gradeThreshold[j] = accountNum * sbtstruct.gradeRate[j];
+        }
+        uint256 tmp_count;
         // burnされていない account 中の上位 x %を計算.
         for (uint i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
+            tmp_count = 1;
             for (uint j = 0; j < gradeNum; j++) {
-                if (i * 100 > accountNum * sbtstruct.gradeRate[j])
-                    // set grade
-                    sbtstruct.grades[_address] = j + 1;
+                if (i * 100 >= gradeThreshold[j]) {
+                    break;
+                }
+                tmp_count++;
+                // set grade
+                sbtstruct.grades[_address] = j + 2;
                 // set skin nft freemint
                 ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
                     _address,
-                    sbtstruct.skinnftNumRate[j]
+                    sbtstruct.skinnftNumRate[j + 1]
                 );
                 // initialize referral and favos
-                sbtstruct.favos[_address] = 0;
-                sbtstruct.referrals[_address] = 0;
             }
+            sbtstruct.favos[_address] = 0;
+            sbtstruct.referrals[_address] = 0;
         }
     }
 
     // functions for frontend
     function addFavos(address userTo, uint8 favo) external {
-        require(favo > 0, "INVALID ARGUMENT");
+        require(favo > 0, "favo num must be bigger than 0");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
@@ -178,9 +188,13 @@ contract SbtImp {
         (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            sbtstruct.makiMemorys[userTo] = _dist * favo;
+            sbtstruct.makiMemorys[userTo] =
+                _dist *
+                addmonthlyDistributedFavoNum;
         } else {
-            sbtstruct.makiMemorys[userTo] = upperBound * favo;
+            sbtstruct.makiMemorys[userTo] =
+                upperBound *
+                addmonthlyDistributedFavoNum;
         }
     }
 

@@ -26,16 +26,18 @@ contract SbtTest is Test {
             address(skinNft)
         );
         skinNft.init(address(sbt));
-        bytes4[] memory sigs = new bytes4[](4);
-        address[] memory impAddress = new address[](4);
+        bytes4[] memory sigs = new bytes4[](5);
+        address[] memory impAddress = new address[](5);
         sigs[0] = bytes4(keccak256("mint()"));
         sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
         sigs[2] = bytes4(keccak256("refer(address)"));
-        sigs[3] = bytes4(keccak256("impInit()"));
+        sigs[3] = bytes4(keccak256("monthInit()"));
+        sigs[4] = bytes4(keccak256("addFavos(address,uint8)"));
         impAddress[0] = address(imp);
         impAddress[1] = address(imp);
         impAddress[2] = address(imp);
         impAddress[3] = address(imp);
+        impAddress[4] = address(imp);
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
     }
@@ -76,12 +78,61 @@ contract SbtTest is Test {
         vm.prank(manA);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(1), manA);
-        assertEq(20, manA.balance);
-        assertEq(20, address(sbt).balance);
+        assertEq(20 ether, manA.balance);
+        assertEq(20 ether, address(sbt).balance);
 
         vm.prank(manB);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(2), manB);
+
+        vm.prank(manC);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        vm.prank(manD);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        vm.prank(manE);
+        bool zero;
+        bytes memory retData;
+        (zero, retData) = address(sbt).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
+        assertEq(abi.decode(retData, (uint256)), 5);
+        assertEq(sbt.mintedTokenNumber(), 5);
+
+        // test add favo
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manB, 10)
+        );
+        assertEq(sbt.favoOf(manA), 10);
+        assertEq(sbt.makiMemoryOf(manB), 50);
+
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manC, 9)
+        );
+        assertEq(sbt.favoOf(manA), 19);
+        assertEq(sbt.makiMemoryOf(manC), 45);
+
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manD, 3)
+        );
+        assertEq(sbt.favoOf(manA), 20);
+        assertEq(sbt.makiMemoryOf(manD), 5);
+
+        vm.expectRevert(bytes("favo num must be bigger than 0"));
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manC, 0)
+        );
+
+        //month init
+        address(sbt).call(abi.encodeWithSignature("monthInit()"));
+        assertEq(sbt.makiOf(manA), 5);
+        sbt.gradeOf()
+
+
+
         // vm.prank(beef);
         // vm.expectRevert(bytes("Need to send more ETH"));
         // address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));

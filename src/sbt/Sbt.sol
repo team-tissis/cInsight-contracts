@@ -34,11 +34,16 @@ contract Sbt {
         sbtstruct.sbtReferralIncentive = 10 ether;
         sbtstruct.monthlyDistributedFavoNum = 20;
         sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
+        sbtstruct.favoUseUpIncentive = 1;
+        sbtstruct.makiDecayRate = 90;
+        sbtstruct.gradeNum = 5;
         uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
+        uint8[5] memory _gradeRate = [20, 60, 80, 95, 100]; // grade 1,2,3,4,5
         for (uint i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
             sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
+            sbtstruct.gradeRate.push(_gradeRate[i]);
         }
     }
 
@@ -144,7 +149,7 @@ contract Sbt {
         return sbtstruct.referralRate;
     }
 
-    function lastUpdatedMonth() external view returns (uint) {
+    function lastupdatedmonth() external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.lastUpdatedMonth;
     }
@@ -153,6 +158,11 @@ contract Sbt {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         if (!isReferral) return sbtstruct.sbtPrice;
         else return sbtstruct.sbtReferralPrice;
+    }
+
+    function mintedTokenNumber() external view returns (uint) {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.mintIndex;
     }
 
     // set functions

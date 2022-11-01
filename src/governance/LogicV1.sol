@@ -1,11 +1,14 @@
 pragma solidity ^0.8.16;
 
-import './InterfacesV1.sol';
-import '../libs/SbtLib.sol';
+import "./InterfacesV1.sol";
+import "../libs/SbtLib.sol";
 
-contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGovernanceEventsV1 {
+contract ChainInsightLogicV1 is
+    ChainInsightGovernanceStorageV1,
+    ChainInsightGovernanceEventsV1
+{
     /// @notice The name of this contract
-    string public constant name = 'Chain Insight Governance';
+    string public constant name = "Chain Insight Governance";
 
     /// @notice The minimum setable executing grace period
     uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 11_520; // About 2 days
@@ -17,7 +20,6 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
 
     /// @notice The max setable executing delay
     uint256 public constant MAX_EXECUTING_DELAY = 172_800;
-
 
     /// @notice The minimum setable voting period
     uint256 public constant MIN_VOTING_PERIOD = 5_760; // About 24 hours
@@ -42,11 +44,13 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
 
     /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH =
-        keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
+        keccak256(
+            "EIP712Domain(string name,uint256 chainId,address verifyingContract)"
+        );
 
     /// @notice The EIP-712 typehash for the ballot struct used by the contract
-    bytes32 public constant BALLOT_TYPEHASH = keccak256('Ballot(uint256 proposalId,uint8 support)');
-
+    bytes32 public constant BALLOT_TYPEHASH =
+        keccak256("Ballot(uint256 proposalId,uint8 support)");
 
     /**
      * @notice Used to initialize the contract during delegator contructor
@@ -64,34 +68,48 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         uint256 votingDelay_,
         uint256 proposalThreshold_
     ) public {
-        require(address(executorContract) == address(0), 'LogicV1::initialize: can only initialize once');
-
-        require(executorContract_ != address(0), 'LogicV1::initialize: invalid Executor address');
-
         require(
-            executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD && executingGracePeriod_ <= MAX_EXECUTING_GRACE_PERIOD,
-            'LogicV1::initialize: invalid executing grace period'
-        );
-        require(
-            executingDelay_ >= MIN_EXECUTING_DELAY && executingDelay_ <= MAX_EXECUTING_DELAY,
-            'LogicV1::initialize: invalid executing delay'
+            address(executorContract) == address(0),
+            "LogicV1::initialize: can only initialize once"
         );
 
         require(
-            votingPeriod_ >= MIN_VOTING_PERIOD && votingPeriod_ <= MAX_VOTING_PERIOD,
-            'LogicV1::initialize: invalid voting period'
-        );
-        require(
-            votingDelay_ >= MIN_VOTING_DELAY && votingDelay_ <= MAX_VOTING_DELAY,
-            'LogicV1::initialize: invalid voting delay'
+            executorContract_ != address(0),
+            "LogicV1::initialize: invalid Executor address"
         );
 
         require(
-            proposalThreshold_ >= MIN_PROPOSAL_THRESHOLD && votingDelay_ <= MAX_PROPOSAL_THRESHOLD,
-            'LogicV1::initialize: invalid voting delay'
+            executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD &&
+                executingGracePeriod_ <= MAX_EXECUTING_GRACE_PERIOD,
+            "LogicV1::initialize: invalid executing grace period"
+        );
+        require(
+            executingDelay_ >= MIN_EXECUTING_DELAY &&
+                executingDelay_ <= MAX_EXECUTING_DELAY,
+            "LogicV1::initialize: invalid executing delay"
         );
 
-        emit ExecutingGracePeriodSet(executingGracePeriod, executingGracePeriod_);
+        require(
+            votingPeriod_ >= MIN_VOTING_PERIOD &&
+                votingPeriod_ <= MAX_VOTING_PERIOD,
+            "LogicV1::initialize: invalid voting period"
+        );
+        require(
+            votingDelay_ >= MIN_VOTING_DELAY &&
+                votingDelay_ <= MAX_VOTING_DELAY,
+            "LogicV1::initialize: invalid voting delay"
+        );
+
+        require(
+            proposalThreshold_ >= MIN_PROPOSAL_THRESHOLD &&
+                votingDelay_ <= MAX_PROPOSAL_THRESHOLD,
+            "LogicV1::initialize: invalid voting delay"
+        );
+
+        emit ExecutingGracePeriodSet(
+            executingGracePeriod,
+            executingGracePeriod_
+        );
         emit ExecutingDelaySet(executingDelay, executingDelay_);
         emit VotingPeriodSet(votingPeriod, votingPeriod_);
         emit VotingDelaySet(votingDelay, votingDelay_);
@@ -124,31 +142,36 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     ) public returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        require(
-            sbtstruct.grade[msg.sender] >= proposalThreshold,
-            'LogicV1::propose: proposer must hold Bonfire SBT'
-        );
+        // require(
+        //     sbtstruct.grade[msg.sender] >= proposalThreshold,
+        //     'LogicV1::propose: proposer must hold Bonfire SBT'
+        // );
 
         require(
             targets.length == values.length &&
                 targets.length == signatures.length &&
                 targets.length == calldatas.length,
-            'LogicV1::propose: proposal function information arity mismatch'
+            "LogicV1::propose: proposal function information arity mismatch"
         );
-        require(targets.length != 0, 'LogicV1::propose: must provide actions');
-        require(targets.length <= proposalMaxOperations, 'LogicV1::propose: too many actions');
+        require(targets.length != 0, "LogicV1::propose: must provide actions");
+        require(
+            targets.length <= proposalMaxOperations,
+            "LogicV1::propose: too many actions"
+        );
 
         /// @notice Ensure that msg.sender currently does not have active or pending proposals
         uint256 latestProposalId = latestProposalIds[msg.sender];
         if (latestProposalId != 0) {
-            ProposalState proposersLatestProposalState = state(latestProposalId);
+            ProposalState proposersLatestProposalState = state(
+                latestProposalId
+            );
             require(
                 proposersLatestProposalState != ProposalState.Active,
-                'LogicV1::propose: one live proposal per proposer, found an already active proposal'
+                "LogicV1::propose: one live proposal per proposer, found an already active proposal"
             );
             require(
                 proposersLatestProposalState != ProposalState.Pending,
-                'LogicV1::propose: one live proposal per proposer, found an already pending proposal'
+                "LogicV1::propose: one live proposal per proposer, found an already pending proposal"
             );
         }
 
@@ -197,7 +220,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     function queue(uint256 proposalId) external {
         require(
             state(proposalId) == ProposalState.Succeeded,
-            'LogicV1::queue: proposal can only be queued if it is succeeded'
+            "LogicV1::queue: proposal can only be queued if it is succeeded"
         );
         Proposal storage proposal = proposals[proposalId];
 
@@ -224,8 +247,10 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         uint256 eta
     ) internal {
         require(
-            !executorContract.transactionIsQueued(keccak256(abi.encode(target, value, signature, data, eta))),
-            'LogicV1::queueOrRevertInternal: identical proposal action already queued at eta'
+            !executorContract.transactionIsQueued(
+                keccak256(abi.encode(target, value, signature, data, eta))
+            ),
+            "LogicV1::queueOrRevertInternal: identical proposal action already queued at eta"
         );
         executorContract.queueTransaction(target, value, signature, data, eta);
     }
@@ -237,7 +262,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     function execute(uint256 proposalId) external {
         require(
             state(proposalId) == ProposalState.Queued,
-            'LogicV1::execute: proposal can only be executed if it is queued'
+            "LogicV1::execute: proposal can only be executed if it is queued"
         );
         Proposal storage proposal = proposals[proposalId];
         proposal.executed = true;
@@ -260,12 +285,15 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param proposalId The id of the proposal to cancel
      */
     function cancel(uint256 proposalId) external {
-        require(state(proposalId) != ProposalState.Executed, 'LogicV1::cancel: cannot cancel executed proposal');
+        require(
+            state(proposalId) != ProposalState.Executed,
+            "LogicV1::cancel: cannot cancel executed proposal"
+        );
 
         Proposal storage proposal = proposals[proposalId];
         require(
             msg.sender == proposal.proposer,
-            'LogicV1::cancel: only proposer can cancel proposal'
+            "LogicV1::cancel: only proposer can cancel proposal"
         );
 
         proposal.canceled = true;
@@ -287,9 +315,12 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param proposalId The id of the proposal to veto
      */
     function veto(uint256 proposalId) external {
-        require(vetoer != address(0), 'LogicV1::veto: veto power burned');
-        require(msg.sender == vetoer, 'LogicV1::veto: only vetoer');
-        require(state(proposalId) != ProposalState.Executed, 'LogicV1::veto: cannot veto executed proposal');
+        require(vetoer != address(0), "LogicV1::veto: veto power burned");
+        require(msg.sender == vetoer, "LogicV1::veto: only vetoer");
+        require(
+            state(proposalId) != ProposalState.Executed,
+            "LogicV1::veto: cannot veto executed proposal"
+        );
 
         Proposal storage proposal = proposals[proposalId];
 
@@ -313,7 +344,11 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param voter The address of the voter
      * @return The voting receipt
      */
-    function getReceipt(uint256 proposalId, address voter) external view returns (Receipt memory) {
+    function getReceipt(uint256 proposalId, address voter)
+        external
+        view
+        returns (Receipt memory)
+    {
         return proposals[proposalId].receipts[voter];
     }
 
@@ -323,32 +358,28 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @return Proposal state
      */
     function state(uint256 proposalId) public view returns (ProposalState) {
-        require(proposalCount >= proposalId, 'LogicV1::state: invalid proposal id');
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::state: invalid proposal id"
+        );
 
         Proposal storage proposal = proposals[proposalId];
         if (proposal.vetoed) {
             return ProposalState.Vetoed;
         } else if (proposal.canceled) {
             return ProposalState.Canceled;
-
         } else if (block.number <= proposal.startBlock) {
             return ProposalState.Pending;
-
         } else if (block.number <= proposal.endBlock) {
             return ProposalState.Active;
-
         } else if (proposal.forVotes <= proposal.againstVotes) {
             return ProposalState.Defeated;
-
         } else if (proposal.eta == 0) {
             return ProposalState.Succeeded;
-
         } else if (proposal.executed) {
             return ProposalState.Executed;
-
         } else if (block.timestamp >= proposal.eta + executingGracePeriod) {
             return ProposalState.Expired;
-
         } else {
             return ProposalState.Queued;
         }
@@ -360,7 +391,13 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param support The support value for the vote. 0=against, 1=for, 2=abstain
      */
     function castVote(uint256 proposalId, uint8 support) external {
-        emit VoteCast(msg.sender, proposalId, support, castVoteInternal(msg.sender, proposalId, support), '');
+        emit VoteCast(
+            msg.sender,
+            proposalId,
+            support,
+            castVoteInternal(msg.sender, proposalId, support),
+            ""
+        );
     }
 
     /**
@@ -374,7 +411,13 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         uint8 support,
         string calldata reason
     ) external {
-        emit VoteCast(msg.sender, proposalId, support, castVoteInternal(msg.sender, proposalId, support), reason);
+        emit VoteCast(
+            msg.sender,
+            proposalId,
+            support,
+            castVoteInternal(msg.sender, proposalId, support),
+            reason
+        );
     }
 
     /**
@@ -389,13 +432,31 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         bytes32 s
     ) external {
         bytes32 domainSeparator = keccak256(
-            abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainIdInternal(), address(this))
+            abi.encode(
+                DOMAIN_TYPEHASH,
+                keccak256(bytes(name)),
+                getChainIdInternal(),
+                address(this)
+            )
         );
-        bytes32 structHash = keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', domainSeparator, structHash));
+        bytes32 structHash = keccak256(
+            abi.encode(BALLOT_TYPEHASH, proposalId, support)
+        );
+        bytes32 digest = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
         address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), 'LogicV1::castVoteBySig: invalid signature');
-        emit VoteCast(signatory, proposalId, support, castVoteInternal(signatory, proposalId, support), '');
+        require(
+            signatory != address(0),
+            "LogicV1::castVoteBySig: invalid signature"
+        );
+        emit VoteCast(
+            signatory,
+            proposalId,
+            support,
+            castVoteInternal(signatory, proposalId, support),
+            ""
+        );
     }
 
     /**
@@ -410,18 +471,24 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
         uint256 proposalId,
         uint8 support
     ) internal returns (uint96) {
-        require(state(proposalId) == ProposalState.Active, 'LogicV1::castVoteInternal: voting is closed');
+        require(
+            state(proposalId) == ProposalState.Active,
+            "LogicV1::castVoteInternal: voting is closed"
+        );
 
-        require(support <= 2, 'LogicV1::castVoteInternal: invalid vote type');
+        require(support <= 2, "LogicV1::castVoteInternal: invalid vote type");
         Proposal storage proposal = proposals[proposalId];
 
         Receipt storage receipt = proposal.receipts[voter];
-        require(receipt.hasVoted == false, 'LogicV1::castVoteInternal: voter already voted');
+        require(
+            receipt.hasVoted == false,
+            "LogicV1::castVoteInternal: voter already voted"
+        );
 
         /// @notice retrieve voting weight of voter
         uint96 votes = getVotes(voter);
 
-        require(votes > 0, 'LogicV1::propose: voter must hold Bonfire SBT');
+        require(votes > 0, "LogicV1::propose: voter must hold Bonfire SBT");
 
         if (support == 0) {
             proposal.againstVotes = proposal.againstVotes + votes;
@@ -445,12 +512,15 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     function _setExecutingGracePeriod(uint256 newExecutingGracePeriod) public {
         require(
             msg.sender == admin,
-            'Executor::_setExecutingDelay: admin only'
+            "Executor::_setExecutingDelay: admin only"
         );
         uint256 oldExecutingGracePeriod = executingGracePeriod;
         executingGracePeriod = newExecutingGracePeriod;
 
-        emit ExecutingGracePeriodSet(oldExecutingGracePeriod, newExecutingGracePeriod);
+        emit ExecutingGracePeriodSet(
+            oldExecutingGracePeriod,
+            newExecutingGracePeriod
+        );
     }
 
     /**
@@ -460,7 +530,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     function _setExecutingDelay(uint256 newExecutingDelay) public {
         require(
             msg.sender == admin,
-            'Executor::_setExecutingDelay: admin only'
+            "Executor::_setExecutingDelay: admin only"
         );
         uint256 oldExecutingDelay = executingDelay;
         executingDelay = newExecutingDelay;
@@ -473,13 +543,11 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param newVotingDelay new voting delay, in blocks
      */
     function _setVotingDelay(uint256 newVotingDelay) external {
+        require(msg.sender == admin, "LogicV1::_setVotingDelay: admin only");
         require(
-            msg.sender == admin,
-            'LogicV1::_setVotingDelay: admin only'
-        );
-        require(
-            newVotingDelay >= MIN_VOTING_DELAY && newVotingDelay <= MAX_VOTING_DELAY,
-            'LogicV1::_setVotingDelay: invalid voting delay'
+            newVotingDelay >= MIN_VOTING_DELAY &&
+                newVotingDelay <= MAX_VOTING_DELAY,
+            "LogicV1::_setVotingDelay: invalid voting delay"
         );
         uint256 oldVotingDelay = votingDelay;
         votingDelay = newVotingDelay;
@@ -492,13 +560,11 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param newVotingPeriod new voting period, in blocks
      */
     function _setVotingPeriod(uint256 newVotingPeriod) external {
+        require(msg.sender == admin, "LogicV1::_setVotingPeriod: admin only");
         require(
-            msg.sender == admin,
-            'LogicV1::_setVotingPeriod: admin only'
-        );
-        require(
-            newVotingPeriod >= MIN_VOTING_PERIOD && newVotingPeriod <= MAX_VOTING_PERIOD,
-            'LogicV1::_setVotingPeriod: invalid voting period'
+            newVotingPeriod >= MIN_VOTING_PERIOD &&
+                newVotingPeriod <= MAX_VOTING_PERIOD,
+            "LogicV1::_setVotingPeriod: invalid voting period"
         );
         uint256 oldVotingPeriod = votingPeriod;
         votingPeriod = newVotingPeriod;
@@ -513,11 +579,12 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     function _setProposalThreshold(uint256 newProposalThreshold) external {
         require(
             msg.sender == admin,
-            'LogicV1::_setProposalThreshold: admin only'
+            "LogicV1::_setProposalThreshold: admin only"
         );
         require(
-            newProposalThreshold >= MIN_PROPOSAL_THRESHOLD && newProposalThreshold <= MAX_PROPOSAL_THRESHOLD,
-            'LogicV1::_setVotingPeriod: invalid proposal threshold'
+            newProposalThreshold >= MIN_PROPOSAL_THRESHOLD &&
+                newProposalThreshold <= MAX_PROPOSAL_THRESHOLD,
+            "LogicV1::_setVotingPeriod: invalid proposal threshold"
         );
         uint256 oldProposalThreshold = proposalThreshold;
         proposalThreshold = newProposalThreshold;
@@ -531,7 +598,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param newPendingAdmin New pending admin.
      */
     function _setPendingAdmin(address newPendingAdmin) external {
-        require(msg.sender == admin, 'LogicV1::_setPendingAdmin: admin only');
+        require(msg.sender == admin, "LogicV1::_setPendingAdmin: admin only");
 
         // Save current value, if any, for inclusion in log
         address oldPendingAdmin = pendingAdmin;
@@ -547,7 +614,10 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @dev Admin function for pending admin to accept role and update admin
      */
     function _acceptAdmin() external {
-        require(msg.sender == pendingAdmin && msg.sender != address(0), 'LogicV1::_acceptAdmin: pending admin only');
+        require(
+            msg.sender == pendingAdmin && msg.sender != address(0),
+            "LogicV1::_acceptAdmin: pending admin only"
+        );
 
         // Save current values for inclusion in log
         address oldAdmin = admin;
@@ -568,7 +638,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      * @param newPendingVetoer New Pending Vetoer
      */
     function _setPendingVetoer(address newPendingVetoer) public {
-        require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
+        require(msg.sender == vetoer, "LogicV1::veto: vetoer only");
 
         emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
 
@@ -576,7 +646,10 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
     }
 
     function _acceptVetoer() external {
-        require(msg.sender == pendingVetoer && msg.sender != address(0), 'LogicV1::veto: pending vetoer only');
+        require(
+            msg.sender == pendingVetoer && msg.sender != address(0),
+            "LogicV1::veto: pending vetoer only"
+        );
 
         // Update vetoer
         emit NewVetoer(vetoer, pendingVetoer);
@@ -593,7 +666,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
      */
     function _burnVetoPower() public {
         // Check caller is vetoer
-        require(msg.sender == vetoer, 'LogicV1::_burnVetoPower: vetoer only');
+        require(msg.sender == vetoer, "LogicV1::_burnVetoPower: vetoer only");
 
         // Update vetoer to 0x0
         emit NewVetoer(vetoer, address(0));
@@ -614,7 +687,7 @@ contract ChainInsightLogicV1 is ChainInsightGovernanceStorageV1, ChainInsightGov
 
     function getVotes(address voter) internal view returns (uint96) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint96 votes = sbtstruct.grade[voter];
-        return votes;
+        // uint96 votes = sbtstruct.grade[voter];
+        // return votes;
     }
 }
