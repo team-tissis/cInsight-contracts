@@ -2,10 +2,9 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
-import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
 
-contract Sbt is ISbt {
+contract Sbt {
     modifier onlyAdmin() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.admin, "ADMIN ONLY");

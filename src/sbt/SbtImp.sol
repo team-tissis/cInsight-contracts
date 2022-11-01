@@ -2,7 +2,6 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
-import "./ISbt.sol";
 import "./../libs/DateTime.sol";
 import "./../libs/QuickSort.sol";
 import "./../skinnft/ISkinNft.sol";
