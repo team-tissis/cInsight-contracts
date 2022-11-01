@@ -96,13 +96,13 @@ contract SbtImp {
     // chaininsight functions
     function impInit() external onlyAdmin {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.favoNum = 20;
+        sbtstruct.monthlyDistributedFavoNum = 20;
         sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
         uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
-        uint8[5] memory _nftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
+        uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
         for (uint i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
-            sbtstruct.nftNumRate.push(_nftNumRate[i]);
+            sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
         }
     }
 
@@ -112,39 +112,22 @@ contract SbtImp {
             DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth
         );
 
-        _addMakiMemoryForDoneFavo(sbtstruct);
         _updatemaki(sbtstruct);
         _updateGrade(sbtstruct);
-
         // burn されたアカウントも代入計算を行なっている．
         // TODO: sstore 0->0 はガス代がかなり安いらしいが，より良い実装はありうる．
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
-            address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
-            sbtstruct.favos[_address] = 0;
-            sbtstruct.referrals[_address] = 0;
-        }
-    }
-
-    function _addMakiMemoryForDoneFavo(SbtLib.SbtStruct storage sbtstruct)
-        internal
-    {
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
-            address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
-
-            if (sbtstruct.favos[_address] == sbtstruct.favoNum) {
-                sbtstruct.makiMemorys[_address] += 10;
-            }
-        }
     }
 
     function _updatemaki(SbtLib.SbtStruct storage sbtstruct) internal {
         for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
-
             sbtstruct.makis[_address] =
                 sbtstruct.makiMemorys[_address] +
-                (sbtstruct.makis[_address] * 9) /
-                10;
+                (sbtstruct.makis[_address] * sbtstruct.makiDecayRate) /
+                100;
+            if (sbtstruct.favos[_address] == sbtstruct.monthlyDistributedFavoNum) {
+                sbtstruct.makis[_address] += sbtstruct.favoUseUpIncentive;
+            }
         }
     }
 
@@ -163,26 +146,20 @@ contract SbtImp {
             }
         }
         makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
+        uint256 gradeNum = sbtstruct.gradeNum;
 
         // burnされていない account 中の上位 x %を計算.
         for (uint i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
-            if (i <= accountNum / 20) {
-                // 上位 5%
-                sbtstruct.grades[_address] = 5;
-                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, 2);
-            } else if (i <= accountNum / 5) {
-                // 上位 20%
-                sbtstruct.grades[_address] = 4;
-                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, 1);
-            } else if (i <= (accountNum / 5) * 2) {
-                // 上位 40%
-                sbtstruct.grades[_address] = 3;
-            } else if (i <= (accountNum / 5) * 4) {
-                // 上位 80%
-                sbtstruct.grades[_address] = 2;
-            } else {
-                sbtstruct.grades[_address] = 1;
+            for (uint j = 0; j < gradeNum, j++){
+                if (i * 100 > accountNum * sbtstruct.gradeRate[j])
+                // set grade
+                sbtstruct.grades[_address] = j + 1;
+                // set skin nft freemint 
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, sbtstruct.skinnftNumRate[j]);
+                // initialize referral and favos
+                sbtstruct.favos[_address] = 0;
+                sbtstruct.referrals[_address] = 0;
             }
         }
     }
@@ -194,18 +171,18 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
-        uint addFavoNum;
-        uint remainFavo = sbtstruct.favoNum - sbtstruct.favos[msg.sender];
+        uint addmonthlyDistributedFavoNum;
+        uint remainFavo = sbtstruct.monthlyDistributedFavoNum - sbtstruct.favos[msg.sender];
         require(remainFavo >= 0, "INVALID ARGUMENT");
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
         if (remainFavo <= favo) {
-            addFavoNum = remainFavo;
+            addmonthlyDistributedFavoNum = remainFavo;
         } else {
-            addFavoNum = favo;
+            addmonthlyDistributedFavoNum = favo;
         }
 
-        sbtstruct.favos[msg.sender] += addFavoNum;
+        sbtstruct.favos[msg.sender] += addmonthlyDistributedFavoNum;
 
         // makiMemoryの計算
         uint upperBound = 5;

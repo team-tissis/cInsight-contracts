@@ -10,7 +10,6 @@ library SbtLib {
         string name;
         string symbol;
         string baseURI;
-        bytes32 validator;
         mapping(bytes4 => bool) interfaces;
         mapping(uint256 => address) owners; // token_id -> address
         mapping(address => uint) favos; // favoした回数
@@ -18,18 +17,21 @@ library SbtLib {
         mapping(address => uint) grades;
         mapping(address => uint) makiMemorys;
         mapping(address => uint) referrals; // リファラルした回数
-        mapping(address => uint) nftPoints; // nft付与権限数
         mapping(address => address) referralMap; // mapping(to => from)
-        uint16 mintIndex;
-        uint16 burnNum;
-        uint16 favoNum;
-        uint8[] referralRate; // grade 1, 2, 3, 4, 5
-        uint8[] nftNumRate; // grade 1, 2, 3, 4, 5
-        uint8 lastUpdatedMonth;
-        address nftAddress;
+        uint8[] referralRate; // referal rate. grade 1, 2, 3, 4, 5
+        uint8[] skinnftNumRate; // allocated skinnft for each grade. grade 1, 2, 3, 4, 5
+        uint8[] gradeRate; // percentage of each grade. grade 1, 2, 3, 4, 5
         uint256 sbtPrice;
         uint256 sbtReferralPrice;
         uint256 sbtReferralIncentive;
+        address nftAddress;
+        uint16 mintIndex;
+        uint16 burnNum;
+        uint16 favoNum;
+        uint8 gradeNum;
+        uint8 lastUpdatedMonth;
+        uint8 favoUseUpIncentive;
+        uint8 makiDecayRate;
     }
 
     // get struct stored at posititon

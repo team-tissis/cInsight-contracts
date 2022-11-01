@@ -9,7 +9,6 @@ import "./../../src/skinnft/SkinNft.sol";
 
 contract SbtTest is Test {
     address admin = address(0xad000);
-    address validator;
     Sbt internal sbt;
     SbtImp internal imp;
     SkinNft internal skinNft;
