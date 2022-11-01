@@ -39,7 +39,6 @@ contract SbtTest is Test {
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
         vm.prank(admin);
-        address(sbt).call(abi.encodeWithSignature("impInit()"));
     }
 
     function testInit() public {
@@ -63,16 +62,19 @@ contract SbtTest is Test {
         address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
         assertEq(address(sbt).balance, 20 ether);
 
-        // test referral mint
-        payable(beef).call{value: 20 ether}("");
+        // console.log(tx.origin);
+        // console.log(address(this));
 
-        vm.prank(thisContract);
-        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
-        vm.prank(beef);
-        address(sbt).call{value: 15 ether}(
-            abi.encodeWithSignature("mintWithReferral(address)", thisContract)
-        );
-        assertEq(address(sbt).balance, 25 ether);
+        // test referral mint
+        // payable(beef).call{value: 20 ether}("");
+
+        // vm.prank(thisContract);
+        // address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        // vm.prank(beef);
+        // address(sbt).call{value: 15 ether}(
+        //     abi.encodeWithSignature("mintWithReferral(address)", thisContract)
+        // );
+        // assertEq(address(sbt).balance, 25 ether);
     }
 
     // function testSetadmin() public {
@@ -88,4 +90,5 @@ contract SbtTest is Test {
     //         abi.encodeWithSignature("setadmin(address)", newOwner)
     //     );
     // }
+    receive() external payable {}
 }
