@@ -3,51 +3,47 @@
 pragma solidity 0.8.16;
 
 import "forge-std/Test.sol";
-import "../Sbt.sol";
-import "../SbtImp.sol";
+import "./../../src/sbt/Sbt.sol";
+import "./../../src/sbt/SbtImp.sol";
+import "./../../src/skinnft/SkinNft.sol";
 
 contract SbtTest is Test {
-    address owner = address(420);
-    address validator;
+    address admin = address(0xad000);
     Sbt internal sbt;
     SbtImp internal imp;
+    SkinNft internal skinNft;
 
     function setUp() public {
-        validator = vm.addr(1);
-
         sbt = new Sbt();
         imp = new SbtImp();
+        skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
 
         sbt.init(
-            owner,
-            "Wagumi SBT",
+            admin,
+            "ChainInsight",
             "SBT",
-            "example://",
-            keccak256(abi.encodePacked(validator))
+            "https://thechaininsight.github.io/sbt/",
+            address(skinNft)
         );
-
+        skinNft.init(address(sbt));
         bytes4[] memory sigs = new bytes4[](4);
         address[] memory impAddress = new address[](4);
-        sigs[0] = bytes4(keccak256("mint(address,uint256,uint256,bytes)"));
-        sigs[1] = bytes4(keccak256("setValidator(bytes32)"));
-        sigs[2] = bytes4(keccak256("getValidator()"));
-        sigs[3] = bytes4(keccak256("setContractOwner(address)"));
+        sigs[0] = bytes4(keccak256("mint()"));
+        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
+        sigs[2] = bytes4(keccak256("refer(address)"));
+        sigs[3] = bytes4(keccak256("impInit()"));
         impAddress[0] = address(imp);
         impAddress[1] = address(imp);
         impAddress[2] = address(imp);
         impAddress[3] = address(imp);
-        vm.prank(owner);
+        vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
-
-        address(sbt).call(
-            abi.encodeWithSignature("setValidator(address)", validator)
-        );
     }
 
     function testInit() public {
-        assertEq(sbt.name(), "Wagumi SBT");
+        assertEq(sbt.name(), "ChainInsight");
         assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.contractOwner(), owner);
+        assertEq(sbt.admin(), admin);
     }
 
     function testSupportsInterface() public {
@@ -55,53 +51,41 @@ contract SbtTest is Test {
         assertEq(sbt.supportsInterface(0x5b5e139f), true);
     }
 
-    function testGetValidator() public {
-        (, bytes memory result) = address(sbt).call(
-            abi.encodeWithSignature("getValidator()")
-        );
-        assertEq(keccak256(abi.encodePacked(validator)), bytes32(result));
-    }
-
     function testMint() public {
-        bytes32 _messagehash = keccak256(
-            abi.encode(validator, address(0xBEEF), uint256(0), uint256(0))
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, _messagehash);
-        vm.prank(validator);
-        address(sbt).call(
-            abi.encodeWithSignature(
-                "mint(address,uint256,uint256,bytes)",
-                address(0xBEEF),
-                uint256(0),
-                uint256(0),
-                abi.encodePacked(r, s, v)
-            )
-        );
-        assertEq(sbt.tokenURI(0), "example://0.json");
+        address beef = address(0xBEEF);
+        address thisContract = address(this);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        assertEq(sbt.ownerOf(1), thisContract);
+        vm.prank(beef);
+        vm.expectRevert(bytes("Need to send more ETH"));
+        address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
+        assertEq(address(sbt).balance, 20 ether);
 
-        vm.expectRevert(bytes("INVALID"));
-        address(sbt).call(
-            abi.encodeWithSignature(
-                "mint(address,uint256,uint256,bytes)",
-                address(0xBEEF),
-                uint256(999),
-                uint256(999),
-                abi.encodePacked(r, s, v)
-            )
+        // test referral mint
+        payable(beef).call{value: 20 ether}("");
+
+        vm.prank(thisContract);
+        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        vm.prank(beef);
+        address(sbt).call{value: 20 ether}(
+            abi.encodeWithSignature("mintWithReferral(address)", thisContract)
         );
+        assertEq(address(sbt).balance, 25 ether);
+        assertEq(address(beef).balance, 5 ether);
     }
 
-    function testSetContractOwner() public {
-        address newOwner = address(3);
-        vm.prank(owner);
-        (, bytes memory result) = address(sbt).call(
-            abi.encodeWithSignature("setContractOwner(address)", newOwner)
-        );
-        assertEq(sbt.contractOwner(), newOwner);
+    // function testSetadmin() public {
+    //     address newOwner = address(3);
+    //     vm.prank(owner);
+    //     (, bytes memory result) = address(sbt).call(
+    //         abi.encodeWithSignature("setadmin(address)", newOwner)
+    //     );
+    //     assertEq(sbt.admin(), newOwner);
 
-        vm.expectRevert(bytes("OWNER ONLY"));
-        address(sbt).call(
-            abi.encodeWithSignature("setContractOwner(address)", newOwner)
-        );
-    }
+    //     vm.expectRevert(bytes("OWNER ONLY"));
+    //     address(sbt).call(
+    //         abi.encodeWithSignature("setadmin(address)", newOwner)
+    //     );
+    // }
+    receive() external payable {}
 }

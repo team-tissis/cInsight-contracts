@@ -1,3 +1,5 @@
+memo*
+
 # Compiler files
 cache/
 out/
@@ -9,3 +11,5 @@ out/
 
 # Dotenv file
 .env
+
+.DS_Store

@@ -2,82 +2,234 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
+import "./../libs/DateTime.sol";
+import "./../libs/QuickSort.sol";
+import "./../skinnft/ISkinNft.sol";
+import "forge-std/Test.sol";
 
 contract SbtImp {
+    modifier onlyAdmin() {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
+        _;
+    }
+
     event Transfer(
         address indexed _from,
         address indexed _to,
         uint256 indexed _tokenId
     );
-    event ContractOwnerChanged(address _newOwner);
-    event ValidatorChanged(bytes32 _newValidator);
 
-    // 0x731133e9
-    function mint(
-        address _address
-    ) external {
-        require(_address != address(0));
+    function mint() public payable returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.maki[_address] == 0, "Already minted");
-        emit Transfer(address(0), _address, uint256(uint160(_address)));
-    }
-
-    function burn(address _address) external  {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
-        delete sbtstruct.maki[_address];
-        emit Transfer(_address, address(0), uint256(uint160(_address)));
-    }
-
-    function setBaseUri(string memory _newBaseURI) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner,"OWNER ONLY");
-        sbtstruct.baseURI = _newBaseURI;
-    }
-
-    function setContractOwner(address _newContactOwner) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
-        sbtstruct.contractOwner = _newContactOwner;
-        emit ContractOwnerChanged(_newContactOwner);
-    }
-
-    function setValidator(bytes32 _newValidator) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.contractOwner, "OWNER ONLY");
-        sbtstruct.validator = _newValidator;
-        emit ValidatorChanged(_newValidator);
-    }
-
-    function getValidator() external view returns (bytes32) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.validator;
-    }
-
-    function verify(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        returns (bool)
-    /** メモ: @shion
-     * https://solidity-by-example.org/signature/
-     * _hash：keccack(msg, nonce, ...) 署名時に用いるメッセージハッシュ
-     * _singnature：{r, s, v} 署名されたメッセージ．r)0-32byte目，s)32-64byte目，v)65byte目
-     * ecrecover：メッセージハッシュと署名されたメッセージから公開鍵を復元する関数
-     * 最後は solidity example では公開鍵を直接比較して検証しているが，今回はそれにハッシュをかけたものを用いて検証している．
-     */
-    {
-        require(_signature.length == 65, "INVALID");
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        bytes32 _r;
-        bytes32 _s;
-        uint8 _v;
-        assembly {
-            _r := mload(add(_signature, 32))
-            _s := mload(add(_signature, 64))
-            _v := byte(0, mload(add(_signature, 96)))
+        require(msg.value >= sbtstruct.sbtPrice, "Need to send more ETH.");
+        require(msg.sender != address(0));
+        require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
+        sbtstruct.mintIndex += 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
+        sbtstruct.grades[msg.sender] = 1;
+        if (msg.value > sbtstruct.sbtPrice) {
+            payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
         }
-        return
-            keccak256(abi.encodePacked(ecrecover(_hash, _v, _r, _s))) ==
-            sbtstruct.validator;
+        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+        return sbtstruct.mintIndex;
+    }
+
+    function mintWithReferral(address referrer) public payable {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
+        require(
+            msg.value >= sbtstruct.sbtReferralPrice,
+            "Need to send more ETH."
+        );
+
+        require(
+            sbtstruct.referralMap[msg.sender] == referrer,
+            "INVALID ACCOUNT"
+        );
+
+        sbtstruct.mintIndex += 1;
+        sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
+        sbtstruct.grades[msg.sender] = 1;
+        payable(referrer).call{value: sbtstruct.sbtReferralIncentive}("");
+
+        if (msg.value > sbtstruct.sbtReferralPrice) {
+            payable(msg.sender).call{
+                value: msg.value - sbtstruct.sbtReferralPrice
+            }("");
+        }
+        emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+    }
+
+    // set functions
+
+    function burn(uint _tokenId) external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.owners[_tokenId], "SBT OWNER ONLY");
+        address currentOwner = sbtstruct.owners[_tokenId];
+
+        delete sbtstruct.owners[_tokenId];
+        sbtstruct.grades[msg.sender] = 0;
+        sbtstruct.favos[msg.sender] = 0;
+        sbtstruct.makiMemorys[msg.sender] = 0;
+        sbtstruct.makis[msg.sender] = 0;
+        sbtstruct.referrals[msg.sender] = 0;
+        sbtstruct.burnNum += 1;
+
+        emit Transfer(currentOwner, address(0), _tokenId);
+    }
+
+    function setFreemintQuantity(address _address, uint256 quantity) public {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.admin, "ONLY ADMIN CAN SET FREEMINT");
+        ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, quantity);
+    }
+
+    function monthInit() public {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(
+            DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth,
+            "monthInit is already executed for this month"
+        );
+
+        _updatemaki(sbtstruct);
+        _updateGrade(sbtstruct);
+        // burn されたアカウントも代入計算を行なっている．
+        // TODO: sstore 0->0 はガス代がかなり安いらしいが，より良い実装はありうる．
+    }
+
+    function _updatemaki(SbtLib.SbtStruct storage sbtstruct) internal {
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+            address _address = sbtstruct.owners[i];
+            sbtstruct.makis[_address] =
+                sbtstruct.makiMemorys[_address] +
+                (sbtstruct.makis[_address] * sbtstruct.makiDecayRate) /
+                100;
+            if (
+                sbtstruct.favos[_address] == sbtstruct.monthlyDistributedFavoNum
+            ) {
+                sbtstruct.makis[_address] += sbtstruct.favoUseUpIncentive;
+            }
+        }
+    }
+
+    function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
+        uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint16[] memory makiSortedIndex = new uint16[](accountNum);
+        uint32[] memory makiArray = new uint32[](accountNum);
+
+        uint count;
+        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+            address _address = sbtstruct.owners[i];
+            if (_address != address(0)) {
+                count += 1;
+                makiSortedIndex[count] = uint16(i);
+                makiArray[count] = uint32(sbtstruct.makis[_address]);
+            }
+        }
+        makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
+        uint256 gradeNum = sbtstruct.gradeNum;
+
+        // burnされていない account 中の上位 x %を計算.
+        for (uint i = 0; i < accountNum; i++) {
+            address _address = sbtstruct.owners[makiSortedIndex[i]];
+            for (uint j = 0; j < gradeNum; j++) {
+                if (i * 100 > accountNum * sbtstruct.gradeRate[j])
+                    // set grade
+                    sbtstruct.grades[_address] = j + 1;
+                // set skin nft freemint
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
+                    _address,
+                    sbtstruct.skinnftNumRate[j]
+                );
+                // initialize referral and favos
+                sbtstruct.favos[_address] = 0;
+                sbtstruct.referrals[_address] = 0;
+            }
+        }
+    }
+
+    // functions for frontend
+    function addFavos(address userTo, uint8 favo) external {
+        require(favo > 0, "INVALID ARGUMENT");
+
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
+
+        uint addmonthlyDistributedFavoNum;
+        require(
+            sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender],
+            "INVALID ARGUMENT"
+        );
+        uint remainFavo = sbtstruct.monthlyDistributedFavoNum -
+            sbtstruct.favos[msg.sender];
+
+        // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
+        if (remainFavo <= favo) {
+            addmonthlyDistributedFavoNum = remainFavo;
+        } else {
+            addmonthlyDistributedFavoNum = favo;
+        }
+
+        sbtstruct.favos[msg.sender] += addmonthlyDistributedFavoNum;
+
+        // makiMemoryの計算
+        uint upperBound = 5;
+        (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
+
+        if (connectFlag && _dist < upperBound) {
+            sbtstruct.makiMemorys[userTo] = _dist * favo;
+        } else {
+            sbtstruct.makiMemorys[userTo] = upperBound * favo;
+        }
+    }
+
+    function _distance(address node1, address node2)
+        internal
+        view
+        returns (uint, bool)
+    {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+
+        uint _dist1;
+        uint _dist2;
+        bool connectFlag = false;
+
+        while (node1 != address(0)) {
+            if (node1 == node2) {
+                connectFlag = true;
+                break;
+            } else {
+                while (node2 != address(0)) {
+                    node2 = sbtstruct.referralMap[node2];
+                    _dist2 += 1;
+                    if (node1 == node2) {
+                        connectFlag = true;
+                        break;
+                    }
+                }
+                node1 = sbtstruct.referralMap[node1];
+                _dist1 += 1;
+                _dist2 = 0;
+            }
+        }
+        return (_dist1 + _dist2, connectFlag);
+    }
+
+    function refer(address userTo) external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
+        require(
+            sbtstruct.referralMap[userTo] == address(0),
+            "THIS USER HAS ALREADY REFERRED"
+        );
+        require(
+            sbtstruct.grades[msg.sender] >= 1 &&
+                sbtstruct.referrals[msg.sender] <=
+                sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
+            "REFER LIMIT EXCEEDED"
+        );
+        sbtstruct.referralMap[userTo] = msg.sender;
+        sbtstruct.referrals[msg.sender] += 1;
     }
 }
