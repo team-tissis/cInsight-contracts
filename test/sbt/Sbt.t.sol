@@ -62,10 +62,10 @@ contract SbtTest is Test {
         vm.prank(beef);
         vm.expectRevert(bytes("Need to send more ETH"));
         address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
+        console.log(address(sbt).balance);
 
         // test referral mint
-        payable(beef).transfer(20 ether);
-        console.log(address(sbt).balance);
+        payable(beef).call{value: 20 ether}("");
 
         vm.prank(thisContract);
         address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
@@ -73,6 +73,7 @@ contract SbtTest is Test {
         address(sbt).call{value: 15 ether}(
             abi.encodeWithSignature("mintWithReferral(address)", thisContract)
         );
+        console.log(beef.balance);
     }
 
     // function testSetadmin() public {

@@ -2,9 +2,11 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
+import "./ISbt.sol";
 import "./../libs/DateTime.sol";
 import "./../libs/QuickSort.sol";
 import "./../skinnft/ISkinNft.sol";
+import "forge-std/Test.sol";
 
 contract SbtImp {
     modifier onlyAdmin() {
@@ -28,7 +30,8 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
         if (msg.value > sbtstruct.sbtPrice) {
-            payable(msg.sender).transfer(msg.value - sbtstruct.sbtPrice);
+            ISbt(address(this)).transferEth(msg.value - sbtstruct.sbtPrice);
+            // payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
         return sbtstruct.mintIndex;
@@ -51,7 +54,7 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
 
-        payable(referrer).transfer(sbtstruct.sbtReferralIncentive);
+        payable(referrer).call{value: sbtstruct.sbtReferralIncentive}("");
 
         if (msg.value > sbtstruct.sbtReferralPrice) {
             payable(msg.sender).transfer(
