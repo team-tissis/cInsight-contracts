@@ -12,6 +12,7 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     uint256 executingDelay = 11520;
     uint256 votingPeriod = 5760;
     uint256 votingDelay = 1;
+    uint256 proposalThreshold = 1;
 
     function setUp() public {
         address implementation = 0x3333333333333333333333333333333333333333;
@@ -23,7 +24,8 @@ contract ChainInsightGovernanceProxyV1Test is Test {
             executingGracePeriod,
             executingDelay,
             votingPeriod,
-            votingDelay
+            votingDelay,
+            proposalThreshold
         );
     }
 
@@ -49,7 +51,6 @@ contract ChainInsightGovernanceProxyV1Test is Test {
         assertEq(proxy.implementation(), newImplementation);
     }
 
-    // TODO: testing fallback function
 }
 
 

@@ -28,8 +28,6 @@ contract ChainInsightGovernanceLogicV1Test is Test {
 
         logic = new ChainInsightLogicV1();
         
-        // TODO: raise error
-        // delegatecall seems to call _setImplementation...
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             executorContract,
@@ -37,7 +35,8 @@ contract ChainInsightGovernanceLogicV1Test is Test {
             executingGracePeriod,
             executingDelay,
             votingPeriod,
-            votingDelay
+            votingDelay,
+            proposalThreshold
         );
 
         logic.initialize(
@@ -61,7 +60,6 @@ contract ChainInsightGovernanceLogicV1Test is Test {
             calldatas,
             description
         );
-        emit log_uint(block.number); // 100
 
         // voting starts
         vm.roll(votingDelay + 1);

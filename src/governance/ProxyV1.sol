@@ -10,21 +10,22 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
         uint256 votingPeriod_,
-        uint256 votingDelay_
+        uint256 votingDelay_,
+        uint256 proposalThreshold_
     ) {
         // Admin set to msg.sender for initialization
         admin = msg.sender;
-
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                'initialize(address,address,uint256,uint256,uint256,uint256)',
+                'initialize(address,address,uint256,uint256,uint256,uint256,uint256)',
                 executorContract_,
                 admin_,
                 executingGracePeriod_,
                 executingDelay_,
                 votingPeriod_,
-                votingDelay_
+                votingDelay_,
+                proposalThreshold_
             )
         );
 
@@ -92,6 +93,7 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
                 revert(add(returnData, 0x20), returndatasize())
             }
         }
+
     }
 
     /**
