@@ -2,10 +2,9 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
-import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
 
-contract Sbt is ISbt {
+contract Sbt {
     modifier onlyAdmin() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
@@ -247,14 +246,6 @@ contract Sbt is ISbt {
                 return(0, returndatasize())
             }
         }
-    }
-
-    function transferEth(uint256 ethValue, address _address) external {
-        require(
-            msg.sender == address(this),
-            "MSG sender must be this contract"
-        );
-        payable(_address).call{value: ethValue}("");
     }
 
     receive() external payable {}
