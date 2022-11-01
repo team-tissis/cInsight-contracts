@@ -249,13 +249,5 @@ contract Sbt is ISbt {
         }
     }
 
-    function transferEth(uint256 ethValue, address _address) external {
-        require(
-            msg.sender == address(this),
-            "MSG sender must be this contract"
-        );
-        payable(_address).call{value: ethValue}("");
-    }
-
     receive() external payable {}
 }

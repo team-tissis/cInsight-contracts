@@ -30,11 +30,7 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
         if (msg.value > sbtstruct.sbtPrice) {
-            ISbt(address(this)).transferEth(
-                msg.value - sbtstruct.sbtPrice,
-                msg.sender
-            );
-            // payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
+            payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
         return sbtstruct.mintIndex;
@@ -56,17 +52,12 @@ contract SbtImp {
         sbtstruct.mintIndex += 1;
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
-
-        ISbt(address(this)).transferEth(
-            sbtstruct.sbtReferralIncentive,
-            referrer
-        );
+        payable(referrer).call{value: sbtstruct.sbtReferralIncentive}("");
 
         if (msg.value > sbtstruct.sbtReferralPrice) {
-            ISbt(address(this)).transferEth(
-                msg.value - sbtstruct.sbtReferralPrice,
-                msg.sender
-            );
+            payable(msg.sender).call{
+                value: msg.value - sbtstruct.sbtReferralPrice
+            }("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
     }
@@ -235,7 +226,7 @@ contract SbtImp {
         );
         require(
             sbtstruct.grades[msg.sender] >= 1 &&
-                sbtstruct.referrals[msg.sender] <
+                sbtstruct.referrals[msg.sender] <=
                 sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
             "REFER LIMIT EXCEEDED"
         );

@@ -62,19 +62,17 @@ contract SbtTest is Test {
         address(sbt).call{value: 0 ether}(abi.encodeWithSignature("mint()"));
         assertEq(address(sbt).balance, 20 ether);
 
-        // console.log(tx.origin);
-        // console.log(address(this));
-
         // test referral mint
-        // payable(beef).call{value: 20 ether}("");
+        payable(beef).call{value: 20 ether}("");
 
-        // vm.prank(thisContract);
-        // address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
-        // vm.prank(beef);
-        // address(sbt).call{value: 15 ether}(
-        //     abi.encodeWithSignature("mintWithReferral(address)", thisContract)
-        // );
-        // assertEq(address(sbt).balance, 25 ether);
+        vm.prank(thisContract);
+        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        vm.prank(beef);
+        address(sbt).call{value: 20 ether}(
+            abi.encodeWithSignature("mintWithReferral(address)", thisContract)
+        );
+        assertEq(address(sbt).balance, 25 ether);
+        assertEq(address(beef).balance, 5 ether);
     }
 
     // function testSetadmin() public {
