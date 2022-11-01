@@ -1,7 +1,8 @@
 pragma solidity ^0.8.16;
 
-import "./InterfacesV1.sol";
-import "../libs/SbtLib.sol";
+import './InterfacesV1.sol';
+import '../sbt/ISbt.sol';
+import "forge-std/Test.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -55,12 +56,14 @@ contract ChainInsightLogicV1 is
     /**
      * @notice Used to initialize the contract during delegator contructor
      * @param executorContract_ The address of the Executor
+     * @param sbtContract_ The address of the Sbt contract
      * @param vetoer_ The address allowed to unilaterally veto proposals
      * @param votingPeriod_ The initial voting period
      * @param votingDelay_ The initial voting delay
      */
     function initialize(
         address executorContract_,
+        address sbtContract_,
         address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
@@ -77,6 +80,8 @@ contract ChainInsightLogicV1 is
             executorContract_ != address(0),
             "LogicV1::initialize: invalid Executor address"
         );
+
+        require(sbtContract_ != address(0), 'LogicV1::initialize: invalid SBT contract address');
 
         require(
             executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD &&
@@ -116,6 +121,7 @@ contract ChainInsightLogicV1 is
         emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
         executorContract = IChainInsightExecutor(executorContract_);
+        sbtContract = ISbt(sbtContract_);
         vetoer = vetoer_;
 
         executingGracePeriod = executingGracePeriod_;
@@ -140,10 +146,8 @@ contract ChainInsightLogicV1 is
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
         require(
-            sbtstruct.grades[msg.sender] >= proposalThreshold,
+            sbtContract.gradeOf(msg.sender) >= proposalThreshold,
             'LogicV1::propose: proposer must hold Bonfire SBT'
         );
 
@@ -470,11 +474,8 @@ contract ChainInsightLogicV1 is
         address voter,
         uint256 proposalId,
         uint8 support
-    ) internal returns (uint96) {
-        require(
-            state(proposalId) == ProposalState.Active,
-            "LogicV1::castVoteInternal: voting is closed"
-        );
+    ) internal returns (uint256) {
+        require(state(proposalId) == ProposalState.Active, 'LogicV1::castVoteInternal: voting is closed');
 
         require(support <= 2, "LogicV1::castVoteInternal: invalid vote type");
         Proposal storage proposal = proposals[proposalId];
@@ -486,7 +487,7 @@ contract ChainInsightLogicV1 is
         );
 
         /// @notice retrieve voting weight of voter
-        uint96 votes = getVotes(voter);
+        uint256 votes = getVotes(voter);
 
         require(votes > 0, "LogicV1::propose: voter must hold Bonfire SBT");
 
@@ -685,9 +686,9 @@ contract ChainInsightLogicV1 is
         return chainId;
     }
 
-    function getVotes(address voter) internal view returns (uint96) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint96 votes = uint96(sbtstruct.grades[voter]);
+    function getVotes(address voter) internal view returns (uint256) {
+        // given vote number equals to his or her grade
+        uint256 votes = sbtContract.gradeOf(voter);
         return votes;
     }
 }

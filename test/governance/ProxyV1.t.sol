@@ -6,8 +6,10 @@ import "../../src/governance/ProxyV1.sol";
 contract ChainInsightGovernanceProxyV1Test is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
 
-    address executorContract = 0x4444444444444444444444444444444444444444;
-    address admin = 0x1111111111111111111111111111111111111111;
+    address executorContract = address(1);
+    address sbtContract = address(2); 
+    address admin = address(3);
+    address implementation = address(4);
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
     uint256 votingPeriod = 5760;
@@ -15,11 +17,10 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     uint256 proposalThreshold = 1;
 
     function setUp() public {
-        address implementation = 0x3333333333333333333333333333333333333333;
-
         proxy = new ChainInsightGovernanceProxyV1(
             implementation,
             executorContract,
+            sbtContract,
             admin,
             executingGracePeriod,
             executingDelay,
@@ -34,18 +35,21 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     }
 
     function testSetImplementationAndInitialize() public {
-        address newImplementation = 0xa333333333333333333333333333333333333333;
+        assertEq(proxy.implementation(), implementation);
+
+        address newImplementation = address(44);
 
         vm.prank(admin);
-
         proxy.setImplementationAndInitialize(
             newImplementation,
             executorContract,
+            sbtContract,
             admin,
             executingGracePeriod,
             executingDelay,
             votingPeriod,
-            votingDelay
+            votingDelay,
+            proposalThreshold
         );
 
         assertEq(proxy.implementation(), newImplementation);

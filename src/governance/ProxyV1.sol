@@ -1,11 +1,13 @@
 pragma solidity ^0.8.16;
 
 import './InterfacesV1.sol';
+import "forge-std/Test.sol";
 
 contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, ChainInsightGovernanceEventsV1 {
     constructor(
         address implementation_,
         address executorContract_,
+        address sbtContract_,
         address admin_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
@@ -18,8 +20,9 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                'initialize(address,address,uint256,uint256,uint256,uint256,uint256)',
+                'initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)',
                 executorContract_,
+                sbtContract_,
                 admin_,
                 executingGracePeriod_,
                 executingDelay_,
@@ -56,24 +59,28 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
     function setImplementationAndInitialize(
         address implementation_,
         address executorContract_,
+        address sbtContract_,
         address admin_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
         uint256 votingPeriod_,
-        uint256 votingDelay_
+        uint256 votingDelay_,
+        uint256 proposalThreshold_
         ) public {
         _setImplementation(implementation_);
 
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                'initialize(address,address,uint256,uint256,uint256,uint256)',
+                'initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)',
                 executorContract_,
+                sbtContract_,
                 admin_,
                 executingGracePeriod_,
                 executingDelay_,
                 votingPeriod_,
-                votingDelay_
+                votingDelay_,
+                proposalThreshold_
             )
         );
 
