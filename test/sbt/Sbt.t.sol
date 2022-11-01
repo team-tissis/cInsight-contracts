@@ -8,34 +8,45 @@ import "./../../src/sbt/SbtImp.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
 contract SbtTest is Test {
-    address admin = address(0xad000);
+    address admin = address(0xad000); //TODO: executor に変更
+    string baseURL = "https://thechaininsight.github.io/";
     Sbt internal sbt;
     SbtImp internal imp;
     SkinNft internal skinNft;
 
     function setUp() public {
+        uint256 functionNum = 7;
+        string[functionNum] functionArray = [
+            "mint()",
+            "mintWithReferral(address)",
+            "burn(uint)",
+            "setFreemintQuantity(address, uint)",
+            "monthInit()",
+            "addFavos(address, uint8)",
+            "refer(address)"
+        ];
+
         sbt = new Sbt();
-        imp = new SbtImp();
-        skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
+        sbtImp = new SbtImp();
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         sbt.init(
             admin,
             "ChainInsight",
             "SBT",
-            "https://thechaininsight.github.io/sbt/",
+            string.concat(baseURL, "sbt/"),
             address(skinNft)
         );
         skinNft.init(address(sbt));
-        bytes4[] memory sigs = new bytes4[](4);
-        address[] memory impAddress = new address[](4);
-        sigs[0] = bytes4(keccak256("mint()"));
-        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
-        sigs[2] = bytes4(keccak256("refer(address)"));
-        sigs[3] = bytes4(keccak256("impInit()"));
-        impAddress[0] = address(imp);
-        impAddress[1] = address(imp);
-        impAddress[2] = address(imp);
-        impAddress[3] = address(imp);
+
+        bytes4[] memory sigs = new bytes4[](functionNum);
+        address[] memory impAddress = new address[](functionNum);
+
+        for (uint256 i = 0; i < functionNum; i++) {
+            sigs[i] = bytes4(keccak256(functionArray[i]));
+            impAddress[i] = address(setImp);
+        }
+
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
     }
