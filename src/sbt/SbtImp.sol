@@ -78,7 +78,7 @@ contract SbtImp {
         delete sbtstruct.owners[_tokenId];
         sbtstruct.grades[msg.sender] = 0;
         sbtstruct.favos[msg.sender] = 0;
-        sbtstruct.makiMemoryMemorys[msg.sender] = 0;
+        sbtstruct.makiMemorys[msg.sender] = 0;
         sbtstruct.makis[msg.sender] = 0;
         sbtstruct.referrals[msg.sender] = 0;
         sbtstruct.nftPoints[msg.sender] = 0;
