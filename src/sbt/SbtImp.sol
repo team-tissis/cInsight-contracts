@@ -63,7 +63,7 @@ contract SbtImp {
 
     // set functions
 
-    function burn(uint _tokenId) external {
+    function burn(uint256 _tokenId) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.owners[_tokenId], "SBT OWNER ONLY");
         address currentOwner = sbtstruct.owners[_tokenId];
@@ -102,7 +102,7 @@ contract SbtImp {
     }
 
     function _updatemaki(SbtLib.SbtStruct storage sbtstruct) internal {
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             sbtstruct.makis[_address] =
                 sbtstruct.makiMemorys[_address] +
@@ -117,15 +117,15 @@ contract SbtImp {
     }
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
-        uint gradeNum = sbtstruct.gradeNum;
+        uint256 accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint256 gradeNum = sbtstruct.gradeNum;
         uint16[] memory makiSortedIndex = new uint16[](accountNum);
         uint32[] memory makiArray = new uint32[](accountNum);
         uint256[] memory gradeThreshold = new uint256[](gradeNum);
 
-        uint count;
-        uint j;
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+        uint256 count;
+        uint256 j;
+        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             if (_address != address(0)) {
                 makiSortedIndex[count] = uint16(i);
@@ -140,10 +140,10 @@ contract SbtImp {
         }
         uint256 grade;
         // burnされていない account 中の上位 x %を計算.
-        for (uint i = 0; i < accountNum; i++) {
+        for (uint256 i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
             grade = 0;
-            for (uint j = 0; j < gradeNum; j++) {
+            for (uint256 j = 0; j < gradeNum; j++) {
                 grade++;
                 if (i * 100 >= gradeThreshold[j]) {
                     break;
@@ -170,12 +170,12 @@ contract SbtImp {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
-        uint addmonthlyDistributedFavoNum;
+        uint256 addmonthlyDistributedFavoNum;
         require(
             sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender],
             "INVALID ARGUMENT"
         );
-        uint remainFavo = sbtstruct.monthlyDistributedFavoNum -
+        uint256 remainFavo = sbtstruct.monthlyDistributedFavoNum -
             sbtstruct.favos[msg.sender];
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
@@ -188,8 +188,8 @@ contract SbtImp {
         sbtstruct.favos[msg.sender] += addmonthlyDistributedFavoNum;
 
         // makiMemoryの計算
-        uint upperBound = 5;
-        (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
+        uint256 upperBound = 5;
+        (uint256 _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
             sbtstruct.makiMemorys[userTo] =
@@ -205,12 +205,12 @@ contract SbtImp {
     function _distance(address node1, address node2)
         internal
         view
-        returns (uint, bool)
+        returns (uint256, bool)
     {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        uint _dist1;
-        uint _dist2;
+        uint256 _dist1;
+        uint256 _dist2;
         bool connectFlag = false;
 
         while (node1 != address(0)) {
@@ -218,7 +218,7 @@ contract SbtImp {
                 connectFlag = true;
                 break;
             } else {
-                while (node2 != address(0)) {
+                while (sbtstruct.referralMap[node2] != address(0)) {
                     node2 = sbtstruct.referralMap[node2];
                     _dist2 += 1;
                     if (node1 == node2) {
