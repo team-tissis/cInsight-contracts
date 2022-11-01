@@ -95,19 +95,6 @@ contract SbtImp {
         ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, quantity);
     }
 
-    // chaininsight functions
-    function impInit() external onlyAdmin {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.monthlyDistributedFavoNum = 20;
-        sbtstruct.lastUpdatedMonth = uint8(DateTime.getMonth(block.timestamp));
-        uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
-        uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
-        for (uint i = 0; i < 5; i++) {
-            sbtstruct.referralRate.push(_referralRate[i]);
-            sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
-        }
-    }
-
     function monthInit() public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(

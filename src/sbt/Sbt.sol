@@ -33,6 +33,14 @@ contract Sbt is ISbt {
         sbtstruct.sbtPrice = 20 ether;
         sbtstruct.sbtReferralPrice = 15 ether;
         sbtstruct.sbtReferralIncentive = 10 ether;
+        sbtstruct.monthlyDistributedFavoNum = 20;
+        sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
+        uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
+        uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
+        for (uint i = 0; i < 5; i++) {
+            sbtstruct.referralRate.push(_referralRate[i]);
+            sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
+        }
     }
 
     mapping(bytes4 => address) public implementations;
