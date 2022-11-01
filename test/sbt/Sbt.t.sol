@@ -45,7 +45,7 @@ contract SbtTest is Test {
     function testInit() public {
         assertEq(sbt.name(), "ChainInsight");
         assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.admin(), admin);
+        assertEq(sbt.executor(), admin);
     }
 
     function testSupportsInterface() public {
@@ -146,6 +146,13 @@ contract SbtTest is Test {
 
         assertEq(address(manB).balance, 30 ether);
         assertEq(address(beef).balance, 25 ether);
+
+        // check distance for addFavo is working.
+        vm.prank(beef);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manB, 10)
+        );
+        assertEq(sbt.makiMemoryOf(manB), 10);
     }
 
     // function testSetadmin() public {

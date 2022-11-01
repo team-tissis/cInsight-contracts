@@ -8,9 +8,9 @@ import "./../skinnft/ISkinNft.sol";
 import "forge-std/Test.sol";
 
 contract SbtImp {
-    modifier onlyAdmin() {
+    modifier onlyExecutor() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
+        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         _;
     }
 
@@ -81,7 +81,10 @@ contract SbtImp {
 
     function setFreemintQuantity(address _address, uint256 quantity) public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "ONLY ADMIN CAN SET FREEMINT");
+        require(
+            msg.sender == sbtstruct.executor,
+            "ONLY EXECUTOR CAN SET FREEMINT"
+        );
         ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, quantity);
     }
 

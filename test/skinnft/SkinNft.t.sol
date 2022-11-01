@@ -35,7 +35,7 @@ contract SbtTest is Test {
     function testInit() public {
         assertEq(sbt.name(), "ChainInsight");
         assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.admin(), admin);
+        assertEq(sbt.executor(), admin);
     }
 
     function testSupportsInterface() public {
