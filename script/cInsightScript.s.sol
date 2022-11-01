@@ -41,10 +41,10 @@ contract cInsightScript is Script {
         sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
         sigs[2] = bytes4(keccak256("refer(address)"));
         sigs[3] = bytes4(keccak256("impInit()"));
-        impAddress[0] = address(imp);
-        impAddress[1] = address(imp);
-        impAddress[2] = address(imp);
-        impAddress[3] = address(imp);
+        impAddress[0] = address(sbtImp);
+        impAddress[1] = address(sbtImp);
+        impAddress[2] = address(sbtImp);
+        impAddress[3] = address(sbtImp);
 
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
