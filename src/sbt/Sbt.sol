@@ -149,6 +149,12 @@ contract Sbt is ISbt {
     }
 
     // set functions
+
+    function setBaseUri(string memory _newBaseURI) external onlyAdmin {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.baseURI = _newBaseURI;
+    }
+
     function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
         external
         onlyAdmin

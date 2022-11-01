@@ -72,10 +72,6 @@ contract SbtImp {
     }
 
     // set functions
-    function setBaseUri(string memory _newBaseURI) external onlyAdmin {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.baseURI = _newBaseURI;
-    }
 
     function burn(uint _tokenId) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
