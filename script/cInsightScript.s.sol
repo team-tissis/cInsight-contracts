@@ -15,17 +15,6 @@ contract cInsightScript is Script {
     address admin = address(0xad000); //TODO: executor に変更
     string baseURL = "https://thechaininsight.github.io/";
 
-    uint256 constant functionNum = 7;
-    string[functionNum] constant functionArray = [
-        "mint()",
-        "mintWithReferral(address)",
-        "burn(uint)",
-        "setFreemintQuantity(address, uint)",
-        "monthInit()",
-        "addFavos(address, uint8)",
-        "refer(address)"
-    ];
-
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
@@ -48,9 +37,15 @@ contract cInsightScript is Script {
         bytes4[] memory sigs = new bytes4[](functionNum);
         address[] memory impAddress = new address[](functionNum);
 
-        for (uint256 i = 0; i < functionNum; i++) {
-            sigs[i] = bytes4(keccak256(functionArray[i]));
-            impAddress[i] = address(setImp);
+        sigs[0] = bytes4(keccak256("mint()"));
+        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
+        sigs[2] = bytes4(keccak256("burn(uint)"));
+        sigs[3] = bytes4(keccak256("setFreemintQuantity(address, uint)"));
+        sigs[4] = bytes4(keccak256("monthInit()"));
+        sigs[5] = bytes4(keccak256("addFavos(address, uint8)"));
+        sigs[6] = bytes4(keccak256("refer(address)"));
+        for (uint256 i = 0; i < 7; i++) {
+            impAddress[i] = address(sbtImp);
         }
 
         vm.prank(admin);
