@@ -24,26 +24,10 @@ contract SbtTest is Test {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/"),
-            address(skinNft)
+            address(skinNft),
+            address(sbtImp)
         );
         skinNft.init(address(sbt));
-
-        bytes4[] memory sigs = new bytes4[](functionNum);
-        address[] memory impAddress = new address[](functionNum);
-
-        sigs[0] = bytes4(keccak256("mint()"));
-        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
-        sigs[2] = bytes4(keccak256("burn(uint)"));
-        sigs[3] = bytes4(keccak256("setFreemintQuantity(address, uint)"));
-        sigs[4] = bytes4(keccak256("monthInit()"));
-        sigs[5] = bytes4(keccak256("addFavos(address, uint8)"));
-        sigs[6] = bytes4(keccak256("refer(address)"));
-        for (uint256 i = 0; i < 7; i++) {
-            impAddress[i] = address(sbtImp);
-        }
-
-        vm.prank(admin);
-        sbt.setImplementation(sigs, impAddress);
     }
 
     function testInit() public {

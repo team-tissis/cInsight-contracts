@@ -19,17 +19,15 @@ contract SbtTest is Test {
         imp = new SbtImp();
         skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
 
-        sbt.init(admin, "ChainInsight", "SBT", "example://", address(skinNft));
-
+        sbt.init(
+            admin,
+            "ChainInsight",
+            "SBT",
+            "example://",
+            address(skinNft),
+            address(imp)
+        );
         skinNft.init(address(sbt));
-        bytes4[] memory sigs = new bytes4[](2);
-        address[] memory impAddress = new address[](2);
-        sigs[0] = bytes4(keccak256("mint(address,uint256,uint256,bytes)"));
-        sigs[1] = bytes4(keccak256("setFreemintQuantity(address,uint256)"));
-        impAddress[0] = address(imp);
-        impAddress[1] = address(imp);
-        vm.prank(admin);
-        sbt.setImplementation(sigs, impAddress);
     }
 
     function testInit() public {
