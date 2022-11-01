@@ -6,9 +6,9 @@ import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
 
 contract Sbt is ISbt {
-    modifier onlyOwner() {
+    modifier onlyAdmin() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
+        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
         _;
     }
     event adminChanged(address _newOwner);
@@ -90,35 +90,30 @@ contract Sbt is ISbt {
         return sbtstruct.owners[_tokenId];
     }
 
-    function setBaseUri(string memory _newBaseURI) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.baseURI = _newBaseURI;
-    }
-
-    function setadmin(address _newContactOwner) external onlyOwner {
+    function setadmin(address _newContactOwner) external onlyAdmin {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.admin = _newContactOwner;
         emit adminChanged(_newContactOwner);
     }
 
-    function getFavo(address _address) external view returns (uint) {
+    function favoOf(address _address) external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.favos[_address];
     }
 
-    function getMaki(address _address) external view returns (uint) {
+    function makiOf(address _address) external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.makis[_address];
     }
 
-    function getGrade(address _address) external view returns (uint) {
+    function gradeOf(address _address) external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.grades[_address];
     }
 
-    function getRate(address _address) external view returns (uint) {
+    function makiMemoryOf(address _address) external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.rates[_address];
+        return sbtstruct.makiMemorys[_address];
     }
 
     function getReferral(address _address) external view returns (uint) {
@@ -136,23 +131,9 @@ contract Sbt is ISbt {
         return sbtstruct.favoNum;
     }
 
-    function setFavoNum(uint8 _favoNum) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.favoNum = _favoNum;
-    }
-
     function getReferralRate() external view returns (uint8[] memory) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.referralRate;
-    }
-
-    function setReferralRate(uint8[] memory _referralRate) external onlyOwner {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
-        // TODO: referralRateのサイズを大きくしたときの挙動
-        for (uint i = 0; i < _referralRate.length; i++) {
-            sbtstruct.referralRate[i] = _referralRate[i];
-        }
     }
 
     function getLastUpdatedMonth() external view returns (uint) {

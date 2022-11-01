@@ -16,7 +16,7 @@ library SbtLib {
         mapping(address => uint) favos; // favoした回数
         mapping(address => uint) makis;
         mapping(address => uint) grades;
-        mapping(address => uint) rates;
+        mapping(address => uint) makiMemorys;
         mapping(address => uint) referrals; // リファラルした回数
         mapping(address => uint) nftPoints; // nft付与権限数
         mapping(address => address) referralMap; // mapping(to => from)

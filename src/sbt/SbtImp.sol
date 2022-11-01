@@ -54,14 +54,20 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
 
-        payable(referrer).call{value: sbtstruct.sbtReferralIncentive}("");
+        ISbt(address(this)).transferEth(sbtstruct.sbtReferralIncentive);
 
         if (msg.value > sbtstruct.sbtReferralPrice) {
-            payable(msg.sender).transfer(
+            ISbt(address(this)).transferEth(
                 msg.value - sbtstruct.sbtReferralPrice
             );
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+    }
+
+    // set functions
+    function setBaseUri(string memory _newBaseURI) external onlyAdmin {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.baseURI = _newBaseURI;
     }
 
     function burn(uint _tokenId) external {
@@ -72,8 +78,8 @@ contract SbtImp {
         delete sbtstruct.owners[_tokenId];
         sbtstruct.grades[msg.sender] = 0;
         sbtstruct.favos[msg.sender] = 0;
+        sbtstruct.makiMemoryMemorys[msg.sender] = 0;
         sbtstruct.makis[msg.sender] = 0;
-        sbtstruct.rates[msg.sender] = 0;
         sbtstruct.referrals[msg.sender] = 0;
         sbtstruct.nftPoints[msg.sender] = 0;
         sbtstruct.burnNum += 1;
@@ -106,8 +112,8 @@ contract SbtImp {
             DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth
         );
 
-        _addMakiForDoneFavo(sbtstruct);
-        _updateRate(sbtstruct);
+        _addMakiMemoryForDoneFavo(sbtstruct);
+        _updatemaki(sbtstruct);
         _updateGrade(sbtstruct);
 
         // burn されたアカウントも代入計算を行なっている．
@@ -119,46 +125,48 @@ contract SbtImp {
         }
     }
 
-    function _addMakiForDoneFavo(SbtLib.SbtStruct storage sbtstruct) internal {
+    function _addMakiMemoryForDoneFavo(SbtLib.SbtStruct storage sbtstruct)
+        internal
+    {
         for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i]; //TODO: このようにmemoryに一時保存すると安い？
 
             if (sbtstruct.favos[_address] == sbtstruct.favoNum) {
-                sbtstruct.makis[_address] += 10;
+                sbtstruct.makiMemorys[_address] += 10;
             }
         }
     }
 
-    function _updateRate(SbtLib.SbtStruct storage sbtstruct) internal {
+    function _updatemaki(SbtLib.SbtStruct storage sbtstruct) internal {
         for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
 
-            sbtstruct.rates[_address] =
-                sbtstruct.makis[_address] +
-                sbtstruct.rates[_address] /
-                4;
+            sbtstruct.makis[_address] =
+                sbtstruct.makiMemorys[_address] +
+                (sbtstruct.makis[_address] * 9) /
+                10;
         }
     }
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
         uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
-        uint16[] memory rateSortedIndex = new uint16[](accountNum);
-        uint32[] memory rateArray = new uint32[](accountNum);
+        uint16[] memory makiSortedIndex = new uint16[](accountNum);
+        uint32[] memory makiArray = new uint32[](accountNum);
 
         uint count;
         for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             if (_address != address(0)) {
                 count += 1;
-                rateSortedIndex[count] = uint16(i);
-                rateArray[count] = uint32(sbtstruct.rates[_address]);
+                makiSortedIndex[count] = uint16(i);
+                makiArray[count] = uint32(sbtstruct.makis[_address]);
             }
         }
-        rateSortedIndex = QuickSort.sort(rateArray, rateSortedIndex);
+        makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
 
         // burnされていない account 中の上位 x %を計算.
         for (uint i = 0; i < accountNum; i++) {
-            address _address = sbtstruct.owners[rateSortedIndex[i]];
+            address _address = sbtstruct.owners[makiSortedIndex[i]];
             if (i <= accountNum / 20) {
                 // 上位 5%
                 sbtstruct.grades[_address] = 5;
@@ -199,14 +207,14 @@ contract SbtImp {
 
         sbtstruct.favos[msg.sender] += addFavoNum;
 
-        // makiの計算
+        // makiMemoryの計算
         uint upperBound = 5;
         (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            sbtstruct.makis[userTo] = _dist * favo;
+            sbtstruct.makiMemorys[userTo] = _dist * favo;
         } else {
-            sbtstruct.makis[userTo] = upperBound * favo;
+            sbtstruct.makiMemorys[userTo] = upperBound * favo;
         }
     }
 
@@ -250,8 +258,8 @@ contract SbtImp {
             "THIS USER HAS ALREADY REFFERD"
         );
         require(
-            sbtstruct.grades[msg.sender] > 0 &&
-                sbtstruct.referrals[msg.sender] <=
+            sbtstruct.grades[msg.sender] >= 1 &&
+                sbtstruct.referrals[msg.sender] <
                 sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
             "REFFER LIMIT EXCEEDED"
         );
