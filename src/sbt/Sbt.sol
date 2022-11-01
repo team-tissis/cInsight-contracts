@@ -21,6 +21,7 @@ contract Sbt is ISbt {
         address _nftAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(_admin != address(0), "_admin must not be address 0");
         require(sbtstruct.admin == address(0), "INITIATED ALREADY");
         sbtstruct.admin = _admin;
         sbtstruct.name = _name;
@@ -224,8 +225,9 @@ contract Sbt is ISbt {
         }
     }
 
-    function transferEth(uint256 ethValue) external {
-        payable(tx.origin).call{value: ethValue}("");
+    function transferEth(uint256 ethValue, address _address) external {
+        require(msg.sender==address(this), "MSG sender must be this contract");
+        payable(_address).call{value: ethValue}("");
     }
 
     receive() external payable {}

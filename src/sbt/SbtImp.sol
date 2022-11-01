@@ -30,7 +30,7 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
         if (msg.value > sbtstruct.sbtPrice) {
-            ISbt(address(this)).transferEth(msg.value - sbtstruct.sbtPrice);
+            ISbt(address(this)).transferEth(msg.value - sbtstruct.sbtPrice, msg.sender);
             // payable(msg.sender).call{value: msg.value - sbtstruct.sbtPrice}("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
@@ -54,11 +54,11 @@ contract SbtImp {
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
 
-        ISbt(address(this)).transferEth(sbtstruct.sbtReferralIncentive);
+        ISbt(address(this)).transferEth(sbtstruct.sbtReferralIncentive, referrer);
 
         if (msg.value > sbtstruct.sbtReferralPrice) {
             ISbt(address(this)).transferEth(
-                msg.value - sbtstruct.sbtReferralPrice
+                msg.value - sbtstruct.sbtReferralPrice, msg.sender
             );
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
@@ -109,7 +109,7 @@ contract SbtImp {
     function monthInit() public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(
-            DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth
+            DateTime.getMonth(block.timestamp) != sbtstruct.lastUpdatedMonth, "monthInit is already executed for this month"
         );
 
         _updatemaki(sbtstruct);
@@ -172,8 +172,8 @@ contract SbtImp {
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
         uint addmonthlyDistributedFavoNum;
+        require(sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender], "INVALID ARGUMENT");
         uint remainFavo = sbtstruct.monthlyDistributedFavoNum - sbtstruct.favos[msg.sender];
-        require(remainFavo >= 0, "INVALID ARGUMENT");
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
         if (remainFavo <= favo) {
@@ -232,13 +232,13 @@ contract SbtImp {
         require(sbtstruct.grades[userTo] == 0, "ALREADY MINTED");
         require(
             sbtstruct.referralMap[userTo] == address(0),
-            "THIS USER HAS ALREADY REFFERD"
+            "THIS USER HAS ALREADY REFERRED"
         );
         require(
             sbtstruct.grades[msg.sender] >= 1 &&
                 sbtstruct.referrals[msg.sender] <
                 sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
-            "REFFER LIMIT EXCEEDED"
+            "REFER LIMIT EXCEEDED"
         );
         sbtstruct.referralMap[userTo] = msg.sender;
         sbtstruct.referrals[msg.sender] += 1;
