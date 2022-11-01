@@ -116,27 +116,22 @@ contract Sbt is ISbt {
         return sbtstruct.makiMemorys[_address];
     }
 
-    function getReferral(address _address) external view returns (uint) {
+    function referralOf(address _address) external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.referrals[_address];
     }
 
-    function getNftPoint(address _address) external view returns (uint) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.nftPoints[_address];
-    }
-
-    function getFavoNum() external view returns (uint) {
+    function favoNum() external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.favoNum;
     }
 
-    function getReferralRate() external view returns (uint8[] memory) {
+    function referralRate() external view returns (uint8[] memory) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.referralRate;
     }
 
-    function getLastUpdatedMonth() external view returns (uint) {
+    function lastUpdatedMonth() external view returns (uint) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.lastUpdatedMonth;
     }
