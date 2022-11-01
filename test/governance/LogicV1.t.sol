@@ -11,12 +11,14 @@ contract ChainInsightGovernanceLogicV1Test is Test {
     address implementation = 0x3333333333333333333333333333333333333333;
     address executorContract = 0x4444444444444444444444444444444444444444;
     address admin = 0x1111111111111111111111111111111111111111;
+    address vetoer = 0x5555555555555555555555555555555555555555;
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
     uint256 votingPeriod = 5760;
     uint256 votingDelay = 1;
+    uint8 proposalThreshold = 1;
 
-    address[] targets = [0x5555555555555555555555555555555555555555];
+    address[] targets = [0x6666666666666666666666666666666666666666];
     uint256[] values = [0];
     string[] signatures = ["func(uint)"];
     bytes[] calldatas = [abi.encodePacked("5")];
@@ -31,7 +33,7 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             executorContract,
-            admin,
+            vetoer,
             executingGracePeriod,
             executingDelay,
             votingPeriod,
@@ -40,11 +42,12 @@ contract ChainInsightGovernanceLogicV1Test is Test {
 
         logic.initialize(
             executorContract,
-            admin,
+            vetoer,
             executingGracePeriod,
             executingDelay,
             votingPeriod,
-            votingDelay
+            votingDelay,
+            proposalThreshold
         );
     }
 
