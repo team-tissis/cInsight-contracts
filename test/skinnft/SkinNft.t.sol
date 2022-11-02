@@ -7,7 +7,7 @@ import "./../../src/sbt/Sbt.sol";
 import "./../../src/sbt/SbtImp.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
-contract SbtTest is Test {
+contract SkinNftTest is Test {
     address admin = address(0xad000);
     Sbt internal sbt;
     SbtImp internal imp;
