@@ -2,9 +2,10 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
+import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
 
-contract Sbt {
+contract Sbt is ISbt {
     modifier onlyExecutor() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
@@ -189,7 +190,7 @@ contract Sbt {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.baseURI = _newBaseURI;
     }
-
+    
     function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
         external
         onlyExecutor

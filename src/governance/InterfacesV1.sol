@@ -1,5 +1,7 @@
 pragma solidity ^0.8.16;
 
+import '../sbt/ISbt.sol';
+
 contract ChainInsightGovernanceEventsV1 {
     /// @notice An event emitted when a new proposal is created
     event ProposalCreated(
@@ -111,6 +113,9 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
     /// @notice The address of ChainInsightExecutor
     IChainInsightExecutor public executorContract;
 
+    /// @notice The address of ChainInsightExecutor
+    ISbt public sbtContract;
+
     /// @notice The latest proposal for each proposer
     mapping(address => uint256) public latestProposalIds; 
 
@@ -168,7 +173,7 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         /// @notice Whether or not the voter supports the proposal or abstains
         uint8 support;
         /// @notice The number of votes the voter had, which were cast
-        uint96 votes;
+        uint256 votes;
     }
 
     /// @notice Possible states that a proposal may be in

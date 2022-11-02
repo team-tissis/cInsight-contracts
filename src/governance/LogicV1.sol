@@ -1,7 +1,8 @@
 pragma solidity ^0.8.16;
 
-import "./InterfacesV1.sol";
-import "../libs/SbtLib.sol";
+import './InterfacesV1.sol';
+import '../sbt/ISbt.sol';
+import "forge-std/Test.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -55,12 +56,14 @@ contract ChainInsightLogicV1 is
     /**
      * @notice Used to initialize the contract during delegator contructor
      * @param executorContract_ The address of the Executor
+     * @param sbtContract_ The address of the Sbt contract
      * @param vetoer_ The address allowed to unilaterally veto proposals
      * @param votingPeriod_ The initial voting period
      * @param votingDelay_ The initial voting delay
      */
     function initialize(
         address executorContract_,
+        address sbtContract_,
         address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
@@ -77,6 +80,8 @@ contract ChainInsightLogicV1 is
             executorContract_ != address(0),
             "LogicV1::initialize: invalid Executor address"
         );
+
+        require(sbtContract_ != address(0), 'LogicV1::initialize: invalid SBT contract address');
 
         require(
             executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD &&
@@ -116,12 +121,14 @@ contract ChainInsightLogicV1 is
         emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
         executorContract = IChainInsightExecutor(executorContract_);
+        sbtContract = ISbt(sbtContract_);
         vetoer = vetoer_;
 
         executingGracePeriod = executingGracePeriod_;
         executingDelay = executingDelay_;
         votingPeriod = votingPeriod_;
         votingDelay = votingDelay_;
+        proposalThreshold = proposalThreshold_;
     }
 
     /**
@@ -140,10 +147,8 @@ contract ChainInsightLogicV1 is
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-
         require(
-            sbtstruct.grades[msg.sender] >= proposalThreshold,
+            sbtContract.gradeOf(msg.sender) >= proposalThreshold,
             'LogicV1::propose: proposer must hold Bonfire SBT'
         );
 
@@ -224,7 +229,7 @@ contract ChainInsightLogicV1 is
         );
         Proposal storage proposal = proposals[proposalId];
 
-        uint256 eta = block.timestamp + executingDelay;
+        uint256 eta = block.number + executingDelay;
         for (uint256 i = 0; i < proposal.targets.length; i++) {
             queueOrRevertInternal(
                 proposal.targets[i],
@@ -378,7 +383,7 @@ contract ChainInsightLogicV1 is
             return ProposalState.Succeeded;
         } else if (proposal.executed) {
             return ProposalState.Executed;
-        } else if (block.timestamp >= proposal.eta + executingGracePeriod) {
+        } else if (block.number >= proposal.eta + executingGracePeriod) {
             return ProposalState.Expired;
         } else {
             return ProposalState.Queued;
@@ -470,11 +475,8 @@ contract ChainInsightLogicV1 is
         address voter,
         uint256 proposalId,
         uint8 support
-    ) internal returns (uint96) {
-        require(
-            state(proposalId) == ProposalState.Active,
-            "LogicV1::castVoteInternal: voting is closed"
-        );
+    ) internal returns (uint256) {
+        require(state(proposalId) == ProposalState.Active, 'LogicV1::castVoteInternal: voting is closed');
 
         require(support <= 2, "LogicV1::castVoteInternal: invalid vote type");
         Proposal storage proposal = proposals[proposalId];
@@ -486,7 +488,7 @@ contract ChainInsightLogicV1 is
         );
 
         /// @notice retrieve voting weight of voter
-        uint96 votes = getVotes(voter);
+        uint256 votes = getVotes(voter);
 
         require(votes > 0, "LogicV1::propose: voter must hold Bonfire SBT");
 
@@ -593,52 +595,14 @@ contract ChainInsightLogicV1 is
     }
 
     /**
-     * @notice Begins transfer of admin rights. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @dev Admin function to begin change of admin. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @param newPendingAdmin New pending admin.
-     */
-    function _setPendingAdmin(address newPendingAdmin) external {
-        require(msg.sender == admin, "LogicV1::_setPendingAdmin: admin only");
-
-        // Save current value, if any, for inclusion in log
-        address oldPendingAdmin = pendingAdmin;
-
-        // Store pendingAdmin with value newPendingAdmin
-        pendingAdmin = newPendingAdmin;
-
-        emit NewPendingAdmin(oldPendingAdmin, newPendingAdmin);
-    }
-
-    /**
-     * @notice Accepts transfer of admin rights. msg.sender must be pendingAdmin
-     * @dev Admin function for pending admin to accept role and update admin
-     */
-    function _acceptAdmin() external {
-        require(
-            msg.sender == pendingAdmin && msg.sender != address(0),
-            "LogicV1::_acceptAdmin: pending admin only"
-        );
-
-        // Save current values for inclusion in log
-        address oldAdmin = admin;
-        address oldPendingAdmin = pendingAdmin;
-
-        // Store admin with value pendingAdmin
-        admin = pendingAdmin;
-
-        // Clear the pending value
-        pendingAdmin = address(0);
-
-        emit NewAdmin(oldAdmin, admin);
-        emit NewPendingAdmin(oldPendingAdmin, pendingAdmin);
-    }
-
-    /**
      * @notice Begins transition of vetoer. The newPendingVetoer must call _acceptVetoer to finalize the transfer.
      * @param newPendingVetoer New Pending Vetoer
      */
     function _setPendingVetoer(address newPendingVetoer) public {
-        require(msg.sender == vetoer, "LogicV1::veto: vetoer only");
+        // TODO: delete
+        console.log(msg.sender);
+        console.log(tx.origin);
+        require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
 
         emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
 
@@ -685,9 +649,9 @@ contract ChainInsightLogicV1 is
         return chainId;
     }
 
-    function getVotes(address voter) internal view returns (uint96) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint96 votes = uint96(sbtstruct.grades[voter]);
+    function getVotes(address voter) internal view returns (uint256) {
+        // given vote number equals to his or her grade
+        uint256 votes = sbtContract.gradeOf(voter);
         return votes;
     }
 }
