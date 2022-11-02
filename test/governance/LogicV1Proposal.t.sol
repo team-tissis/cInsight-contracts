@@ -17,6 +17,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     SbtImp internal imp;
 
     address admin = address(1);
+    address logicAdminTmp = address(0);
     address vetoer = address(2);
     address proposer = address(3);
     address voter = address(4);
@@ -65,6 +66,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
             proposalThreshold
         );
 
+        vm.prank(logicAdminTmp);
         logic.initialize(
             address(executor),
             address(sbt),

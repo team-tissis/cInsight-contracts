@@ -14,6 +14,7 @@ contract ChainInsightLogicV1VetoerTest is Test {
     Sbt internal sbt;
 
     address admin = address(1);
+    address logicAdminTmp = address(0);
     address vetoer = address(2);
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
@@ -40,6 +41,7 @@ contract ChainInsightLogicV1VetoerTest is Test {
             proposalThreshold
         );
 
+        vm.prank(logicAdminTmp);
         logic.initialize(
             address(executor),
             address(sbt),
