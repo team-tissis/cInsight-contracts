@@ -76,6 +76,8 @@ contract ChainInsightLogicV1 is
             "LogicV1::initialize: can only initialize once"
         );
 
+        require(msg.sender == admin, "LogicV1::initialize: admin only");
+
         require(
             executorContract_ != address(0),
             "LogicV1::initialize: invalid Executor address"
