@@ -9,6 +9,7 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
         address executorContract_,
         address sbtContract_,
         address admin_,
+        address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
         uint256 votingPeriod_,
@@ -23,7 +24,7 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
                 'initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)',
                 executorContract_,
                 sbtContract_,
-                admin_,
+                vetoer_,
                 executingGracePeriod_,
                 executingDelay_,
                 votingPeriod_,
@@ -41,7 +42,7 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
      * @notice Called by the admin to update the implementation of the delegator
      * @param implementation_ The address of the new implementation for delegation
      */
-    function _setImplementation(address implementation_) internal {
+    function _setImplementation(address implementation_) public {
         require(msg.sender == admin, 'NounsDAOProxy::_setImplementation: admin only');
 
         require(implementation_ != address(0), 'NounsDAOProxy::_setImpelementation: invalid implementation address');
@@ -56,34 +57,42 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
         emit NewImplementation(oldImplementation, implementation);
     }
 
-    function setImplementationAndInitialize(
-        address implementation_,
-        address executorContract_,
-        address sbtContract_,
-        address admin_,
-        uint256 executingGracePeriod_,
-        uint256 executingDelay_,
-        uint256 votingPeriod_,
-        uint256 votingDelay_,
-        uint256 proposalThreshold_
-        ) public {
-        _setImplementation(implementation_);
+    /**
+     * @notice Begins transfer of admin rights. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
+     * @dev Function to begin change of admin. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
+     * @param newPendingAdmin New pending admin.
+     */
+    function _setPendingAdmin(address newPendingAdmin) external {
+        require(msg.sender == address(this), 'ProxyV1::_setPendingAdmin: pending admin can be setted only through voting');
 
-        delegateTo(
-            implementation_,
-            abi.encodeWithSignature(
-                'initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)',
-                executorContract_,
-                sbtContract_,
-                admin_,
-                executingGracePeriod_,
-                executingDelay_,
-                votingPeriod_,
-                votingDelay_,
-                proposalThreshold_
-            )
-        );
+        // Save current value, if any, for inclusion in log
+        address oldPendingAdmin = pendingAdmin;
 
+        // Store pendingAdmin with value newPendingAdmin
+        pendingAdmin = newPendingAdmin;
+
+        emit NewPendingAdmin(oldPendingAdmin, newPendingAdmin);
+    }
+
+    /**
+     * @notice Accepts transfer of admin rights. msg.sender must be pendingAdmin
+     * @dev Admin function for pending admin to accept role and update admin
+     */
+    function _acceptAdmin() external {
+        require(msg.sender == pendingAdmin, 'ProxyV1::_acceptAdmin: pending admin only');
+
+        // Save current values for inclusion in log
+        address oldAdmin = admin;
+        address oldPendingAdmin = pendingAdmin;
+
+        // Store admin with value pendingAdmin
+        admin = pendingAdmin;
+
+        // Clear the pending value
+        pendingAdmin = address(0);
+
+        emit NewAdmin(oldAdmin, admin);
+        emit NewPendingAdmin(oldPendingAdmin, pendingAdmin);
     }
 
     /**

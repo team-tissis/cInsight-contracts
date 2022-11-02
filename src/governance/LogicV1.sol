@@ -228,7 +228,7 @@ contract ChainInsightLogicV1 is
         );
         Proposal storage proposal = proposals[proposalId];
 
-        uint256 eta = block.timestamp + executingDelay;
+        uint256 eta = block.number + executingDelay;
         for (uint256 i = 0; i < proposal.targets.length; i++) {
             queueOrRevertInternal(
                 proposal.targets[i],
@@ -382,7 +382,7 @@ contract ChainInsightLogicV1 is
             return ProposalState.Succeeded;
         } else if (proposal.executed) {
             return ProposalState.Executed;
-        } else if (block.timestamp >= proposal.eta + executingGracePeriod) {
+        } else if (block.number >= proposal.eta + executingGracePeriod) {
             return ProposalState.Expired;
         } else {
             return ProposalState.Queued;
@@ -594,6 +594,7 @@ contract ChainInsightLogicV1 is
     }
 
     /**
+<<<<<<< HEAD
      * @notice Begins transfer of admin rights. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
      * @dev Admin function to begin change of admin. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
      * @param newPendingAdmin New pending admin.
@@ -635,11 +636,20 @@ contract ChainInsightLogicV1 is
     }
 
     /**
+=======
+>>>>>>> dc4be61 (MOD: fig bugs)
      * @notice Begins transition of vetoer. The newPendingVetoer must call _acceptVetoer to finalize the transfer.
      * @param newPendingVetoer New Pending Vetoer
      */
     function _setPendingVetoer(address newPendingVetoer) public {
+<<<<<<< HEAD
         require(msg.sender == vetoer, "LogicV1::veto: vetoer only");
+=======
+        // TODO: delete
+        console.log(msg.sender);
+        console.log(tx.origin);
+        require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
+>>>>>>> dc4be61 (MOD: fig bugs)
 
         emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
 

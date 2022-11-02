@@ -16,12 +16,12 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
 
     // function acceptLogicAddress() external {
     function setLogicAddress(address newLogicAddress) external {
-        // require(msg.sender == pendingGovContract, 'Executor::acceptGovContract: Call must come from pendingGovContract.');
+        // require(msg.sender == pendingGovContract, 'ExecutorV1::acceptGovContract: Call must come from pendingGovContract.');
         // logicAddress = msg.sender;
         // pendingLogicAddress = address(0);
         require(
             msg.sender == address(this),
-            'Executor::setPendingLogicAddress: Call must come from Executor.'
+            'ExecutorV1::setPendingLogicAddress: Call must come from ExecutorV1.'
         );
 
         address oldLogicAddress = logicAddress;
@@ -34,7 +34,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
      * function setPendingLogicAddress(address pendingLogicAddress_) public {
      *     require(
      *         msg.sender == address(this),
-     *         'Executor::setPendingLogicAddress: Call must come from Executor.'
+     *         'ExecutorV1::setPendingLogicAddress: Call must come from ExecutorV1.'
      *     );
      *     pendingLogicAddress = pendingLogicAddress_;
 
@@ -53,7 +53,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         bytes calldata data,
         uint256 eta
     ) external returns (bytes32) {
-        require(msg.sender == logicAddress, 'Executor::queueTransaction: Call must come from Logic.');
+        require(msg.sender == logicAddress, 'ExecutorV1::queueTransaction: Call must come from Logic.');
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = true;
@@ -69,7 +69,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         bytes calldata data,
         uint256 eta
     ) external {
-        require(msg.sender == logicAddress, 'Executor::cancelTransaction: Call must come from Logic.');
+        require(msg.sender == logicAddress, 'ExecutorV1::cancelTransaction: Call must come from Logic.');
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = false;
@@ -85,18 +85,18 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         uint256 eta,
         uint256 executingGracePeriod
     ) external payable returns (bytes memory) {
-        require(msg.sender == logicAddress, 'Executor::executeTransaction: Call must come from Logic.');
+        require(msg.sender == logicAddress, 'ExecutorV1::executeTransaction: Call must come from Logic.');
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
 
-        require(queuedTransactions[txHash], "Executor::executeTransaction: Transaction hasn't been queued.");
+        require(queuedTransactions[txHash], "ExecutorV1::executeTransaction: Transaction hasn't been queued.");
 
         require(
-            getBlockTimestamp() >= eta,
-            "Executor::executeTransaction: Transaction hasn't surpassed time lock."
+            block.number >= eta,
+            "ExecutorV1::executeTransaction: Transaction hasn't surpassed time lock."
         );
         require(
-            getBlockTimestamp() <= eta + executingGracePeriod,
-            'Executor::executeTransaction: Transaction is stale.'
+            block.number <= eta + executingGracePeriod,
+            'ExecutorV1::executeTransaction: Transaction is stale.'
         );
 
         // delete transaction from queue
@@ -113,15 +113,11 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
 
         /// @notice The first four bytes correspond to function selector defined else clause
         (bool success, bytes memory returnData) = target.call{ value: value }(callData);
-        require(success, 'Executor::executeTransaction: Transaction executed reverted.');
+        require(success, 'ExecutorV1::executeTransaction: Transaction executed reverted.');
 
         emit ExecuteTransaction(txHash, target, value, signature, data, eta);
 
         return returnData;
-    }
-
-    function getBlockTimestamp() internal view returns (uint256) {
-        return block.timestamp;
     }
 
     receive() external payable {}
