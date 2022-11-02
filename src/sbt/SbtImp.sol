@@ -211,25 +211,28 @@ contract SbtImp {
 
         uint256 _dist1;
         uint256 _dist2;
+        address _node1;
+        address _node2;
         bool connectFlag = false;
 
-        while (node1 != address(0)) {
-            if (node1 == node2) {
+        _node1 = node1;
+        while (_node1 != address(0)) {
+            if (_node1 == node2) {
                 connectFlag = true;
                 break;
-            } else {
-                while (sbtstruct.referralMap[node2] != address(0)) {
-                    node2 = sbtstruct.referralMap[node2];
-                    _dist2 += 1;
-                    if (node1 == node2) {
-                        connectFlag = true;
-                        break;
-                    }
-                }
-                node1 = sbtstruct.referralMap[node1];
-                _dist1 += 1;
-                _dist2 = 0;
             }
+            _node2 = sbtstruct.referralMap[node2];
+            while (_node2 != address(0)) {
+                _dist2 += 1;
+                if (_node1 == _node2) {
+                    connectFlag = true;
+                    break;
+                }
+                _node2 = sbtstruct.referralMap[_node2];
+            }
+            _node1 = sbtstruct.referralMap[_node1];
+            _dist1 += 1;
+            _dist2 = 0;
         }
         return (_dist1 + _dist2, connectFlag);
     }
