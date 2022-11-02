@@ -2,15 +2,18 @@
 pragma solidity ^0.8.16;
 
 import "forge-std/Script.sol";
+import {ChainInsightLogicV1} from "src/governance/LogicV1.sol";
+import {ChainInsightExecutorV1} from "src/governance/ExecutorV1.sol";
+import {ChainInsightGovernanceProxyV1} from "src/governance/ProxyV1.sol";
 import {Sbt} from "src/sbt/Sbt.sol";
 import {SbtImp} from "src/sbt/SbtImp.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
 import {ISkinNft} from "src/skinnft/ISkinNft.sol";
 
 contract cInsightScript is Script {
-    ChainInsightGovernanceProxyV1 proxy;
     ChainInsightLogicV1 logic;
     ChainInsightExecutorV1 executor;
+    ChainInsightGovernanceProxyV1 proxy;
     Sbt sbt;
     SbtImp sbtImp;
     SkinNft skinNft;
@@ -33,13 +36,11 @@ contract cInsightScript is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         logic = new ChainInsightLogicV1();
-        newLogic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1(address(logic));
         sbt = new Sbt();
         sbtImp = new SbtImp();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
-        vm.prank(proxy);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
@@ -53,7 +54,8 @@ contract cInsightScript is Script {
             proposalThreshold
         );
 
-        logic.initialize(
+        address(proxy).call(abi.encodeWithSignature(
+            "initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)",
             address(executor),
             address(sbt),
             vetoer,
@@ -62,7 +64,7 @@ contract cInsightScript is Script {
             votingPeriod,
             votingDelay,
             proposalThreshold
-        );
+        ));
 
         sbt.init(
             address(executor),
