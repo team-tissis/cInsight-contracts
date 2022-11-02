@@ -142,10 +142,10 @@ contract ChainInsightLogicV1 is
     ) public returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        // require(
-        //     sbtstruct.grade[msg.sender] >= proposalThreshold,
-        //     'LogicV1::propose: proposer must hold Bonfire SBT'
-        // );
+        require(
+            sbtstruct.grades[msg.sender] >= proposalThreshold,
+            'LogicV1::propose: proposer must hold Bonfire SBT'
+        );
 
         require(
             targets.length == values.length &&
@@ -687,7 +687,7 @@ contract ChainInsightLogicV1 is
 
     function getVotes(address voter) internal view returns (uint96) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        // uint96 votes = sbtstruct.grade[voter];
-        // return votes;
+        uint96 votes = uint96(sbtstruct.grades[voter]);
+        return votes;
     }
 }
