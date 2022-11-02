@@ -11,10 +11,7 @@ contract Sbt is ISbt {
         require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         _;
     }
-<<<<<<< HEAD
     event executorChanged(address _newOwner);
-=======
->>>>>>> 4cde51e (MOD: fix bugs, add tests, ISbt)
 
     function init(
         address _executor,

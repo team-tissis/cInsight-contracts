@@ -595,62 +595,14 @@ contract ChainInsightLogicV1 is
     }
 
     /**
-<<<<<<< HEAD
-     * @notice Begins transfer of admin rights. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @dev Admin function to begin change of admin. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @param newPendingAdmin New pending admin.
-     */
-    function _setPendingAdmin(address newPendingAdmin) external {
-        require(msg.sender == admin, "LogicV1::_setPendingAdmin: admin only");
-
-        // Save current value, if any, for inclusion in log
-        address oldPendingAdmin = pendingAdmin;
-
-        // Store pendingAdmin with value newPendingAdmin
-        pendingAdmin = newPendingAdmin;
-
-        emit NewPendingAdmin(oldPendingAdmin, newPendingAdmin);
-    }
-
-    /**
-     * @notice Accepts transfer of admin rights. msg.sender must be pendingAdmin
-     * @dev Admin function for pending admin to accept role and update admin
-     */
-    function _acceptAdmin() external {
-        require(
-            msg.sender == pendingAdmin && msg.sender != address(0),
-            "LogicV1::_acceptAdmin: pending admin only"
-        );
-
-        // Save current values for inclusion in log
-        address oldAdmin = admin;
-        address oldPendingAdmin = pendingAdmin;
-
-        // Store admin with value pendingAdmin
-        admin = pendingAdmin;
-
-        // Clear the pending value
-        pendingAdmin = address(0);
-
-        emit NewAdmin(oldAdmin, admin);
-        emit NewPendingAdmin(oldPendingAdmin, pendingAdmin);
-    }
-
-    /**
-=======
->>>>>>> dc4be61 (MOD: fig bugs)
      * @notice Begins transition of vetoer. The newPendingVetoer must call _acceptVetoer to finalize the transfer.
      * @param newPendingVetoer New Pending Vetoer
      */
     function _setPendingVetoer(address newPendingVetoer) public {
-<<<<<<< HEAD
-        require(msg.sender == vetoer, "LogicV1::veto: vetoer only");
-=======
         // TODO: delete
         console.log(msg.sender);
         console.log(tx.origin);
         require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
->>>>>>> dc4be61 (MOD: fig bugs)
 
         emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
 
