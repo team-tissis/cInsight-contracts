@@ -11,6 +11,7 @@ import "../../src/sbt/SbtImp.sol";
 contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
+    ChainInsightLogicV1 internal newLogic;
     ChainInsightExecutorV1 internal executor;
     Sbt internal sbt;
     SbtImp internal imp;
@@ -31,10 +32,9 @@ contract ChainInsightLogicV1PropososalTest is Test {
     uint256[] values = [0];
     // string[] signatures = ["setMonthlyDistributedFavoNum(uint16)"];
     // bytes[] calldatas = [abi.encode(99)];
-    string[] signatures = ["gradeOf(address)"];
-    bytes[] calldatas = [abi.encode(address(voter))];
-    string description = "Check grade of voter";
-
+    bytes[] calldatas;
+    string[] signatures = ["setLogicAddress(address)"];
+    string description = "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] proposalIds = new uint256[](2);
     uint256[] etas = new uint256[](2);
     bytes32[] txHashs = new bytes32[](2);
@@ -42,11 +42,13 @@ contract ChainInsightLogicV1PropososalTest is Test {
     function setUp() public {
         // create and initialize contracts
         logic = new ChainInsightLogicV1();
+        newLogic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1(address(logic));
         sbt = new Sbt();
         imp = new SbtImp();
 
-        targets = [address(sbt)];
+        targets = [address(executor)];
+        calldatas = [abi.encode(address(newLogic))];
         
         vm.prank(admin);
         proxy = new ChainInsightGovernanceProxyV1(
@@ -141,12 +143,14 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
     function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
+        assertFalse(executor.logicAddress() == address(newLogic));
 
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
 
         logic.execute(proposalIds[0]);
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
+        assertTrue(executor.logicAddress() == address(newLogic));
     }
 
     function testCancel() public {
@@ -164,7 +168,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.prank(vetoer);
         logic.veto(proposalIds[0]);
 
-        // TODO: why compile error?
+        // TODO: struct proposals is private...
         // assertTrue(logic.proposals(proposalIds[0]).vetoed);
         assertFalse(executor.queuedTransactions(txHashs[0]));
     }
