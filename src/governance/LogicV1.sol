@@ -128,6 +128,7 @@ contract ChainInsightLogicV1 is
         executingDelay = executingDelay_;
         votingPeriod = votingPeriod_;
         votingDelay = votingDelay_;
+        proposalThreshold = proposalThreshold_;
     }
 
     /**
