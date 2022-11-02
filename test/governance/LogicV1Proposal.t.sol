@@ -34,11 +34,12 @@ contract ChainInsightLogicV1PropososalTest is Test {
     // bytes[] calldatas = [abi.encode(99)];
     bytes[] calldatas;
     string[] signatures = ["setLogicAddress(address)"];
-    string description = "ChainInsightExecutorV1: Change address of logic contract";
+    string description =
+        "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] proposalIds = new uint256[](2);
     uint256[] etas = new uint256[](2);
     bytes32[] txHashs = new bytes32[](2);
-    
+
     function setUp() public {
         // create and initialize contracts
         logic = new ChainInsightLogicV1();
@@ -49,7 +50,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         targets = [address(executor)];
         calldatas = [abi.encode(address(newLogic))];
-        
+
         vm.prank(admin);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
@@ -82,20 +83,9 @@ contract ChainInsightLogicV1PropososalTest is Test {
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/",
-            nftAddress
+            nftAddress,
+            address(imp)
         );
-        bytes4[] memory sigs = new bytes4[](4);
-        address[] memory impAddress = new address[](4);
-        sigs[0] = bytes4(keccak256("mint()"));
-        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
-        sigs[2] = bytes4(keccak256("refer(address)"));
-        sigs[3] = bytes4(keccak256("impInit()"));
-        impAddress[0] = address(imp);
-        impAddress[1] = address(imp);
-        impAddress[2] = address(imp);
-        impAddress[3] = address(imp);
-        vm.prank(admin);
-        sbt.setImplementation(sigs, impAddress);
 
         // mint SBT to obtain voting right
         vm.deal(proposer, 10000 ether);
@@ -129,7 +119,15 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         logic.queue(proposalIds[0]);
         etas[0] = block.number + executingDelay;
-        txHashs[0] = keccak256(abi.encode(targets[0], values[0], signatures[0], calldatas[0], etas[0]));
+        txHashs[0] = keccak256(
+            abi.encode(
+                targets[0],
+                values[0],
+                signatures[0],
+                calldatas[0],
+                etas[0]
+            )
+        );
     }
 
     function testPropose() public {

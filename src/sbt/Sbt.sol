@@ -11,7 +11,6 @@ contract Sbt is ISbt {
         require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         _;
     }
-    event executorChanged(address _newOwner);
 
     function init(
         address _executor,
@@ -41,6 +40,7 @@ contract Sbt is ISbt {
         sbtstruct.gradeNum = 5;
         uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
+        uint8[5] memory _gradeRate = [80, 40, 20, 5, 0];
 
         for (uint256 i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
@@ -52,9 +52,9 @@ contract Sbt is ISbt {
         sigs[0] = bytes4(keccak256("mint()"));
         sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
         sigs[2] = bytes4(keccak256("burn(uint)"));
-        sigs[3] = bytes4(keccak256("setFreemintQuantity(address, uint)"));
+        sigs[3] = bytes4(keccak256("setFreemintQuantity(address,uint256)"));
         sigs[4] = bytes4(keccak256("monthInit()"));
-        sigs[5] = bytes4(keccak256("addFavos(address, uint8)"));
+        sigs[5] = bytes4(keccak256("addFavos(address,uint8)"));
         sigs[6] = bytes4(keccak256("refer(address)"));
 
         for (uint256 i = 0; i < sigs.length; i++) {
@@ -166,9 +166,7 @@ contract Sbt is ISbt {
         return sbtstruct.referralRate;
     }
 
-
     function lastUpdatedMonth() external view returns (uint256) {
-
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.lastUpdatedMonth;
     }
@@ -179,7 +177,7 @@ contract Sbt is ISbt {
         else return sbtstruct.sbtReferralPrice;
     }
 
-    function mintedTokenNumber() external view returns (uint) {
+    function mintedTokenNumber() external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.mintIndex;
     }
@@ -190,7 +188,7 @@ contract Sbt is ISbt {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.baseURI = _newBaseURI;
     }
-    
+
     function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
         external
         onlyExecutor
