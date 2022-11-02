@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.16;
 
 import "forge-std/Script.sol";
-
 import {Sbt} from "src/sbt/Sbt.sol";
 import {SbtImp} from "src/sbt/SbtImp.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
@@ -13,11 +12,11 @@ contract cInsightScript is Script {
     SbtImp sbtImp;
     SkinNft skinNft;
 
-    address admin = address(0xad000); //TODO: executor に変更
+    address admin = address(9);
     string baseURL = "https://thechaininsight.github.io/";
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("DEPROYER_KEY");
 
         // excute operations as a deployer account until stop broadcast
         vm.startBroadcast(deployerPrivateKey);
@@ -31,23 +30,10 @@ contract cInsightScript is Script {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/"),
-            address(skinNft)
+            address(skinNft),
+            address(sbtImp)
         );
         skinNft.init(address(sbt));
-
-        bytes4[] memory sigs = new bytes4[](4);
-        address[] memory impAddress = new address[](4);
-        sigs[0] = bytes4(keccak256("mint()"));
-        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
-        sigs[2] = bytes4(keccak256("refer(address)"));
-        sigs[3] = bytes4(keccak256("impInit()"));
-        impAddress[0] = address(sbtImp);
-        impAddress[1] = address(sbtImp);
-        impAddress[2] = address(sbtImp);
-        impAddress[3] = address(sbtImp);
-
-        vm.prank(admin);
-        sbt.setImplementation(sigs, impAddress);
 
         vm.stopBroadcast();
     }

@@ -17,7 +17,8 @@ contract Sbt {
         string calldata _name,
         string calldata _symbol,
         string calldata _baseURI,
-        address _nftAddress
+        address _nftAddress,
+        address _impAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(_admin != address(0), "_admin must not be address 0");
@@ -36,9 +37,24 @@ contract Sbt {
         sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
         uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
-        for (uint i = 0; i < 5; i++) {
+        for (uint256 i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
             sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
+        }
+
+        bytes4[] memory sigs = new bytes4[](7);
+        sigs[0] = bytes4(keccak256("mint()"));
+        sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
+        sigs[2] = bytes4(keccak256("burn(uint)"));
+        sigs[3] = bytes4(keccak256("setFreemintQuantity(address, uint)"));
+        sigs[4] = bytes4(keccak256("monthInit()"));
+        sigs[5] = bytes4(keccak256("addFavos(address, uint8)"));
+        sigs[6] = bytes4(keccak256("refer(address)"));
+
+        for (uint256 i = 0; i < sigs.length; i++) {
+            unchecked {
+                implementations[sigs[i]] = _impAddress;
+            }
         }
     }
 
@@ -109,32 +125,32 @@ contract Sbt {
         emit adminChanged(_newContactOwner);
     }
 
-    function favoOf(address _address) external view returns (uint) {
+    function favoOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.favos[_address];
     }
 
-    function makiOf(address _address) external view returns (uint) {
+    function makiOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.makis[_address];
     }
 
-    function gradeOf(address _address) external view returns (uint) {
+    function gradeOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.grades[_address];
     }
 
-    function makiMemoryOf(address _address) external view returns (uint) {
+    function makiMemoryOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.makiMemorys[_address];
     }
 
-    function referralOf(address _address) external view returns (uint) {
+    function referralOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.referrals[_address];
     }
 
-    function monthlyDistributedFavoNum() external view returns (uint) {
+    function monthlyDistributedFavoNum() external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.monthlyDistributedFavoNum;
     }
@@ -144,7 +160,7 @@ contract Sbt {
         return sbtstruct.referralRate;
     }
 
-    function lastUpdatedMonth() external view returns (uint) {
+    function lastUpdatedMonth() external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.lastUpdatedMonth;
     }
