@@ -54,18 +54,6 @@ contract cInsightScript is Script {
             proposalThreshold
         );
 
-        address(proxy).call(abi.encodeWithSignature(
-            "initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)",
-            address(executor),
-            address(sbt),
-            vetoer,
-            executingGracePeriod,
-            executingDelay,
-            votingPeriod,
-            votingDelay,
-            proposalThreshold
-        ));
-
         sbt.init(
             address(executor),
             "ChainInsight",
