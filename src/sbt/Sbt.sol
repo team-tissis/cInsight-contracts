@@ -5,15 +5,15 @@ import "./../libs/SbtLib.sol";
 import "./../skinnft/ISkinNft.sol";
 
 contract Sbt {
-    modifier onlyAdmin() {
+    modifier onlyExecutor() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
+        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         _;
     }
-    event adminChanged(address _newOwner);
+    event executorChanged(address _newOwner);
 
     function init(
-        address _admin,
+        address _executor,
         string calldata _name,
         string calldata _symbol,
         string calldata _baseURI,
@@ -21,9 +21,9 @@ contract Sbt {
         address _impAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(_admin != address(0), "_admin must not be address 0");
-        require(sbtstruct.admin == address(0), "INITIATED ALREADY");
-        sbtstruct.admin = _admin;
+        require(_executor != address(0), "_executor must not be address 0");
+        require(sbtstruct.executor == address(0), "INITIATED ALREADY");
+        sbtstruct.executor = _executor;
         sbtstruct.name = _name;
         sbtstruct.symbol = _symbol;
         sbtstruct.baseURI = _baseURI;
@@ -35,11 +35,16 @@ contract Sbt {
         sbtstruct.sbtReferralIncentive = 10 ether;
         sbtstruct.monthlyDistributedFavoNum = 20;
         sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
+        sbtstruct.favoUseUpIncentive = 1;
+        sbtstruct.makiDecayRate = 90;
+        sbtstruct.gradeNum = 5;
         uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
+
         for (uint256 i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
             sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
+            sbtstruct.gradeRate.push(_gradeRate[i]);
         }
 
         bytes4[] memory sigs = new bytes4[](7);
@@ -66,7 +71,7 @@ contract Sbt {
         address[] calldata _impAddress
     ) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
+        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         require(_sigs.length == _impAddress.length, "INVALID LENGTH");
         for (uint256 i = 0; i < _sigs.length; i++) {
             unchecked {
@@ -76,9 +81,9 @@ contract Sbt {
     }
 
     // get functions
-    function admin() external view returns (address) {
+    function executor() external view returns (address) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.admin;
+        return sbtstruct.executor;
     }
 
     // supportしているERCversionなど
@@ -119,10 +124,10 @@ contract Sbt {
         return sbtstruct.owners[_tokenId];
     }
 
-    function setadmin(address _newContactOwner) external onlyAdmin {
+    function setExecutor(address _newContactOwner) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.admin = _newContactOwner;
-        emit adminChanged(_newContactOwner);
+        sbtstruct.executor = _newContactOwner;
+        emit executorChanged(_newContactOwner);
     }
 
     function favoOf(address _address) external view returns (uint256) {
@@ -160,7 +165,9 @@ contract Sbt {
         return sbtstruct.referralRate;
     }
 
+
     function lastUpdatedMonth() external view returns (uint256) {
+
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.lastUpdatedMonth;
     }
@@ -171,16 +178,21 @@ contract Sbt {
         else return sbtstruct.sbtReferralPrice;
     }
 
+    function mintedTokenNumber() external view returns (uint) {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.mintIndex;
+    }
+
     // set functions
 
-    function setBaseUri(string memory _newBaseURI) external onlyAdmin {
+    function setBaseUri(string memory _newBaseURI) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.baseURI = _newBaseURI;
     }
 
     function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
         external
-        onlyAdmin
+        onlyExecutor
     {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.monthlyDistributedFavoNum = _monthlyDistributedFavoNum;
@@ -190,7 +202,7 @@ contract Sbt {
         uint8[] memory _referralRate,
         uint8[] memory _skinnftNumRate,
         uint8[] memory _gradeRate
-    ) external onlyAdmin {
+    ) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         uint256 gradeNum = sbtstruct.gradeNum;
         require(_referralRate.length == gradeNum, "INVALID LENGTH");
@@ -207,7 +219,7 @@ contract Sbt {
         uint256 _sbtPrice,
         uint256 _sbtReferralPrice,
         uint256 _sbtReferralIncentive
-    ) external onlyAdmin {
+    ) external onlyExecutor {
         require(
             _sbtReferralPrice >= _sbtReferralIncentive,
             "REFERRAL PRICE MUST BE BIGGER THAN REFERRAL INCENTIVE"

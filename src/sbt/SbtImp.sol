@@ -8,9 +8,9 @@ import "./../skinnft/ISkinNft.sol";
 import "forge-std/Test.sol";
 
 contract SbtImp {
-    modifier onlyAdmin() {
+    modifier onlyExecutor() {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "OWNER ONLY");
+        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
         _;
     }
 
@@ -63,7 +63,7 @@ contract SbtImp {
 
     // set functions
 
-    function burn(uint _tokenId) external {
+    function burn(uint256 _tokenId) external {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(msg.sender == sbtstruct.owners[_tokenId], "SBT OWNER ONLY");
         address currentOwner = sbtstruct.owners[_tokenId];
@@ -81,7 +81,10 @@ contract SbtImp {
 
     function setFreemintQuantity(address _address, uint256 quantity) public {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "ONLY ADMIN CAN SET FREEMINT");
+        require(
+            msg.sender == sbtstruct.executor,
+            "ONLY EXECUTOR CAN SET FREEMINT"
+        );
         ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(_address, quantity);
     }
 
@@ -99,7 +102,7 @@ contract SbtImp {
     }
 
     function _updatemaki(SbtLib.SbtStruct storage sbtstruct) internal {
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             sbtstruct.makis[_address] =
                 sbtstruct.makiMemorys[_address] +
@@ -114,54 +117,65 @@ contract SbtImp {
     }
 
     function _updateGrade(SbtLib.SbtStruct storage sbtstruct) internal {
-        uint accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint256 accountNum = sbtstruct.mintIndex - sbtstruct.burnNum;
+        uint256 gradeNum = sbtstruct.gradeNum;
         uint16[] memory makiSortedIndex = new uint16[](accountNum);
         uint32[] memory makiArray = new uint32[](accountNum);
+        uint256[] memory gradeThreshold = new uint256[](gradeNum);
 
-        uint count;
-        for (uint i = 1; i <= sbtstruct.mintIndex; i++) {
+        uint256 count;
+        uint256 j;
+        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
             address _address = sbtstruct.owners[i];
             if (_address != address(0)) {
-                count += 1;
                 makiSortedIndex[count] = uint16(i);
                 makiArray[count] = uint32(sbtstruct.makis[_address]);
+                count += 1;
             }
         }
         makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
-        uint256 gradeNum = sbtstruct.gradeNum;
-
+        gradeNum--;
+        for (j = 0; j < gradeNum; j++) {
+            gradeThreshold[j] = accountNum * sbtstruct.gradeRate[j];
+        }
+        uint256 grade;
         // burnされていない account 中の上位 x %を計算.
-        for (uint i = 0; i < accountNum; i++) {
+        for (uint256 i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
-            for (uint j = 0; j < gradeNum; j++) {
-                if (i * 100 > accountNum * sbtstruct.gradeRate[j])
-                    // set grade
-                    sbtstruct.grades[_address] = j + 1;
-                // set skin nft freemint
-                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
-                    _address,
-                    sbtstruct.skinnftNumRate[j]
-                );
-                // initialize referral and favos
-                sbtstruct.favos[_address] = 0;
-                sbtstruct.referrals[_address] = 0;
+            grade = 0;
+            for (uint256 j = 0; j < gradeNum; j++) {
+                grade++;
+                if (i * 100 >= gradeThreshold[j]) {
+                    break;
+                }
+                // set grade
             }
+            sbtstruct.grades[_address] = grade;
+            // set skin nft freemint
+            ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
+                _address,
+                sbtstruct.skinnftNumRate[grade - 1]
+            );
+            // initialize referral and favos
+
+            sbtstruct.favos[_address] = 0;
+            sbtstruct.referrals[_address] = 0;
         }
     }
 
     // functions for frontend
     function addFavos(address userTo, uint8 favo) external {
-        require(favo > 0, "INVALID ARGUMENT");
+        require(favo > 0, "favo num must be bigger than 0");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
 
-        uint addmonthlyDistributedFavoNum;
+        uint256 addmonthlyDistributedFavoNum;
         require(
             sbtstruct.monthlyDistributedFavoNum > sbtstruct.favos[msg.sender],
             "INVALID ARGUMENT"
         );
-        uint remainFavo = sbtstruct.monthlyDistributedFavoNum -
+        uint256 remainFavo = sbtstruct.monthlyDistributedFavoNum -
             sbtstruct.favos[msg.sender];
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
@@ -174,44 +188,51 @@ contract SbtImp {
         sbtstruct.favos[msg.sender] += addmonthlyDistributedFavoNum;
 
         // makiMemoryの計算
-        uint upperBound = 5;
-        (uint _dist, bool connectFlag) = _distance(msg.sender, userTo);
+        uint256 upperBound = 5;
+        (uint256 _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            sbtstruct.makiMemorys[userTo] = _dist * favo;
+            sbtstruct.makiMemorys[userTo] =
+                _dist *
+                addmonthlyDistributedFavoNum;
         } else {
-            sbtstruct.makiMemorys[userTo] = upperBound * favo;
+            sbtstruct.makiMemorys[userTo] =
+                upperBound *
+                addmonthlyDistributedFavoNum;
         }
     }
 
     function _distance(address node1, address node2)
         internal
         view
-        returns (uint, bool)
+        returns (uint256, bool)
     {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
 
-        uint _dist1;
-        uint _dist2;
+        uint256 _dist1;
+        uint256 _dist2;
+        address _node1;
+        address _node2;
         bool connectFlag = false;
 
-        while (node1 != address(0)) {
-            if (node1 == node2) {
+        _node1 = node1;
+        while (_node1 != address(0)) {
+            if (_node1 == node2) {
                 connectFlag = true;
                 break;
-            } else {
-                while (node2 != address(0)) {
-                    node2 = sbtstruct.referralMap[node2];
-                    _dist2 += 1;
-                    if (node1 == node2) {
-                        connectFlag = true;
-                        break;
-                    }
-                }
-                node1 = sbtstruct.referralMap[node1];
-                _dist1 += 1;
-                _dist2 = 0;
             }
+            _node2 = sbtstruct.referralMap[node2];
+            while (_node2 != address(0)) {
+                _dist2 += 1;
+                if (_node1 == _node2) {
+                    connectFlag = true;
+                    break;
+                }
+                _node2 = sbtstruct.referralMap[_node2];
+            }
+            _node1 = sbtstruct.referralMap[_node1];
+            _dist1 += 1;
+            _dist2 = 0;
         }
         return (_dist1 + _dist2, connectFlag);
     }
@@ -225,7 +246,7 @@ contract SbtImp {
         );
         require(
             sbtstruct.grades[msg.sender] >= 1 &&
-                sbtstruct.referrals[msg.sender] <=
+                sbtstruct.referrals[msg.sender] <
                 sbtstruct.referralRate[sbtstruct.grades[msg.sender] - 1],
             "REFER LIMIT EXCEEDED"
         );

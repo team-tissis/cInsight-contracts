@@ -6,7 +6,7 @@ library SbtLib {
     bytes32 constant SBT_STRUCT_POSITION = keccak256("chaininsight");
 
     struct SbtStruct {
-        address admin;
+        address executor;
         string name;
         string symbol;
         string baseURI;
