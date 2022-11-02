@@ -8,7 +8,7 @@ import "../../src/governance/ExecutorV1.sol";
 import "../../src/sbt/Sbt.sol";
 import "../../src/sbt/SbtImp.sol";
 
-contract ChainInsightGovernanceLogicV1Test is Test {
+contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightExecutorV1 internal executor;
@@ -29,17 +29,24 @@ contract ChainInsightGovernanceLogicV1Test is Test {
     // propose info
     address[] targets; // set later
     uint256[] values = [0];
+    // string[] signatures = ["setMonthlyDistributedFavoNum(uint16)"];
+    // bytes[] calldatas = [abi.encode(99)];
     string[] signatures = ["gradeOf(address)"];
-    bytes[] calldatas = [abi.encode(voter)];
+    bytes[] calldatas = [abi.encode(address(voter))];
     string description = "Check grade of voter";
+
+    uint256[] proposalIds = new uint256[](2);
+    uint256[] etas = new uint256[](2);
+    bytes32[] txHashs = new bytes32[](2);
     
     function setUp() public {
+        // create and initialize contracts
         logic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1(address(logic));
         sbt = new Sbt();
-        targets = [address(sbt)];
-
         imp = new SbtImp();
+
+        targets = [address(sbt)];
         
         vm.prank(admin);
         proxy = new ChainInsightGovernanceProxyV1(
@@ -66,7 +73,7 @@ contract ChainInsightGovernanceLogicV1Test is Test {
             proposalThreshold
         );
 
-        // sbt initialization
+        // initialize sbt
         // TODO: admin -> executor
         sbt.init(
             admin,
@@ -87,11 +94,12 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         impAddress[3] = address(imp);
         vm.prank(admin);
         sbt.setImplementation(sigs, impAddress);
-    }
 
-    function testProposeToExecute() public {
-        sbt.favoOf(voter);
         // mint SBT to obtain voting right
+        vm.deal(proposer, 10000 ether);
+        vm.prank(proposer);
+        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+
         vm.deal(voter, 10000 ether);
         vm.prank(voter);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
@@ -99,30 +107,66 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         // set block.number to 0
         vm.roll(0);
 
+        // propose
         vm.prank(proposer);
-        uint256 proposalId = logic.propose(
-                                targets,
-                                values,
-                                signatures,
-                                calldatas,
-                                description
-                             );
-
-        assertEq(proposalId, 1);
-        assertEq(logic.latestProposalIds(proposer), 1);
+        proposalIds[0] = logic.propose(
+            targets,
+            values,
+            signatures,
+            calldatas,
+            description
+        );
 
         // voting starts
         vm.roll(votingDelay + 1);
         vm.prank(voter);
-        logic.castVote(proposalId, 1);
+        logic.castVote(proposalIds[0], 1);
 
         // voting ends
         vm.roll(votingDelay + votingPeriod + 1);
 
-        logic.queue(proposalId);
+        logic.queue(proposalIds[0]);
+        etas[0] = block.number + executingDelay;
+        txHashs[0] = keccak256(abi.encode(targets[0], values[0], signatures[0], calldatas[0], etas[0]));
+    }
+
+    function testPropose() public {
+        assertEq(proposalIds[0], 1);
+        assertEq(logic.latestProposalIds(proposer), 1);
+    }
+
+    function testQueue() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+    }
+
+    function testExecute() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
 
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-        logic.execute(proposalId);
+
+        logic.execute(proposalIds[0]);
+
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+    }
+
+    function testCancel() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+
+        vm.prank(proposer);
+        logic.cancel(proposalIds[0]);
+
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+    }
+
+    function testVeto() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+
+        vm.prank(vetoer);
+        logic.veto(proposalIds[0]);
+
+        // TODO: why compile error?
+        // assertTrue(logic.proposals(proposalIds[0]).vetoed);
+        assertFalse(executor.queuedTransactions(txHashs[0]));
     }
 
     receive() external payable {}

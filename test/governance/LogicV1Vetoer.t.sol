@@ -7,7 +7,7 @@ import "../../src/governance/ExecutorV1.sol";
 // import "../../src/governance/InterfacesV1.sol";
 import "../../src/sbt/Sbt.sol";
 
-contract ChainInsightGovernanceLogicV1Test is Test {
+contract ChainInsightLogicV1VetoerTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightExecutorV1 internal executor;
@@ -52,21 +52,21 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         );
     }
 
-    function TestSetPendingVetoer() public {
-        assertEq(logic.pendingVetoer(), address(0));
-
+    function testSetPendingVetoer() public {
         address pendingVetoer = address(55);
+
+        assertFalse(logic.pendingVetoer() == pendingVetoer);
 
         vm.prank(vetoer);
         logic._setPendingVetoer(pendingVetoer);
 
-        assertEq(logic.pendingVetoer(), pendingVetoer);
+        assertTrue(logic.pendingVetoer() == pendingVetoer);
     }
 
-    function TestAcceptVetoer() public {
-        assertEq(logic.vetoer(), address(0));
-
+    function testAcceptVetoer() public {
         address pendingVetoer = address(55);
+
+        assertFalse(logic.vetoer() == pendingVetoer);
 
         vm.prank(vetoer);
         logic._setPendingVetoer(pendingVetoer);
@@ -74,12 +74,11 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         vm.prank(pendingVetoer);
         logic._acceptVetoer();
 
-        assertEq(logic.vetoer(), pendingVetoer);
+        assertTrue(logic.vetoer() == pendingVetoer);
     }
 
-    function TestBurnVetoPower() public {
-        assertEq(logic.vetoer(), vetoer);
-        assertEq(logic.pendingVetoer(), address(0));
+    function testBurnVetoPower() public {
+        assertFalse(logic.vetoer() == address(0));
 
         // set pending vetoer
         address pendingVetoer = address(55);
@@ -87,11 +86,12 @@ contract ChainInsightGovernanceLogicV1Test is Test {
         vm.prank(vetoer);
         logic._setPendingVetoer(pendingVetoer);
 
+        assertFalse(logic.pendingVetoer() == address(0));
         // set vetoer and pending vetoer to address 0
         vm.prank(vetoer);
         logic._burnVetoPower();
 
-        assertEq(logic.vetoer(), address(0));
-        assertEq(logic.pendingVetoer(), address(0));
+        assertTrue(logic.vetoer() == address(0));
+        assertTrue(logic.pendingVetoer() == address(0));
     }
 }
