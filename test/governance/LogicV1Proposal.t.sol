@@ -88,11 +88,11 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // mint SBT to obtain voting right
         vm.deal(proposer, 10000 ether);
         vm.prank(proposer);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
 
         vm.deal(voter, 10000 ether);
         vm.prank(voter);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
 
         // set block.number to 0
         vm.roll(0);
@@ -142,7 +142,9 @@ contract ChainInsightLogicV1PropososalTest is Test {
     function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
         assertFalse(executor.logicAddress() == address(newLogic));
-        (, , , , , , , , , , bool oldExecuted) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , , , bool oldExecuted) = logic.proposals(
+            proposalIds[0]
+        );
         assertFalse(oldExecuted);
 
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
@@ -150,32 +152,38 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
         assertTrue(executor.logicAddress() == address(newLogic));
-        (, , , , , , , , , , bool newExecuted) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , , , bool newExecuted) = logic.proposals(
+            proposalIds[0]
+        );
         assertTrue(newExecuted);
     }
 
     function testCancel() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
-        (, , , , , , , , bool oldCanceled, ,) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , bool oldCanceled, , ) = logic.proposals(
+            proposalIds[0]
+        );
         assertFalse(oldCanceled);
 
         vm.prank(proposer);
         logic.cancel(proposalIds[0]);
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
-        (, , , , , , , , bool newCanceled, ,) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , bool newCanceled, , ) = logic.proposals(
+            proposalIds[0]
+        );
         assertTrue(newCanceled);
     }
 
     function testVeto() public {
-        (, , , , , , , , , bool oldVetoed,) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , , bool oldVetoed, ) = logic.proposals(proposalIds[0]);
         assertFalse(oldVetoed);
         assertTrue(executor.queuedTransactions(txHashs[0]));
 
         vm.prank(vetoer);
         logic.veto(proposalIds[0]);
 
-        (, , , , , , , , , bool newVetoed,) = logic.proposals(proposalIds[0]);
+        (, , , , , , , , , bool newVetoed, ) = logic.proposals(proposalIds[0]);
         assertTrue(newVetoed);
         assertFalse(executor.queuedTransactions(txHashs[0]));
     }
