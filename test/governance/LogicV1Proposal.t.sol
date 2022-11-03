@@ -132,6 +132,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     function testPropose() public {
         assertEq(proposalIds[0], 1);
         assertEq(logic.latestProposalIds(proposer), 1);
+        assertEq(logic.proposalCount(), 1);
     }
 
     function testQueue() public {
