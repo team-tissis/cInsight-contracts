@@ -4,7 +4,6 @@ import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
-// import "../../src/governance/InterfacesV1.sol";
 import "../../src/sbt/Sbt.sol";
 import "../../src/sbt/SbtImp.sol";
 
@@ -22,6 +21,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     address proposer = address(3);
     address voter = address(4);
     address nftAddress = address(5);
+
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
     uint256 votingPeriod = 5760;
@@ -29,11 +29,9 @@ contract ChainInsightLogicV1PropososalTest is Test {
     uint8 proposalThreshold = 1;
 
     // propose info
-    address[] targets; // set later
+    address[] targets; // will be set later
     uint256[] values = [0];
-    // string[] signatures = ["setMonthlyDistributedFavoNum(uint16)"];
-    // bytes[] calldatas = [abi.encode(99)];
-    bytes[] calldatas;
+    bytes[] calldatas; // will be set later
     string[] signatures = ["setLogicAddress(address)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
@@ -78,10 +76,8 @@ contract ChainInsightLogicV1PropososalTest is Test {
             proposalThreshold
         );
 
-        // initialize sbt
-        // TODO: admin -> executor
         sbt.init(
-            admin,
+            address(executor),
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/",
@@ -119,6 +115,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // voting ends
         vm.roll(votingDelay + votingPeriod + 1);
 
+        // queue proposal
         logic.queue(proposalIds[0]);
         etas[0] = block.number + executingDelay;
         txHashs[0] = keccak256(
@@ -144,32 +141,41 @@ contract ChainInsightLogicV1PropososalTest is Test {
     function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
         assertFalse(executor.logicAddress() == address(newLogic));
+        (, , , , , , , , , , bool oldExecuted) = logic.proposals(proposalIds[0]);
+        assertFalse(oldExecuted);
 
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-
         logic.execute(proposalIds[0]);
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
         assertTrue(executor.logicAddress() == address(newLogic));
+        (, , , , , , , , , , bool newExecuted) = logic.proposals(proposalIds[0]);
+        assertTrue(newExecuted);
     }
 
     function testCancel() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool oldCanceled, ,) = logic.proposals(proposalIds[0]);
+        assertFalse(oldCanceled);
 
         vm.prank(proposer);
         logic.cancel(proposalIds[0]);
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool newCanceled, ,) = logic.proposals(proposalIds[0]);
+        assertTrue(newCanceled);
     }
 
     function testVeto() public {
+        (, , , , , , , , , bool oldVetoed,) = logic.proposals(proposalIds[0]);
+        assertFalse(oldVetoed);
         assertTrue(executor.queuedTransactions(txHashs[0]));
 
         vm.prank(vetoer);
         logic.veto(proposalIds[0]);
 
-        // TODO: struct proposals is private...
-        // assertTrue(logic.proposals(proposalIds[0]).vetoed);
+        (, , , , , , , , , bool newVetoed,) = logic.proposals(proposalIds[0]);
+        assertTrue(newVetoed);
         assertFalse(executor.queuedTransactions(txHashs[0]));
     }
 
