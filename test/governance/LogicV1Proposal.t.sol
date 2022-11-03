@@ -1,5 +1,6 @@
 pragma solidity ^0.8.16;
 
+import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
