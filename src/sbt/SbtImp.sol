@@ -34,7 +34,11 @@ contract SbtImp {
         return sbtstruct.mintIndex;
     }
 
-    function mintWithReferral(address referrer) public payable {
+    function mintWithReferral(address referrer)
+        public
+        payable
+        returns (uint256)
+    {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
         require(
@@ -58,6 +62,7 @@ contract SbtImp {
             }("");
         }
         emit Transfer(address(0), msg.sender, sbtstruct.mintIndex);
+        return sbtstruct.mintIndex;
     }
 
     // set functions

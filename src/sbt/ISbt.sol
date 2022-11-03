@@ -42,6 +42,8 @@ interface ISbt {
 
     function lastUpdatedMonth() external view returns (uint256);
 
+    function mintedTokenNumber() external view returns (uint256);
+
     function sbtPrice(bool isReferral) external view returns (uint256);
 
     function setBaseUri(string memory _newBaseURI) external;

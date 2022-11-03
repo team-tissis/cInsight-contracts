@@ -38,7 +38,7 @@ contract Sbt is ISbt {
         sbtstruct.favoUseUpIncentive = 1;
         sbtstruct.makiDecayRate = 90;
         sbtstruct.gradeNum = 5;
-        uint8[5] memory _referralRate = [0, 0, 1, 3, 5]; // grade 1,2,3,4,5
+        uint8[5] memory _referralRate = [1, 1, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
         uint8[5] memory _gradeRate = [80, 40, 20, 5, 0];
 
