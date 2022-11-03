@@ -47,6 +47,7 @@ contract cInsightGovScript is Script {
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("DEPROYER_KEY");
+        address deployerAddress = vm.envAddress("CONTRACT_ADDRESS");
 
         // excute operations as a deployer account until stop broadcast
         vm.startBroadcast(deployerPrivateKey);
@@ -101,6 +102,8 @@ contract cInsightGovScript is Script {
         // vm.startBroadcast(address(voter));
 
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        console.log("here");
+        console.log(sbt.gradeOf(deployerAddress));
 
         // set block.number to 0
         vm.roll(0);
