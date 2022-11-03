@@ -143,7 +143,7 @@ contract SbtImp {
         for (uint256 i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
             grade = 0;
-            for (uint256 j = 0; j < gradeNum; j++) {
+            for (j = 0; j < gradeNum; j++) {
                 grade++;
                 if (i * 100 >= gradeThreshold[j]) {
                     break;

@@ -1,11 +1,14 @@
 pragma solidity ^0.8.16;
 
+import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
 import "../../src/sbt/Sbt.sol";
 import "../../src/sbt/SbtImp.sol";
+import "../../src/skinnft/SkinNft.sol";
 
+// test skinnft setfreemintquantity can call via govenance logic
 contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
@@ -13,6 +16,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightExecutorV1 internal executor;
     Sbt internal sbt;
     SbtImp internal imp;
+    SkinNft internal skinNft;
 
     address admin = address(1);
     address logicAdminTmp = address(0);
@@ -20,6 +24,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     address proposer = address(3);
     address voter = address(4);
     address nftAddress = address(5);
+    address beef = address(0xBEEF);
 
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
@@ -31,7 +36,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     address[] targets; // will be set later
     uint256[] values = [0];
     bytes[] calldatas; // will be set later
-    string[] signatures = ["setLogicAddress(address)"];
+    string[] signatures = ["setFreemintQuantity(address,uint256)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] proposalIds = new uint256[](2);
@@ -45,9 +50,11 @@ contract ChainInsightLogicV1PropososalTest is Test {
         executor = new ChainInsightExecutorV1(address(logic));
         sbt = new Sbt();
         imp = new SbtImp();
+        skinNft = new SkinNft("");
+        skinNft.init(address(sbt));
 
-        targets = [address(executor)];
-        calldatas = [abi.encode(address(newLogic))];
+        targets = [address(sbt)];
+        calldatas = [abi.encode(beef, 100)];
 
         vm.prank(logicAdminTmp);
         logic.initialize(
@@ -66,7 +73,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/",
-            nftAddress,
+            address(skinNft),
             address(imp)
         );
 
@@ -79,7 +86,12 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.prank(voter);
         address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
 
+        vm.deal(beef, 10000 ether);
+        vm.prank(beef);
+        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+
         // set block.number to 0
+
         vm.roll(0);
 
         // propose
@@ -114,63 +126,11 @@ contract ChainInsightLogicV1PropososalTest is Test {
         );
     }
 
-    function testPropose() public {
-        assertEq(proposalIds[0], 1);
-        assertEq(logic.latestProposalIds(proposer), 1);
-        assertEq(logic.proposalCount(), 1);
-    }
-
-    function testQueue() public {
-        assertTrue(executor.queuedTransactions(txHashs[0]));
-    }
-
     function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
-        assertFalse(executor.logicAddress() == address(newLogic));
-        (, , , , , , , , , , bool oldExecuted) = logic.proposals(
-            proposalIds[0]
-        );
-        assertFalse(oldExecuted);
-
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
         logic.execute(proposalIds[0]);
-
-        assertFalse(executor.queuedTransactions(txHashs[0]));
-        assertTrue(executor.logicAddress() == address(newLogic));
-        (, , , , , , , , , , bool newExecuted) = logic.proposals(
-            proposalIds[0]
-        );
-        assertTrue(newExecuted);
-    }
-
-    function testCancel() public {
-        assertTrue(executor.queuedTransactions(txHashs[0]));
-        (, , , , , , , , bool oldCanceled, , ) = logic.proposals(
-            proposalIds[0]
-        );
-        assertFalse(oldCanceled);
-
-        vm.prank(proposer);
-        logic.cancel(proposalIds[0]);
-
-        assertFalse(executor.queuedTransactions(txHashs[0]));
-        (, , , , , , , , bool newCanceled, , ) = logic.proposals(
-            proposalIds[0]
-        );
-        assertTrue(newCanceled);
-    }
-
-    function testVeto() public {
-        (, , , , , , , , , bool oldVetoed, ) = logic.proposals(proposalIds[0]);
-        assertFalse(oldVetoed);
-        assertTrue(executor.queuedTransactions(txHashs[0]));
-
-        vm.prank(vetoer);
-        logic.veto(proposalIds[0]);
-
-        (, , , , , , , , , bool newVetoed, ) = logic.proposals(proposalIds[0]);
-        assertTrue(newVetoed);
-        assertFalse(executor.queuedTransactions(txHashs[0]));
+        assertEq(skinNft.getFreemintQuantity(beef), 100);
     }
 
     receive() external payable {}

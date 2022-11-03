@@ -7,11 +7,11 @@ contract ChainInsightGovernanceProxyV1 is
     ChainInsightGovernanceStorageV1,
     ChainInsightGovernanceEventsV1
 {
+    // TODO: aprameteer admin_ is not used. should be removed
     /**
      * @param implementation_ The address for implementaion for delegationcall.
      * @param executorContract_ The address for transaction executor contract which passed by votes.
      * @param sbtContract_ The address for sbtContract(sbt.sol)
-     * @param admin_ the admin address of govenance. This admin will be only chosen by votes.
      * @param vetoer_ the address of person who has rights to veto proposal. TODO: This function shoud not be included.
      * @param executingGracePeriod_ the period proposal is lasting. The proposal transaction must be executed before this period is passed.
      * @param executingDelay_ the proposal is executed after queue function is called and this period is passed.
@@ -32,7 +32,8 @@ contract ChainInsightGovernanceProxyV1 is
         uint256 proposalThreshold_
     ) {
         // Admin set to msg.sender for initialization
-        admin = msg.sender;
+        // This is the admin address of governance. This admin will be only chosen by votes after this.
+        // admin = msg.sender;
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
@@ -47,9 +48,7 @@ contract ChainInsightGovernanceProxyV1 is
                 proposalThreshold_
             )
         );
-
         _setImplementation(implementation_);
-
         admin = admin_;
     }
 
@@ -60,16 +59,16 @@ contract ChainInsightGovernanceProxyV1 is
     function _setImplementation(address implementation_) public {
         require(
             msg.sender == admin,
-            "NounsDAOProxy::_setImplementation: admin only"
+            "ChainInsightProxy::_setImplementation: admin only"
         );
 
         require(
             implementation_ != address(0),
-            "NounsDAOProxy::_setImpelementation: invalid implementation address"
+            "ChainInsightProxy::_setImpelementation: invalid implementation address"
         );
         require(
             implementation_ != implementation,
-            "NounsDAOProxy::_setImpelementation: implementation address must be different from old one"
+            "ChainInsightProxy::_setImpelementation: implementation address must be different from old one"
         );
 
         address oldImplementation = implementation;
