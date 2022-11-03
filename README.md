@@ -2,6 +2,10 @@
 the smart contracts codes
 
 # localnet deploy
+Please Install foundry
+https://book.getfoundry.sh/getting-started/installation
+
+Next, 
 ```bash
 $ forge build
 $ anvil
