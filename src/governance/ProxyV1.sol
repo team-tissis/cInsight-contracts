@@ -1,9 +1,23 @@
 pragma solidity ^0.8.16;
 
-import './InterfacesV1.sol';
-import "forge-std/Test.sol";
+import "./InterfacesV1.sol";
 
-contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, ChainInsightGovernanceEventsV1 {
+contract ChainInsightGovernanceProxyV1 is
+    ChainInsightGovernanceStorageV1,
+    ChainInsightGovernanceEventsV1
+{
+    // TODO: aprameteer admin_ is not used. should be removed
+    /**
+     * @param implementation_ The address for implementaion for delegationcall.
+     * @param executorContract_ The address for transaction executor contract which passed by votes.
+     * @param sbtContract_ The address for sbtContract(sbt.sol)
+     * @param vetoer_ the address of person who has rights to veto proposal. TODO: This function shoud not be included.
+     * @param executingGracePeriod_ the period proposal is lasting. The proposal transaction must be executed before this period is passed.
+     * @param executingDelay_ the proposal is executed after queue function is called and this period is passed.
+     * @param votingPeriod_ The voting period
+     * @param votingDelay_ voting delay
+     * @param proposalThreshold_ The proposal is passed if the number of votes obtained is greater than this threshold.
+     */
     constructor(
         address implementation_,
         address executorContract_,
@@ -17,11 +31,13 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
         uint256 proposalThreshold_
     ) {
         // Admin set to msg.sender for initialization
-        admin = msg.sender;
+        // This is the admin address of governance. This admin will be only chosen by votes after this.
+        // admin = msg.sender;
+        admin = admin_;
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                'initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)',
+                "initialize(address,address,address,uint256,uint256,uint256,uint256,uint256)",
                 executorContract_,
                 sbtContract_,
                 vetoer_,
@@ -32,10 +48,7 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
                 proposalThreshold_
             )
         );
-
         _setImplementation(implementation_);
-
-        admin = admin_;
     }
 
     /**
@@ -43,12 +56,18 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
      * @param implementation_ The address of the new implementation for delegation
      */
     function _setImplementation(address implementation_) public {
-        require(msg.sender == admin, 'NounsDAOProxy::_setImplementation: admin only');
+        require(
+            msg.sender == admin,
+            "ChainInsightProxy::_setImplementation: admin only"
+        );
 
-        require(implementation_ != address(0), 'NounsDAOProxy::_setImpelementation: invalid implementation address');
+        require(
+            implementation_ != address(0),
+            "ChainInsightProxy::_setImpelementation: invalid implementation address"
+        );
         require(
             implementation_ != implementation,
-            'NounsDAOProxy::_setImpelementation: implementation address must be different from old one'
+            "ChainInsightProxy::_setImpelementation: implementation address must be different from old one"
         );
 
         address oldImplementation = implementation;
@@ -63,7 +82,10 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
      * @param newPendingAdmin New pending admin.
      */
     function _setPendingAdmin(address newPendingAdmin) external {
-        require(msg.sender == address(this), 'ProxyV1::_setPendingAdmin: pending admin can be setted only through voting');
+        require(
+            msg.sender == address(this),
+            "ProxyV1::_setPendingAdmin: pending admin can be setted only through voting"
+        );
 
         // Save current value, if any, for inclusion in log
         address oldPendingAdmin = pendingAdmin;
@@ -79,7 +101,10 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
      * @dev Admin function for pending admin to accept role and update admin
      */
     function _acceptAdmin() external {
-        require(msg.sender == pendingAdmin, 'ProxyV1::_acceptAdmin: pending admin only');
+        require(
+            msg.sender == pendingAdmin,
+            "ProxyV1::_acceptAdmin: pending admin only"
+        );
 
         // Save current values for inclusion in log
         address oldAdmin = admin;
@@ -109,7 +134,6 @@ contract ChainInsightGovernanceProxyV1 is ChainInsightGovernanceStorageV1, Chain
                 revert(add(returnData, 0x20), returndatasize())
             }
         }
-
     }
 
     /**

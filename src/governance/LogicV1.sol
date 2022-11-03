@@ -1,8 +1,7 @@
 pragma solidity ^0.8.16;
 
-import './InterfacesV1.sol';
-import '../sbt/ISbt.sol';
-import "forge-std/Test.sol";
+import "./InterfacesV1.sol";
+import "../sbt/ISbt.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -83,7 +82,10 @@ contract ChainInsightLogicV1 is
             "LogicV1::initialize: invalid Executor address"
         );
 
-        require(sbtContract_ != address(0), 'LogicV1::initialize: invalid SBT contract address');
+        require(
+            sbtContract_ != address(0),
+            "LogicV1::initialize: invalid SBT contract address"
+        );
 
         require(
             executingGracePeriod_ >= MIN_EXECUTING_GRACE_PERIOD &&
@@ -151,7 +153,7 @@ contract ChainInsightLogicV1 is
     ) public returns (uint256) {
         require(
             sbtContract.gradeOf(msg.sender) >= proposalThreshold,
-            'LogicV1::propose: proposer must hold Bonfire SBT'
+            "LogicV1::propose: proposer must hold Bonfire SBT"
         );
 
         require(
@@ -478,7 +480,10 @@ contract ChainInsightLogicV1 is
         uint256 proposalId,
         uint8 support
     ) internal returns (uint256) {
-        require(state(proposalId) == ProposalState.Active, 'LogicV1::castVoteInternal: voting is closed');
+        require(
+            state(proposalId) == ProposalState.Active,
+            "LogicV1::castVoteInternal: voting is closed"
+        );
 
         require(support <= 2, "LogicV1::castVoteInternal: invalid vote type");
         Proposal storage proposal = proposals[proposalId];
@@ -602,9 +607,7 @@ contract ChainInsightLogicV1 is
      */
     function _setPendingVetoer(address newPendingVetoer) public {
         // TODO: delete
-        console.log(msg.sender);
-        console.log(tx.origin);
-        require(msg.sender == vetoer, 'LogicV1::veto: vetoer only');
+        require(msg.sender == vetoer, "LogicV1::veto: vetoer only");
 
         emit NewPendingVetoer(pendingVetoer, newPendingVetoer);
 
