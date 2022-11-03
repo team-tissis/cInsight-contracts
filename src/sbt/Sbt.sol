@@ -110,12 +110,18 @@ contract Sbt is ISbt {
 
     function tokenURI(uint256 _tokenId) external view returns (string memory) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        address _owner = sbtstruct.owners[_tokenId];
+        require(
+            _owner != address(0),
+            "ERC721URIStorage: URI query for nonexistent token"
+        );
         return
             string(
                 abi.encodePacked(
                     sbtstruct.baseURI,
-                    _toString(_tokenId),
-                    ".json"
+                    _toString(sbtstruct.grades[_owner]),
+                    "/",
+                    _toString(_tokenId)
                 )
             );
     }

@@ -28,7 +28,6 @@ contract SbtTest is Test {
             address(sbtImp)
         );
         skinNft.init(address(sbt));
-
     }
 
     function testInit() public {
@@ -64,6 +63,7 @@ contract SbtTest is Test {
         address beef = address(0xbeef);
         payable(beef).call{value: 40 ether}("");
 
+        //mint
         vm.prank(manA);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(1), manA);
@@ -86,6 +86,15 @@ contract SbtTest is Test {
         );
         assertEq(abi.decode(retData, (uint256)), 5);
         assertEq(sbt.mintedTokenNumber(), 5);
+
+        //tokenURI
+        vm.expectRevert(
+            bytes("ERC721URIStorage: URI query for nonexistent token")
+        );
+        sbt.tokenURI(10);
+
+        string memory tokenuri = sbt.tokenURI(4);
+        assertEq(tokenuri, "https://thechaininsight.github.io/sbt/1/4");
 
         // test add favo
         vm.prank(manA);
