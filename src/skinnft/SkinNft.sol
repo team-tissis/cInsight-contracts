@@ -86,6 +86,8 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
         uint256 nextTokenId = _nextTokenId();
         _mint(_address, freemintQuantity[_address]);
         freemintQuantity[_address] = 0;
+        // 自動でiconに設定
+        _icon[_address] = nextTokenId;
         return;
     }
 
