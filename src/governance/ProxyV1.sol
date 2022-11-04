@@ -1,10 +1,6 @@
 pragma solidity ^0.8.16;
 
 import "./InterfacesV1.sol";
-<<<<<<< HEAD
-=======
-import "forge-std/Test.sol";
->>>>>>> 0f7412b (fix minor bugs)
 
 contract ChainInsightGovernanceProxyV1 is
     ChainInsightGovernanceStorageV1,
