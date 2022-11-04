@@ -24,7 +24,7 @@ contract SbtImp {
         require(msg.value >= sbtstruct.sbtPrice, "Need to send more ETH.");
         require(msg.sender != address(0));
         require(sbtstruct.grades[msg.sender] == 0, "ALREADY MINTED");
-        sbtstruct.mintIndex += 1;
+        sbtstruct.mintIndex++;
         sbtstruct.owners[sbtstruct.mintIndex] = msg.sender;
         sbtstruct.grades[msg.sender] = 1;
         if (msg.value > sbtstruct.sbtPrice) {

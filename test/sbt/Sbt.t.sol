@@ -23,7 +23,7 @@ contract SbtTest is Test {
             admin,
             "ChainInsight",
             "SBT",
-            string.concat(baseURL, "sbt/"),
+            string.concat(baseURL, "sbt/metadata/"),
             address(skinNft),
             address(sbtImp)
         );
@@ -94,7 +94,10 @@ contract SbtTest is Test {
         sbt.tokenURI(10);
 
         string memory tokenuri = sbt.tokenURI(4);
-        assertEq(tokenuri, "https://thechaininsight.github.io/sbt/1/4");
+        assertEq(
+            tokenuri,
+            "https://thechaininsight.github.io/sbt/metadata/1/4"
+        );
 
         // test add favo
         vm.prank(manA);
