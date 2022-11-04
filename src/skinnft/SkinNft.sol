@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import "./ERC721AQueryable.sol";
 import "./ISkinNft.sol";
+import "./../sbt/ISbt.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
     string baseURI;
@@ -14,6 +15,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
     }
 
     address sbtAddress;
+    ISbt internal sbt;
     mapping(address => uint256) public freemintQuantity;
     mapping(address => uint256) public _icon;
 
@@ -23,12 +25,14 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
             "The contract is already initialized"
         );
         sbtAddress = _sbtAddress;
+        sbt = ISbt(_sbtAddress);
     }
 
-    function mint(uint256 quantity) external payable {
-        // `_mint`'s second argument now takes in a `quantity`, not a `tokenId`.
-        _mint(msg.sender, quantity);
-    }
+    // TODO: implemente mint function and auction.
+    // function mint(uint256 quantity) external payable {
+    //     // `_mint`'s second argument now takes in a `quantity`, not a `tokenId`.
+    //     _mint(msg.sender, quantity);
+    // }
 
     function getIcon(address _address) external view returns (uint256) {
         return _icon[_address];
@@ -40,6 +44,17 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
             "THE TOKEN IS OWNED BY OTHER PERSON"
         );
         _icon[msg.sender] = tokenId;
+    }
+
+    function IconURI(address _address) external view returns (string memory) {
+        require(sbt.gradeOf(_address) != 0, "address dosn't hold SBT");
+        uint256 iconId = _icon[_address];
+        if (iconId == 0) {
+            uint256 sbtTokenId = sbt.tokenIdOf(_address);
+            return sbt.tokenURI(sbtTokenId);
+        } else {
+            return tokenURI(iconId);
+        }
     }
 
     function transferFrom(
@@ -65,6 +80,15 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
             "SET FREEMINT IS ONLY ALLOWED TO SBT CONTRACT"
         );
         freemintQuantity[_address] += quantity;
+
+        // TODO: This airdrop code is for Hackathon. stop airdrop.
+        require(quantity != 0, "NOT FREEMINTABLE");
+        uint256 nextTokenId = _nextTokenId();
+        _mint(_address, freemintQuantity[_address]);
+        freemintQuantity[_address] = 0;
+        // 自動でiconに設定
+        _icon[_address] = nextTokenId;
+        return;
     }
 
     function freeMint() external returns (uint256) {

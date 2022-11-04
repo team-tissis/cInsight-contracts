@@ -115,10 +115,13 @@ contract Sbt is ISbt {
             _owner != address(0),
             "ERC721URIStorage: URI query for nonexistent token"
         );
+        uint256 skinNftTokenId = ISkinNft(sbtstruct.nftAddress).getIcon(_owner);
         return
             string(
                 abi.encodePacked(
                     sbtstruct.baseURI,
+                    _toString(skinNftTokenId),
+                    "/",
                     _toString(sbtstruct.grades[_owner]),
                     "/",
                     _toString(_tokenId)
@@ -145,12 +148,6 @@ contract Sbt is ISbt {
                 break;
             }
         }
-    }
-
-    function setExecutor(address _newContactOwner) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.executor = _newContactOwner;
-        emit executorChanged(_newContactOwner);
     }
 
     function favoOf(address _address) external view returns (uint256) {

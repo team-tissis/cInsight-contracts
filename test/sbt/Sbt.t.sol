@@ -98,7 +98,7 @@ contract SbtTest is Test {
         string memory tokenuri = sbt.tokenURI(4);
         assertEq(
             tokenuri,
-            "https://thechaininsight.github.io/sbt/metadata/1/4"
+            "https://thechaininsight.github.io/sbt/metadata/0/1/4"
         );
 
         // test add favo

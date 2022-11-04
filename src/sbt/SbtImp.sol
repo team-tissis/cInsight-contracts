@@ -143,6 +143,7 @@ contract SbtImp {
             gradeThreshold[j] = accountNum * sbtstruct.gradeRate[j];
         }
         uint256 grade;
+        uint256 skinnftQuantity;
         // burnされていない account 中の上位 x %を計算.
         for (uint256 i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
@@ -156,10 +157,14 @@ contract SbtImp {
             }
             sbtstruct.grades[_address] = grade;
             // set skin nft freemint
-            ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
-                _address,
-                sbtstruct.skinnftNumRate[grade - 1]
-            );
+            skinnftQuantity = sbtstruct.skinnftNumRate[grade - 1];
+            if (skinnftQuantity > 0) {
+                ISkinNft(sbtstruct.nftAddress).setFreemintQuantity(
+                    _address,
+                    skinnftQuantity
+                );
+            }
+
             // initialize referral and favos
 
             sbtstruct.favos[_address] = 0;
