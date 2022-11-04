@@ -130,7 +130,10 @@ contract ChainInsightLogicV1PropososalTest is Test {
         assertTrue(executor.queuedTransactions(txHashs[0]));
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
         logic.execute(proposalIds[0]);
-        assertEq(skinNft.getFreemintQuantity(beef), 100);
+        // TODO: execute this comment out after stop airdrop skinnft.
+        // assertEq(skinNft.getFreemintQuantity(beef), 100);
+
+        assertEq(skinNft.ownerOf(1), beef);
     }
 
     receive() external payable {}

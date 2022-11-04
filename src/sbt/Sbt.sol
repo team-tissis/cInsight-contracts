@@ -115,9 +115,7 @@ contract Sbt is ISbt {
             _owner != address(0),
             "ERC721URIStorage: URI query for nonexistent token"
         );
-        console.log(_owner);
         uint256 skinNftTokenId = ISkinNft(sbtstruct.nftAddress).getIcon(_owner);
-        console.log(skinNftTokenId);
         return
             string(
                 abi.encodePacked(
