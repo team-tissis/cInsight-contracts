@@ -131,6 +131,22 @@ contract Sbt is ISbt {
         return sbtstruct.owners[_tokenId];
     }
 
+    function tokenIdOf(address _address)
+        external
+        view
+        returns (uint256 _tokenId)
+    {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        _tokenId = 0;
+
+        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
+            if (sbtstruct.owners[i] == _address) {
+                _tokenId = i;
+                break;
+            }
+        }
+    }
+
     function setExecutor(address _newContactOwner) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.executor = _newContactOwner;
