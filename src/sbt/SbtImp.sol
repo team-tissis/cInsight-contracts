@@ -177,7 +177,9 @@ contract SbtImp {
         require(favo > 0, "favo num must be bigger than 0");
 
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(sbtstruct.grades[msg.sender] != 0, "SBT HOLDER ONLY");
+        require(sbtstruct.grades[msg.sender] != 0, "SENDER: SBT HOLDER ONLY");
+        require(sbtstruct.grades[userTo] != 0, "USERTO: SBT HOLDER ONLY");
+        require(msg.sender != userTo, "CAN'T FAVO YOURSELF");
 
         uint256 addmonthlyDistributedFavoNum;
         require(
@@ -201,11 +203,11 @@ contract SbtImp {
         (uint256 _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            sbtstruct.makiMemorys[userTo] =
+            sbtstruct.makiMemorys[userTo] +=
                 _dist *
                 addmonthlyDistributedFavoNum;
         } else {
-            sbtstruct.makiMemorys[userTo] =
+            sbtstruct.makiMemorys[userTo] +=
                 upperBound *
                 addmonthlyDistributedFavoNum;
         }
