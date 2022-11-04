@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 import "./../libs/SbtLib.sol";
 import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
+import "forge-std/Test.sol";
 
 contract Sbt is ISbt {
     modifier onlyExecutor() {
@@ -115,10 +116,15 @@ contract Sbt is ISbt {
             _owner != address(0),
             "ERC721URIStorage: URI query for nonexistent token"
         );
+        console.log(_owner);
+        uint256 skinNftTokenId = ISkinNft(sbtstruct.nftAddress).getIcon(_owner);
+        console.log(skinNftTokenId);
         return
             string(
                 abi.encodePacked(
                     sbtstruct.baseURI,
+                    _toString(skinNftTokenId),
+                    "/",
                     _toString(sbtstruct.grades[_owner]),
                     "/",
                     _toString(_tokenId)
@@ -145,12 +151,6 @@ contract Sbt is ISbt {
                 break;
             }
         }
-    }
-
-    function setExecutor(address _newContactOwner) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.executor = _newContactOwner;
-        emit executorChanged(_newContactOwner);
     }
 
     function favoOf(address _address) external view returns (uint256) {

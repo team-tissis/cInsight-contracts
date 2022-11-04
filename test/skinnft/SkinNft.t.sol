@@ -23,7 +23,7 @@ contract SkinNftTest is Test {
             admin,
             "ChainInsight",
             "SBT",
-            "example://",
+            "https://thechaininsight.github.io/sbt/metadata/",
             address(skinNft),
             address(imp)
         );
@@ -45,6 +45,14 @@ contract SkinNftTest is Test {
         address beef = address(0xBEEF);
         address pork = address(409);
         address noki = address(0x0909);
+        vm.deal(beef, 10000 ether);
+        vm.deal(pork, 10000 ether);
+
+        vm.prank(beef);
+        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        vm.prank(pork);
+        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+
         assertEq(skinNft.getFreemintQuantity(beef), 0);
         vm.prank(admin);
         address(sbt).call(
@@ -64,25 +72,34 @@ contract SkinNftTest is Test {
             )
         );
 
-        assertEq(skinNft.getFreemintQuantity(beef), 2);
-        assertEq(skinNft.getFreemintQuantity(address(1)), 0);
-        vm.prank(pork);
-        skinNft.freeMint();
+        //TODO: these comment out should be executed when the nft airdrop is stopped
 
-        vm.prank(noki);
-        vm.expectRevert(bytes("NOT FREEMINTABLE"));
-        skinNft.freeMint();
+        // assertEq(skinNft.getFreemintQuantity(beef), 2);
+        // assertEq(skinNft.getFreemintQuantity(address(1)), 0);
+        // vm.prank(pork);
+        // skinNft.freeMint();
 
-        vm.startPrank(beef);
-        skinNft.freeMint();
-        assertEq(skinNft.ownerOf(1), pork);
-        skinNft.setIcon(3);
-        assertEq(skinNft.getIcon(beef), 3);
+        // vm.prank(noki);
+        // vm.expectRevert(bytes("NOT FREEMINTABLE"));
+        // skinNft.freeMint();
 
-        vm.expectRevert(bytes("THE TOKEN IS OWNED BY OTHER PERSON"));
-        skinNft.setIcon(1);
-        skinNft.tokenURI(1);
+        // vm.startPrank(beef);
+        // skinNft.freeMint();
+        // assertEq(skinNft.ownerOf(1), pork);
+        // skinNft.setIcon(3);
+        // assertEq(skinNft.getIcon(beef), 3);
 
-        skinNft.tokensOfOwner(beef);
+        // vm.expectRevert(bytes("THE TOKEN IS OWNED BY OTHER PERSON"));
+        // skinNft.setIcon(1);
+        // skinNft.tokenURI(1);
+
+        uint256[] memory beefToken = new uint256[](2);
+        beefToken[0] = 0;
+        beefToken[1] = 1;
+        assertEq(skinNft.tokensOfOwner(beef), beefToken);
+        assertEq(
+            sbt.tokenURI(1),
+            "https://thechaininsight.github.io/sbt/metadata/0/1/1"
+        );
     }
 }
