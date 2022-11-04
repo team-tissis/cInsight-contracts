@@ -22,8 +22,6 @@ interface ISbt {
 
     function tokenURI(uint256 _tokenId) external view returns (string memory);
 
-    function tokenIdOf(address _address) external view returns (uint256);
-
     function ownerOf(uint256 _tokenId) external view returns (address);
 
     function setExecutor(address _newContactOwner) external;

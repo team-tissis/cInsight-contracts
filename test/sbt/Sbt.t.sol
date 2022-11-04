@@ -67,14 +67,12 @@ contract SbtTest is Test {
         vm.prank(manA);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(1), manA);
-        assertEq(sbt.tokenIdOf(manA), 1);
         assertEq(20 ether, manA.balance);
         assertEq(20 ether, address(sbt).balance);
 
         vm.prank(manB);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(2), manB);
-        assertEq(sbt.tokenIdOf(manB), 2);
 
         vm.prank(manC);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
