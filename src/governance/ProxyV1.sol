@@ -56,18 +56,15 @@ contract ChainInsightGovernanceProxyV1 is
      * @param implementation_ The address of the new implementation for delegation
      */
     function _setImplementation(address implementation_) public {
-        require(
-            msg.sender == admin,
-            "ChainInsightProxy::_setImplementation: admin only"
-        );
+        require(msg.sender == admin, "Proxy::_setImplementation: admin only");
 
         require(
             implementation_ != address(0),
-            "ChainInsightProxy::_setImpelementation: invalid implementation address"
+            "Proxy::_setImpelementation: invalid implementation address"
         );
         require(
             implementation_ != implementation,
-            "ChainInsightProxy::_setImpelementation: implementation address must be different from old one"
+            "Proxy::_setImpelementation: implementation address must be different from old one"
         );
 
         address oldImplementation = implementation;

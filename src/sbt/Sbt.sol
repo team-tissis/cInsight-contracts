@@ -131,12 +131,6 @@ contract Sbt is ISbt {
         return sbtstruct.owners[_tokenId];
     }
 
-    function setExecutor(address _newContactOwner) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.executor = _newContactOwner;
-        emit executorChanged(_newContactOwner);
-    }
-
     function favoOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.favos[_address];
@@ -189,6 +183,11 @@ contract Sbt is ISbt {
     }
 
     // set functions
+    function setExecutor(address _newContactOwner) external onlyExecutor {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.executor = _newContactOwner;
+        emit executorChanged(_newContactOwner);
+    }
 
     function setBaseUri(string memory _newBaseURI) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
@@ -239,7 +238,7 @@ contract Sbt is ISbt {
         sbtstruct.sbtReferralIncentive = _sbtReferralIncentive;
     }
 
-    // utility function from openzeppelin
+    // utility function
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";
