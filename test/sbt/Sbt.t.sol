@@ -155,7 +155,7 @@ contract SbtTest is Test {
         address(sbt).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manB, 10)
         );
-        assertEq(sbt.makiMemoryOf(manB), 10);
+        assertEq(sbt.makiMemoryOf(manB), 60); // + 10
     }
 
     // function testSetadmin() public {
