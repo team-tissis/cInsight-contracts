@@ -99,26 +99,40 @@ contract ChainInsightLogicV1PropososalTest is Test {
             )
         );
 
-        // // voting starts
-        // vm.roll(votingDelay + 1);
-        // vm.prank(voter);
-        // logic.castVote(proposalIds[0], 1);
+        proposalIds[0] = 1;
 
-        // // voting ends
-        // vm.roll(votingDelay + votingPeriod + 1);
+        // voting starts
+        vm.roll(votingDelay + 1);
+        vm.prank(voter);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'castVote(uint256,uint8)',
+                proposalIds[0],
+                1
+            )
+        );
 
-        // // queue proposal
-        // logic.queue(proposalIds[0]);
-        // etas[0] = block.number + executingDelay;
-        // txHashs[0] = keccak256(
-        //     abi.encode(
-        //         targets[0],
-        //         values[0],
-        //         signatures[0],
-        //         calldatas[0],
-        //         etas[0]
-        //     )
-        // );
+        // voting ends
+        vm.roll(votingDelay + votingPeriod + 1);
+
+        // queue proposal
+        // TODO: delegatecall -> call seems to fail...
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'queue(uint256)',
+                proposalIds[0] 
+            )
+        );
+        etas[0] = block.number + executingDelay;
+        txHashs[0] = keccak256(
+            abi.encode(
+                targets[0],
+                values[0],
+                signatures[0],
+                calldatas[0],
+                etas[0]
+            )
+        );
     }
 
     function testPropose() public {
@@ -126,24 +140,30 @@ contract ChainInsightLogicV1PropososalTest is Test {
         assertEq(proxy.proposalCount(), 1);
     }
 
-    // function testQueue() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    // }
+    function testQueue() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+    }
 
-    // function testExecute() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    //     assertFalse(executor.logicAddress() == address(newLogic));
-    //     (, , , , , , , , , , bool oldExecuted) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldExecuted);
+     function testExecute() public {
+        // assertTrue(executor.queuedTransactions(txHashs[0]));
+        // assertFalse(executor.logicAddress() == address(newLogic));
+        (, , , , , , , , , , bool oldExecuted) = 
+        proxy.proposals(proposalIds[0]);
+        assertFalse(oldExecuted);
 
-    //     vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-    //     logic.execute(proposalIds[0]);
+        vm.roll(votingDelay + votingPeriod + executingDelay + 1);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'execute(uint256)',
+                proposalIds[0] 
+            )
+        );
 
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    //     assertTrue(executor.logicAddress() == address(newLogic));
-    //     (, , , , , , , , , , bool newExecuted) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newExecuted);
-    // }
+         // assertFalse(executor.queuedTransactions(txHashs[0]));
+         // assertTrue(executor.logicAddress() == address(newLogic));
+         (, , , , , , , , , , bool newExecuted) = proxy.proposals(proposalIds[0]);
+         assertTrue(newExecuted);
+     }
 
     // function testCancel() public {
     //     assertTrue(executor.queuedTransactions(txHashs[0]));

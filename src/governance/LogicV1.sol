@@ -358,6 +358,10 @@ contract ChainInsightLogicV1 is
         view
         returns (Receipt memory)
     {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getReceipt: invalid proposal id"
+        );
         return proposals[proposalId].receipts[voter];
     }
 
@@ -659,4 +663,60 @@ contract ChainInsightLogicV1 is
         uint256 votes = sbtContract.gradeOf(voter);
         return votes;
     }
+
+    function getProposalTargets(uint256 proposalId) external view returns (address[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalTargets: invalid proposal id"
+        );
+        return proposals[proposalId].targets;
+    }
+
+    function getProposalValues(uint256 proposalId) external view returns (uint256[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalValues: invalid proposal id"
+        );
+        return proposals[proposalId].values;
+    }
+
+    function getProposalSignatures(uint256 proposalId) external view returns (string[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalSignatures: invalid proposal id"
+        );
+        return proposals[proposalId].signatures;
+    }
+
+    function getProposalCalldatas(uint256 proposalId) external view returns (bytes[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalCalldatas: invalid proposal id"
+        );
+        return proposals[proposalId].calldatas;
+    }
+
+    // function getProposalSignature(uint256 proposalId, uint256 index) external view returns (string memory) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalSignature: invalid proposal id"
+    //     );
+    //     require(
+    //         proposals[proposalId].targets.length >= index,
+    //         "LogicV1::getProposalSignature: invalid index"
+    //     );
+    //     return proposals[proposalId].signatures[index];
+    // }
+
+    // function getProposalCalldata(uint256 proposalId, uint256 index) external view returns (bytes memory) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalCalldata: invalid proposal id"
+    //     );
+    //     require(
+    //         proposals[proposalId].targets.length >= index,
+    //         "LogicV1::getProposalCalldata: invalid index"
+    //     );
+    //     return proposals[proposalId].calldatas[index];
+    // }
 }

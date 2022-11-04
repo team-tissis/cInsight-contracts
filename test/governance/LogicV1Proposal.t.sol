@@ -119,6 +119,28 @@ contract ChainInsightLogicV1PropososalTest is Test {
         assertEq(proposalIds[0], 1);
         assertEq(logic.latestProposalIds(proposer), 1);
         assertEq(logic.proposalCount(), 1);
+        // array and mapping data has gone away to somewhere...
+        (uint256 id, , , , , , , , , ,) = logic.proposals(
+            proposalIds[0]
+        );
+        assertEq(id, proposalIds[0]);
+    }
+
+    function testGetProposalTargets() public {
+        assertEq(abi.encodePacked(logic.getProposalTargets(proposalIds[0])), abi.encodePacked(targets));
+    }
+
+    function testGetProposalValues() public {
+        assertEq(abi.encodePacked(logic.getProposalValues(proposalIds[0])), abi.encodePacked(values));
+    }
+
+    function testGetProposalSignatures() public {
+        // array of array does not seem to be abi encoded...
+        assertEq(abi.encodePacked(logic.getProposalSignatures(proposalIds[0])[0]), abi.encodePacked(signatures[0]));
+    }
+
+    function testGetProposalCalldatas() public {
+        assertEq(abi.encodePacked(logic.getProposalCalldatas(proposalIds[0])[0]), abi.encodePacked(calldatas[0]));
     }
 
     function testQueue() public {
