@@ -89,7 +89,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
         return;
     }
 
-    function freeMint() public returns (uint256) {
+    function freeMint() external returns (uint256) {
         uint256 quantity = freemintQuantity[msg.sender];
         require(quantity != 0, "NOT FREEMINTABLE");
         uint256 nextTokenId = _nextTokenId();
