@@ -205,6 +205,11 @@ contract Sbt is ISbt {
     }
 
     // set functions
+    function setExecutor(address _newContactOwner) external onlyExecutor {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.executor = _newContactOwner;
+        emit executorChanged(_newContactOwner);
+    }
 
     function setBaseUri(string memory _newBaseURI) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
@@ -255,7 +260,7 @@ contract Sbt is ISbt {
         sbtstruct.sbtReferralIncentive = _sbtReferralIncentive;
     }
 
-    // utility function from openzeppelin
+    // utility function
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";
