@@ -147,12 +147,6 @@ contract Sbt is ISbt {
         }
     }
 
-    function setExecutor(address _newContactOwner) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.executor = _newContactOwner;
-        emit executorChanged(_newContactOwner);
-    }
-
     function favoOf(address _address) external view returns (uint256) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.favos[_address];
