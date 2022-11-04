@@ -31,9 +31,7 @@ contract ChainInsightGovernanceProxyV1 is
         uint256 proposalThreshold_
     ) {
         // Admin set to msg.sender for initialization
-        // This is the admin address of governance. This admin will be only chosen by votes after this.
-        // admin = msg.sender;
-        admin = admin_;
+        admin = msg.sender;
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
@@ -49,6 +47,8 @@ contract ChainInsightGovernanceProxyV1 is
             )
         );
         _setImplementation(implementation_);
+
+        admin = admin_;
     }
 
     /**
