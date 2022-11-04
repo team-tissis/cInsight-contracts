@@ -71,6 +71,13 @@ contract cInsightGovScript is Script {
             proposalThreshold
         );
 
+        console.log("address(proxy), address(logic), address(executor), address(sbt), address(sbtImp), address(skinNft)");
+        console.log(address(proxy));
+        console.log(address(logic));
+        console.log(address(executor));
+        console.log(address(sbt));
+        console.log(address(sbtImp));
+        console.log(address(skinNft));
         sbt.init(
             address(executor),
             "ChainInsight",
@@ -102,22 +109,20 @@ contract cInsightGovScript is Script {
         // vm.startBroadcast(address(voter));
 
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
-        console.log("here");
-        console.log(sbt.gradeOf(deployerAddress));
 
-        // set block.number to 0
-        vm.roll(0);
-        // propose
-        (bool success, bytes memory returnData) = address(proxy).delegatecall(
-            abi.encodeWithSignature(
-                'propose(address[],uint256[],bytes[],string[],string)',
-                targets,
-                values,
-                signatures,
-                calldatas,
-                description
-            )
-        );
+        // // set block.number to 0
+        // vm.roll(0);
+        // // propose
+        // (bool success, bytes memory returnData) = address(proxy).call(
+        //     abi.encodeWithSignature(
+        //         'propose(address[],uint256[],string[],bytes[],string)',
+        //         targets,
+        //         values,
+        //         signatures,
+        //         calldatas,
+        //         description
+        //     )
+        // );
 
         vm.stopBroadcast();
     }
