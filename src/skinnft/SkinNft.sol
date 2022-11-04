@@ -4,7 +4,6 @@ pragma solidity ^0.8.16;
 import "./ERC721AQueryable.sol";
 import "./ISkinNft.sol";
 import "./../sbt/ISbt.sol";
-import "forge-std/Test.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
     string baseURI;

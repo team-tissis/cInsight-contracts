@@ -4,7 +4,6 @@ pragma solidity ^0.8.16;
 import "./../libs/SbtLib.sol";
 import "./ISbt.sol";
 import "./../skinnft/ISkinNft.sol";
-import "forge-std/Test.sol";
 
 contract Sbt is ISbt {
     modifier onlyExecutor() {
