@@ -7,7 +7,7 @@ import "../../src/governance/ExecutorV1.sol";
 import "../../src/sbt/Sbt.sol";
 import "../../src/sbt/SbtImp.sol";
 
-contract ChainInsightLogicV1PropososalTest is Test {
+contract ChainInsightExecutorV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightLogicV1 internal newLogic;
@@ -16,7 +16,6 @@ contract ChainInsightLogicV1PropososalTest is Test {
     SbtImp internal imp;
 
     address deployer = address(1);
-    address logicAdminTmp = address(0);
     address vetoer = address(2);
     address proposer = address(3);
     address voter = address(4);
@@ -32,7 +31,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     address[] targets; // will be set later
     uint256[] values = [0];
     bytes[] calldatas; // will be set later
-    string[] signatures = ["setLogicAddress(address)"];
+    string[] signatures = ["_setImplementation(address)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] proposalIds = new uint256[](2);
@@ -43,14 +42,11 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // create and initialize contracts
         logic = new ChainInsightLogicV1();
         newLogic = new ChainInsightLogicV1();
+        vm.prank(deployer);
         executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         imp = new SbtImp();
 
-        targets = [address(executor)];
-        calldatas = [abi.encode(address(newLogic))];
-
-        // vm.prank(deployer);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
@@ -62,6 +58,12 @@ contract ChainInsightLogicV1PropososalTest is Test {
             votingDelay,
             proposalThreshold
         );
+
+        targets = [address(proxy)];
+        calldatas = [abi.encode(address(newLogic))];
+
+        vm.prank(deployer);
+        executor.setProxyAddress(address(proxy));
 
         sbt.init(
             address(executor),
@@ -115,7 +117,6 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.roll(votingDelay + votingPeriod + 1);
 
         // queue proposal
-        // TODO: delegatecall -> call seems to fail...
         address(proxy).call(
             abi.encodeWithSignature(
                 'queue(uint256)',
@@ -144,8 +145,8 @@ contract ChainInsightLogicV1PropososalTest is Test {
     }
 
      function testExecute() public {
-        // assertTrue(executor.queuedTransactions(txHashs[0]));
-        // assertFalse(executor.logicAddress() == address(newLogic));
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+        assertFalse(proxy.implementation() == address(newLogic));
         (, , , , , , , , , , bool oldExecuted) = 
         proxy.proposals(proposalIds[0]);
         assertFalse(oldExecuted);
@@ -158,37 +159,47 @@ contract ChainInsightLogicV1PropososalTest is Test {
             )
         );
 
-         // assertFalse(executor.queuedTransactions(txHashs[0]));
-         // assertTrue(executor.logicAddress() == address(newLogic));
+         assertFalse(executor.queuedTransactions(txHashs[0]));
+         assertTrue(proxy.implementation() == address(newLogic));
          (, , , , , , , , , , bool newExecuted) = proxy.proposals(proposalIds[0]);
          assertTrue(newExecuted);
      }
 
-    // function testCancel() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    //     (, , , , , , , , bool oldCanceled, ,) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldCanceled);
+    function testCancel() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool oldCanceled, ,) = proxy.proposals(proposalIds[0]);
+        assertFalse(oldCanceled);
 
-    //     vm.prank(proposer);
-    //     logic.cancel(proposalIds[0]);
+        vm.prank(proposer);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'cancel(uint256)',
+                proposalIds[0] 
+            )
+        );
 
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    //     (, , , , , , , , bool newCanceled, ,) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newCanceled);
-    // }
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool newCanceled, ,) = proxy.proposals(proposalIds[0]);
+        assertTrue(newCanceled);
+    }
 
-    // function testVeto() public {
-    //     (, , , , , , , , , bool oldVetoed,) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldVetoed);
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
+    function testVeto() public {
+        (, , , , , , , , , bool oldVetoed,) = proxy.proposals(proposalIds[0]);
+        assertFalse(oldVetoed);
+        assertTrue(executor.queuedTransactions(txHashs[0]));
 
-    //     vm.prank(vetoer);
-    //     logic.veto(proposalIds[0]);
+        vm.prank(vetoer);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'veto(uint256)',
+                proposalIds[0] 
+            )
+        );
 
-    //     (, , , , , , , , , bool newVetoed,) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newVetoed);
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    // }
+        (, , , , , , , , , bool newVetoed,) = proxy.proposals(proposalIds[0]);
+        assertTrue(newVetoed);
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+    }
 
     receive() external payable {}
 }

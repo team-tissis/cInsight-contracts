@@ -24,7 +24,7 @@ contract ChainInsightLogicV1VetoerTest is Test {
     
     function setUp() public {
         logic = new ChainInsightLogicV1();
-        executor = new ChainInsightExecutorV1(address(logic));
+        executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         
         vm.prank(admin);
@@ -32,7 +32,6 @@ contract ChainInsightLogicV1VetoerTest is Test {
             address(logic),
             address(executor),
             address(sbt),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -43,7 +42,6 @@ contract ChainInsightLogicV1VetoerTest is Test {
 
         vm.prank(logicAdminTmp);
         logic.initialize(
-            address(executor),
             address(sbt),
             vetoer,
             executingGracePeriod,
