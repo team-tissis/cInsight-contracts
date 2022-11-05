@@ -155,7 +155,6 @@ contract ChainInsightLogicV1PropososalTest is Test {
             )
         );
         assertEq(skinNft.ownerOf(1), beef);
-        // assertEq(skinNft.getFreemintQuantity(beef), 100);
     }
 
     receive() external payable {}
