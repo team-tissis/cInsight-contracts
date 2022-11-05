@@ -53,13 +53,12 @@ contract cInsightGovScript is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         logic = new ChainInsightLogicV1();
-        executor = new ChainInsightExecutorV1(address(logic));
+        executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         sbtImp = new SbtImp();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
-            address(logic),
             address(executor),
             address(sbt),
             admin,
@@ -70,6 +69,8 @@ contract cInsightGovScript is Script {
             votingDelay,
             proposalThreshold
         );
+
+        executor.setProxyAddress(address(proxy));
 
         console.log("address(proxy), address(logic), address(executor), address(sbt), address(sbtImp), address(skinNft)");
         console.log(address(proxy));
