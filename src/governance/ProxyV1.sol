@@ -38,8 +38,7 @@ contract ChainInsightGovernanceProxyV1 is
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                "initialize(address,address,address,address,uint256,uint256,uint256,uint256,uint256)",
-                executor_,
+                "initialize(address,address,uint256,uint256,uint256,uint256,uint256)",
                 sbtContract_,
                 vetoer_,
                 executingGracePeriod_,
@@ -62,7 +61,11 @@ contract ChainInsightGovernanceProxyV1 is
      * @param implementation_ The address of the new implementation for delegation
      */
     function _setImplementation(address implementation_) public {
-        require(msg.sender == executor, "Proxy::_setImplementation: executor only");
+        if (implementation == address(0)) {
+            require(msg.sender == deployer, "Proxy::_setImplementation: Call must come from deployer for the first time.");
+        } else {
+            require(msg.sender == executor, "Proxy::_setImplementation: executor only");
+        }
 
         require(
             implementation_ != address(0),
