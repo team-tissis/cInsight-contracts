@@ -10,9 +10,9 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     ChainInsightLogicV1 internal newLogic;
 
 
-    address executorContract = address(1);
+    address executor = address(1);
     address sbtContract = address(2); 
-    address admin = address(3);
+    address deployer = address(3);
     address vetoer = address(4);
     address implementation = address(5);
     uint256 executingGracePeriod = 11520;
@@ -23,13 +23,11 @@ contract ChainInsightGovernanceProxyV1Test is Test {
 
     function setUp() public {
         logic = new ChainInsightLogicV1();
-        vm.prank(admin);
+        vm.prank(deployer);
         proxy = new ChainInsightGovernanceProxyV1(
-            // implementation,
             address(logic),
-            executorContract,
+            executor,
             sbtContract,
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -40,7 +38,7 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     }
 
     function testConstructor() public {
-        assertEq(proxy.admin(), admin);
+        assertEq(proxy.deployer(), address(0));
     }
 
     function testSetImplementation() public {
@@ -50,7 +48,7 @@ contract ChainInsightGovernanceProxyV1Test is Test {
 
         assertFalse(address(logic) == address(newLogic));
 
-        vm.prank(admin);
+        vm.prank(executor);
         proxy._setImplementation(address(newLogic));
 
         // check that proxy implementation is setted

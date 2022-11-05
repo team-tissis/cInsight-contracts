@@ -54,11 +54,11 @@ contract ChainInsightGovernanceEventsV1 {
     /// @notice Emitted when implementation is changed
     event NewImplementation(address oldImplementation, address newImplementation);
 
-    /// @notice Emitted when pendingAdmin is changed
-    event NewPendingAdmin(address oldPendingAdmin, address newPendingAdmin);
+    // /// @notice Emitted when pendingAdmin is changed
+    // event NewPendingAdmin(address oldPendingAdmin, address newPendingAdmin);
 
-    /// @notice Emitted when pendingAdmin is accepted, which means admin is updated
-    event NewAdmin(address oldAdmin, address newAdmin);
+    /// @notice Emitted when executor is setted
+    event NewExecutor(address oldExecutor, address newExecutor);
 
     /// @notice Emitted when pendingVetoer is changed.
     event NewPendingVetoer(address oldPendingVetoer, address newPendingVetoer);
@@ -69,11 +69,11 @@ contract ChainInsightGovernanceEventsV1 {
 
 
 contract ChainInsightGovernanceProxyStorage {
-    /// @notice Administrator for this contract
-    address public admin;
+    /// @notice deployer address for proxy contract
+    address public deployer;
 
-    /// @notice Pending administrator for this contract
-    address public pendingAdmin;
+    /// @notice address of executor contract
+    address public executor;
 
     /// @notice Active brains of Governor
     address public implementation;
@@ -110,8 +110,8 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
     /// @notice The total number of proposals
     uint256 public proposalCount;
 
-    /// @notice The address of ChainInsightExecutor
-    IChainInsightExecutor public executorContract;
+    // /// @notice The address of ChainInsightExecutor
+    // IChainInsightExecutor public executorContract;
 
     /// @notice The address of ChainInsightExecutor
     ISbt public sbtContract;
@@ -191,8 +191,8 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
 }
 
 interface IChainInsightExecutor {
-    // event NewLogicAddress(address indexed newLogicAddress);
-     event NewLogicAddress(address oldLogicAddress, address newLogicAddress);
+    // event NewProxyAddress(address indexed newProxyAddress);
+     event NewProxyAddress(address oldProxyAddress, address newProxyAddress);
 
     event CancelTransaction(
         bytes32 indexed txHash,
@@ -219,8 +219,8 @@ interface IChainInsightExecutor {
         uint256 eta
     );
 
-    // function acceptLogicAddress() external;
-    function setLogicAddress(address newLogicAddress) external;
+    // function acceptProxyAddress() external;
+    function setProxyAddress(address newProxyAddress) external;
 
     function transactionIsQueued(bytes32 txHash) external view returns (bool);
 

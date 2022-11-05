@@ -3,44 +3,36 @@ pragma solidity ^0.8.16;
 import './InterfacesV1.sol';
 
 contract ChainInsightExecutorV1 is IChainInsightExecutor {
-    // event NewPendingLogicContract(address indexed newGovContract);
 
-    address public logicAddress;
-    // address public pendingLogicContract;
+    address public proxyAddress;
+    address public deployer;
 
     mapping(bytes32 => bool) public queuedTransactions;
 
-    constructor(address logicAddress_) {
-        logicAddress = logicAddress_;
+    constructor() {
+        deployer = msg.sender;
     }
 
-    // function acceptLogicAddress() external {
-    function setLogicAddress(address newLogicAddress) external {
-        // require(msg.sender == pendingGovContract, 'ExecutorV1::acceptGovContract: Call must come from pendingGovContract.');
-        // logicAddress = msg.sender;
-        // pendingLogicAddress = address(0);
-        require(
-            msg.sender == address(this),
-            'ExecutorV1::setPendingLogicAddress: Call must come from ExecutorV1.'
-        );
+    function setProxyAddress(address newProxyAddress) external {
+        if (proxyAddress == address(0)) {
+            require(
+                msg.sender == deployer,
+                'ExecutorV1::setProxyAddress: Call must come from deployer for the first time.'
+            );
+            // deployer address is no longer used.
+            deployer = address(0);
+        } else {
+            require(
+                msg.sender == address(this),
+                'ExecutorV1::setProxyAddress: Call must come from Executor.'
+            );
+        }
 
-        address oldLogicAddress = logicAddress;
-        logicAddress = newLogicAddress;
+        address oldProxyAddress = proxyAddress;
+        proxyAddress = newProxyAddress;
 
-        emit NewLogicAddress(oldLogicAddress, newLogicAddress);
+        emit NewProxyAddress(oldProxyAddress, newProxyAddress);
     }
-
-    /** 
-     * function setPendingLogicAddress(address pendingLogicAddress_) public {
-     *     require(
-     *         msg.sender == address(this),
-     *         'ExecutorV1::setPendingLogicAddress: Call must come from ExecutorV1.'
-     *     );
-     *     pendingLogicAddress = pendingLogicAddress_;
-
-     *     emit NewPendingLogicAddress(pendingLogicAddress);
-     * }
-     */
 
     function transactionIsQueued(bytes32 txHash) external view returns (bool) {
         return queuedTransactions[txHash];
@@ -53,7 +45,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         bytes calldata data,
         uint256 eta
     ) external returns (bytes32) {
-        require(msg.sender == logicAddress, 'ExecutorV1::queueTransaction: Call must come from Logic.');
+        require(msg.sender == proxyAddress, 'ExecutorV1::queueTransaction: Call must come from Proxy.');
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = true;
@@ -69,7 +61,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         bytes calldata data,
         uint256 eta
     ) external {
-        require(msg.sender == logicAddress, 'ExecutorV1::cancelTransaction: Call must come from Logic.');
+        require(msg.sender == proxyAddress, 'ExecutorV1::cancelTransaction: Call must come from Proxy.');
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = false;
@@ -85,7 +77,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
         uint256 eta,
         uint256 executingGracePeriod
     ) external payable returns (bytes memory) {
-        require(msg.sender == logicAddress, 'ExecutorV1::executeTransaction: Call must come from Logic.');
+        require(msg.sender == proxyAddress, 'ExecutorV1::executeTransaction: Call must come from Proxy.');
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
 
         require(queuedTransactions[txHash], "ExecutorV1::executeTransaction: Transaction hasn't been queued.");
@@ -111,7 +103,7 @@ contract ChainInsightExecutorV1 is IChainInsightExecutor {
             callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
         }
 
-        /// @notice The first four bytes correspond to function selector defined else clause
+        // The first four bytes correspond to function selector defined else clause
         (bool success, bytes memory returnData) = target.call{ value: value }(callData);
         require(success, 'ExecutorV1::executeTransaction: Transaction executed reverted.');
 

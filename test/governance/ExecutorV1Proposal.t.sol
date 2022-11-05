@@ -7,7 +7,7 @@ import "../../src/governance/ExecutorV1.sol";
 import "../../src/sbt/Sbt.sol";
 import "../../src/sbt/SbtImp.sol";
 
-contract ChainInsightLogicV1PropososalTest is Test {
+contract ChainInsightExecutorV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightLogicV1 internal newLogic;
@@ -15,8 +15,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     Sbt internal sbt;
     SbtImp internal imp;
 
-    address admin = address(1);
-    address logicAdminTmp = address(0);
+    address deployer = address(1);
     address vetoer = address(2);
     address proposer = address(3);
     address voter = address(4);
@@ -32,10 +31,9 @@ contract ChainInsightLogicV1PropososalTest is Test {
     address[] targets; // will be set later
     uint256[] values = [0];
     bytes[] calldatas; // will be set later
-    string[] signatures = ["setLogicAddress(address)"];
+    string[] signatures = ["_setImplementation(address)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
-    uint256[] proposalIds = new uint256[](2);
     uint256[] etas = new uint256[](2);
     bytes32[] txHashs = new bytes32[](2);
 
@@ -43,19 +41,15 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // create and initialize contracts
         logic = new ChainInsightLogicV1();
         newLogic = new ChainInsightLogicV1();
-        executor = new ChainInsightExecutorV1(address(logic));
+        vm.prank(deployer);
+        executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         imp = new SbtImp();
 
-        targets = [address(executor)];
-        calldatas = [abi.encode(address(newLogic))];
-
-        vm.prank(admin);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
             address(sbt),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -63,6 +57,12 @@ contract ChainInsightLogicV1PropososalTest is Test {
             votingDelay,
             proposalThreshold
         );
+
+        targets = [address(proxy)];
+        calldatas = [abi.encode(address(newLogic))];
+
+        vm.prank(deployer);
+        executor.setProxyAddress(address(proxy));
 
         sbt.init(
             address(executor),
@@ -88,7 +88,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // propose
         vm.prank(proposer);
 
-        (bool success, bytes memory returnData) = address(proxy).call(
+        address(proxy).call(
             abi.encodeWithSignature(
                 'propose(address[],uint256[],string[],bytes[],string)',
                 targets,
@@ -99,26 +99,37 @@ contract ChainInsightLogicV1PropososalTest is Test {
             )
         );
 
-        // // voting starts
-        // vm.roll(votingDelay + 1);
-        // vm.prank(voter);
-        // logic.castVote(proposalIds[0], 1);
+        // voting starts
+        vm.roll(votingDelay + 1);
+        vm.prank(voter);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'castVote(uint256,uint8)',
+                1,
+                1
+            )
+        );
 
-        // // voting ends
-        // vm.roll(votingDelay + votingPeriod + 1);
+        // voting ends
+        vm.roll(votingDelay + votingPeriod + 1);
 
-        // // queue proposal
-        // logic.queue(proposalIds[0]);
-        // etas[0] = block.number + executingDelay;
-        // txHashs[0] = keccak256(
-        //     abi.encode(
-        //         targets[0],
-        //         values[0],
-        //         signatures[0],
-        //         calldatas[0],
-        //         etas[0]
-        //     )
-        // );
+        // queue proposal
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'queue(uint256)',
+                1 
+            )
+        );
+        etas[0] = block.number + executingDelay;
+        txHashs[0] = keccak256(
+            abi.encode(
+                targets[0],
+                values[0],
+                signatures[0],
+                calldatas[0],
+                etas[0]
+            )
+        );
     }
 
     function testPropose() public {
@@ -126,50 +137,66 @@ contract ChainInsightLogicV1PropososalTest is Test {
         assertEq(proxy.proposalCount(), 1);
     }
 
-    // function testQueue() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    // }
+    function testQueue() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+    }
 
-    // function testExecute() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    //     assertFalse(executor.logicAddress() == address(newLogic));
-    //     (, , , , , , , , , , bool oldExecuted) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldExecuted);
+     function testExecute() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+        assertFalse(proxy.implementation() == address(newLogic));
+        (, , , , , , , , , , bool oldExecuted) = 
+        proxy.proposals(1);
+        assertFalse(oldExecuted);
 
-    //     vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-    //     logic.execute(proposalIds[0]);
+        vm.roll(votingDelay + votingPeriod + executingDelay + 1);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'execute(uint256)',
+                1 
+            )
+        );
 
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    //     assertTrue(executor.logicAddress() == address(newLogic));
-    //     (, , , , , , , , , , bool newExecuted) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newExecuted);
-    // }
+         assertFalse(executor.queuedTransactions(txHashs[0]));
+         assertTrue(proxy.implementation() == address(newLogic));
+         (, , , , , , , , , , bool newExecuted) = proxy.proposals(1);
+         assertTrue(newExecuted);
+     }
 
-    // function testCancel() public {
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
-    //     (, , , , , , , , bool oldCanceled, ,) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldCanceled);
+    function testCancel() public {
+        assertTrue(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool oldCanceled, ,) = proxy.proposals(1);
+        assertFalse(oldCanceled);
 
-    //     vm.prank(proposer);
-    //     logic.cancel(proposalIds[0]);
+        vm.prank(proposer);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'cancel(uint256)',
+                1 
+            )
+        );
 
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    //     (, , , , , , , , bool newCanceled, ,) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newCanceled);
-    // }
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+        (, , , , , , , , bool newCanceled, ,) = proxy.proposals(1);
+        assertTrue(newCanceled);
+    }
 
-    // function testVeto() public {
-    //     (, , , , , , , , , bool oldVetoed,) = logic.proposals(proposalIds[0]);
-    //     assertFalse(oldVetoed);
-    //     assertTrue(executor.queuedTransactions(txHashs[0]));
+    function testVeto() public {
+        (, , , , , , , , , bool oldVetoed,) = proxy.proposals(1);
+        assertFalse(oldVetoed);
+        assertTrue(executor.queuedTransactions(txHashs[0]));
 
-    //     vm.prank(vetoer);
-    //     logic.veto(proposalIds[0]);
+        vm.prank(vetoer);
+        address(proxy).call(
+            abi.encodeWithSignature(
+                'veto(uint256)',
+                1 
+            )
+        );
 
-    //     (, , , , , , , , , bool newVetoed,) = logic.proposals(proposalIds[0]);
-    //     assertTrue(newVetoed);
-    //     assertFalse(executor.queuedTransactions(txHashs[0]));
-    // }
+        (, , , , , , , , , bool newVetoed,) = proxy.proposals(1);
+        assertTrue(newVetoed);
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+    }
 
     receive() external payable {}
 }

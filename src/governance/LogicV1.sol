@@ -54,14 +54,12 @@ contract ChainInsightLogicV1 is
 
     /**
      * @notice Used to initialize the contract during delegator contructor
-     * @param executorContract_ The address of the Executor
      * @param sbtContract_ The address of the Sbt contract
      * @param vetoer_ The address allowed to unilaterally veto proposals
      * @param votingPeriod_ The initial voting period
      * @param votingDelay_ The initial voting delay
      */
     function initialize(
-        address executorContract_,
         address sbtContract_,
         address vetoer_,
         uint256 executingGracePeriod_,
@@ -71,16 +69,11 @@ contract ChainInsightLogicV1 is
         uint256 proposalThreshold_
     ) public {
         require(
-            address(executorContract) == address(0),
+            executor == address(0),
             "LogicV1::initialize: can only initialize once"
         );
 
-        require(msg.sender == admin, "LogicV1::initialize: admin only");
-
-        require(
-            executorContract_ != address(0),
-            "LogicV1::initialize: invalid Executor address"
-        );
+        require(msg.sender == deployer, "LogicV1::initialize: deployer only");
 
         require(
             sbtContract_ != address(0),
@@ -124,7 +117,7 @@ contract ChainInsightLogicV1 is
         emit VotingDelaySet(votingDelay, votingDelay_);
         emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
-        executorContract = IChainInsightExecutor(executorContract_);
+        // IChainInsightExecutor(executor) = IChainInsightExecutor(executor_);
         sbtContract = ISbt(sbtContract_);
         vetoer = vetoer_;
 
@@ -256,12 +249,12 @@ contract ChainInsightLogicV1 is
         uint256 eta
     ) internal {
         require(
-            !executorContract.transactionIsQueued(
+            !IChainInsightExecutor(executor).transactionIsQueued(
                 keccak256(abi.encode(target, value, signature, data, eta))
             ),
             "LogicV1::queueOrRevertInternal: identical proposal action already queued at eta"
         );
-        executorContract.queueTransaction(target, value, signature, data, eta);
+        IChainInsightExecutor(executor).queueTransaction(target, value, signature, data, eta);
     }
 
     /**
@@ -277,7 +270,7 @@ contract ChainInsightLogicV1 is
         proposal.executed = true;
 
         for (uint256 i = 0; i < proposal.targets.length; i++) {
-            executorContract.executeTransaction(
+            IChainInsightExecutor(executor).executeTransaction(
                 proposal.targets[i],
                 proposal.values[i],
                 proposal.signatures[i],
@@ -307,7 +300,7 @@ contract ChainInsightLogicV1 is
 
         proposal.canceled = true;
         for (uint256 i = 0; i < proposal.targets.length; i++) {
-            executorContract.cancelTransaction(
+            IChainInsightExecutor(executor).cancelTransaction(
                 proposal.targets[i],
                 proposal.values[i],
                 proposal.signatures[i],
@@ -335,7 +328,7 @@ contract ChainInsightLogicV1 is
 
         proposal.vetoed = true;
         for (uint256 i = 0; i < proposal.targets.length; i++) {
-            executorContract.cancelTransaction(
+            IChainInsightExecutor(executor).cancelTransaction(
                 proposal.targets[i],
                 proposal.values[i],
                 proposal.signatures[i],
@@ -358,6 +351,10 @@ contract ChainInsightLogicV1 is
         view
         returns (Receipt memory)
     {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getReceipt: invalid proposal id"
+        );
         return proposals[proposalId].receipts[voter];
     }
 
@@ -520,8 +517,8 @@ contract ChainInsightLogicV1 is
      */
     function _setExecutingGracePeriod(uint256 newExecutingGracePeriod) public {
         require(
-            msg.sender == admin,
-            "Executor::_setExecutingDelay: admin only"
+            msg.sender == executor,
+            "Executor::_setExecutingDelay: executor only"
         );
         uint256 oldExecutingGracePeriod = executingGracePeriod;
         executingGracePeriod = newExecutingGracePeriod;
@@ -538,8 +535,8 @@ contract ChainInsightLogicV1 is
      */
     function _setExecutingDelay(uint256 newExecutingDelay) public {
         require(
-            msg.sender == admin,
-            "Executor::_setExecutingDelay: admin only"
+            msg.sender == executor,
+            "Executor::_setExecutingDelay: executor only"
         );
         uint256 oldExecutingDelay = executingDelay;
         executingDelay = newExecutingDelay;
@@ -552,7 +549,7 @@ contract ChainInsightLogicV1 is
      * @param newVotingDelay new voting delay, in blocks
      */
     function _setVotingDelay(uint256 newVotingDelay) external {
-        require(msg.sender == admin, "LogicV1::_setVotingDelay: admin only");
+        require(msg.sender == executor, "LogicV1::_setVotingDelay: executor only");
         require(
             newVotingDelay >= MIN_VOTING_DELAY &&
                 newVotingDelay <= MAX_VOTING_DELAY,
@@ -569,7 +566,7 @@ contract ChainInsightLogicV1 is
      * @param newVotingPeriod new voting period, in blocks
      */
     function _setVotingPeriod(uint256 newVotingPeriod) external {
-        require(msg.sender == admin, "LogicV1::_setVotingPeriod: admin only");
+        require(msg.sender == executor, "LogicV1::_setVotingPeriod: executor only");
         require(
             newVotingPeriod >= MIN_VOTING_PERIOD &&
                 newVotingPeriod <= MAX_VOTING_PERIOD,
@@ -587,8 +584,8 @@ contract ChainInsightLogicV1 is
      */
     function _setProposalThreshold(uint256 newProposalThreshold) external {
         require(
-            msg.sender == admin,
-            "LogicV1::_setProposalThreshold: admin only"
+            msg.sender == executor,
+            "LogicV1::_setProposalThreshold: executor only"
         );
         require(
             newProposalThreshold >= MIN_PROPOSAL_THRESHOLD &&
@@ -659,4 +656,60 @@ contract ChainInsightLogicV1 is
         uint256 votes = sbtContract.gradeOf(voter);
         return votes;
     }
+
+    function getProposalTargets(uint256 proposalId) external view returns (address[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalTargets: invalid proposal id"
+        );
+        return proposals[proposalId].targets;
+    }
+
+    function getProposalValues(uint256 proposalId) external view returns (uint256[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalValues: invalid proposal id"
+        );
+        return proposals[proposalId].values;
+    }
+
+    function getProposalSignatures(uint256 proposalId) external view returns (string[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalSignatures: invalid proposal id"
+        );
+        return proposals[proposalId].signatures;
+    }
+
+    function getProposalCalldatas(uint256 proposalId) external view returns (bytes[] memory) {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getProposalCalldatas: invalid proposal id"
+        );
+        return proposals[proposalId].calldatas;
+    }
+
+    // function getProposalSignature(uint256 proposalId, uint256 index) external view returns (string memory) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalSignature: invalid proposal id"
+    //     );
+    //     require(
+    //         proposals[proposalId].targets.length >= index,
+    //         "LogicV1::getProposalSignature: invalid index"
+    //     );
+    //     return proposals[proposalId].signatures[index];
+    // }
+
+    // function getProposalCalldata(uint256 proposalId, uint256 index) external view returns (bytes memory) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalCalldata: invalid proposal id"
+    //     );
+    //     require(
+    //         proposals[proposalId].targets.length >= index,
+    //         "LogicV1::getProposalCalldata: invalid index"
+    //     );
+    //     return proposals[proposalId].calldatas[index];
+    // }
 }
