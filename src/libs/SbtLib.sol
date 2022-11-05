@@ -7,6 +7,7 @@ library SbtLib {
 
     struct SbtStruct {
         address executor;
+        address admin;
         string name;
         string symbol;
         string baseURI;

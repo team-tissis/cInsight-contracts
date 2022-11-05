@@ -77,6 +77,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/",
+            20 ether,
             address(skinNft),
             address(imp)
         );

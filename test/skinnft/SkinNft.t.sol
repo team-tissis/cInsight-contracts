@@ -24,6 +24,7 @@ contract SkinNftTest is Test {
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/metadata/",
+            20 ether,
             address(skinNft),
             address(imp)
         );

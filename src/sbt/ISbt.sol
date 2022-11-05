@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 interface ISbt {
     event executorChanged(address _newOwner);
+    event adminChanged(address _admin);
 
     function setImplementation(
         bytes4[] calldata _sigs,
@@ -10,6 +11,8 @@ interface ISbt {
     ) external;
 
     function executor() external view returns (address);
+
+    function admin() external view returns (address);
 
     function supportsInterface(bytes4 _interfaceID)
         external
@@ -47,6 +50,8 @@ interface ISbt {
     function mintedTokenNumber() external view returns (uint256);
 
     function sbtPrice(bool isReferral) external view returns (uint256);
+
+    function setAdmin(address _admin) external;
 
     function setBaseUri(string memory _newBaseURI) external;
 
