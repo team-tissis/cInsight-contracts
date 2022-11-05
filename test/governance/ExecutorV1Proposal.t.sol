@@ -15,7 +15,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     Sbt internal sbt;
     SbtImp internal imp;
 
-    address admin = address(1);
+    address deployer = address(1);
     address logicAdminTmp = address(0);
     address vetoer = address(2);
     address proposer = address(3);
@@ -43,19 +43,18 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // create and initialize contracts
         logic = new ChainInsightLogicV1();
         newLogic = new ChainInsightLogicV1();
-        executor = new ChainInsightExecutorV1(address(logic));
+        executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         imp = new SbtImp();
 
         targets = [address(executor)];
         calldatas = [abi.encode(address(newLogic))];
 
-        vm.prank(admin);
+        // vm.prank(deployer);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
             address(sbt),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
