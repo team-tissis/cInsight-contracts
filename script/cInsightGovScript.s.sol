@@ -22,8 +22,8 @@ contract cInsightGovScript is Script {
     address vetoer = address(2);
 
     uint256 executingGracePeriod = 11520;
-    uint256 executingDelay = 240; //11520;
-    uint256 votingPeriod = 240; //5760;
+    uint256 executingDelay = 11520;
+    uint256 votingPeriod = 5760;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
 
