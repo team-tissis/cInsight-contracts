@@ -17,6 +17,7 @@ contract Sbt is ISbt {
         string calldata _name,
         string calldata _symbol,
         string calldata _baseURI,
+        uint256 _sbtPrice,
         address _nftAddress,
         address _impAddress
     ) external {
@@ -24,23 +25,24 @@ contract Sbt is ISbt {
         require(_executor != address(0), "_executor must not be address 0");
         require(sbtstruct.executor == address(0), "INITIATED ALREADY");
         sbtstruct.executor = _executor;
+        sbtstruct.admin = msg.sender;
         sbtstruct.name = _name;
         sbtstruct.symbol = _symbol;
         sbtstruct.baseURI = _baseURI;
         sbtstruct.nftAddress = _nftAddress;
         sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
         sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
-        sbtstruct.sbtPrice = 20 ether;
-        sbtstruct.sbtReferralPrice = 15 ether;
-        sbtstruct.sbtReferralIncentive = 10 ether;
-        sbtstruct.monthlyDistributedFavoNum = 20;
+        sbtstruct.sbtPrice = _sbtPrice;
+        sbtstruct.sbtReferralPrice = _sbtPrice / 2;
+        sbtstruct.sbtReferralIncentive = _sbtPrice / 4;
+        sbtstruct.monthlyDistributedFavoNum = 10;
         sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
         sbtstruct.favoUseUpIncentive = 1;
         sbtstruct.makiDecayRate = 90;
-        sbtstruct.gradeNum = 5;
+        sbtstruct.gradeNum = 5; // currently grade num is immutable and is set 5. TODO: change to mutable
         uint8[5] memory _referralRate = [1, 1, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
-        uint8[5] memory _gradeRate = [80, 40, 20, 5, 0];
+        uint8[5] memory _gradeRate = [80, 60, 40, 20, 0]; // the percentage of grade 1,2,3,4,5
 
         for (uint256 i = 0; i < 5; i++) {
             sbtstruct.referralRate.push(_referralRate[i]);
@@ -85,6 +87,11 @@ contract Sbt is ISbt {
     function executor() external view returns (address) {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         return sbtstruct.executor;
+    }
+
+    function admin() external view returns (address) {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        return sbtstruct.admin;
     }
 
     // supportしているERCversionなど
@@ -208,6 +215,12 @@ contract Sbt is ISbt {
         emit executorChanged(_newContactOwner);
     }
 
+    function setAdmin(address _admin) external onlyExecutor {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        sbtstruct.admin = _admin;
+        emit adminChanged(_admin);
+    }
+
     function setBaseUri(string memory _newBaseURI) external onlyExecutor {
         SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
         sbtstruct.baseURI = _newBaseURI;
@@ -297,6 +310,12 @@ contract Sbt is ISbt {
                 return(0, returndatasize())
             }
         }
+    }
+
+    function withdraw(uint256 balance) external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
+        payable(msg.sender).call{value: balance}("");
     }
 
     receive() external payable {}

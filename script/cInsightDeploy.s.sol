@@ -17,20 +17,15 @@ contract cInsightScript is Script {
     Sbt sbt;
     SbtImp sbtImp;
     SkinNft skinNft;
-
-    address admin = address(1);
-    address vetoer = address(2);
-
     uint256 executingGracePeriod = 11520;
     uint256 executingDelay = 11520;
     uint256 votingPeriod = 5760;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
-
     string baseURL = "https://thechaininsight.github.io/";
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("DEPROYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         // excute operations as a deployer account until stop broadcast
         vm.startBroadcast(deployerPrivateKey);
@@ -39,12 +34,14 @@ contract cInsightScript is Script {
         executor = new ChainInsightExecutorV1();
         sbt = new Sbt();
         sbtImp = new SbtImp();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/metadata/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
+        address admin = tx.origin;
+        address vetoer = address(0);
 
         proxy = new ChainInsightGovernanceProxyV1(
+            address(logic),
             address(executor),
             address(sbt),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,

@@ -72,7 +72,9 @@ contract cInsightGovScript is Script {
 
         executor.setProxyAddress(address(proxy));
 
-        console.log("address(proxy), address(logic), address(executor), address(sbt), address(sbtImp), address(skinNft)");
+        console.log(
+            "address(proxy), address(logic), address(executor), address(sbt), address(sbtImp), address(skinNft)"
+        );
         console.log(address(proxy));
         console.log(address(logic));
         console.log(address(executor));
@@ -84,6 +86,7 @@ contract cInsightGovScript is Script {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/"),
+            20 ether,
             address(skinNft),
             address(sbtImp)
         );

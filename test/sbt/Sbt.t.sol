@@ -13,6 +13,7 @@ contract SbtTest is Test {
     Sbt internal sbt;
     SbtImp internal sbtImp;
     SkinNft internal skinNft;
+    uint256 sbtPrice = 0.1 ether;
 
     function setUp() public {
         sbt = new Sbt();
@@ -24,6 +25,7 @@ contract SbtTest is Test {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/metadata/"),
+            sbtPrice,
             address(skinNft),
             address(sbtImp)
         );
@@ -42,34 +44,36 @@ contract SbtTest is Test {
     }
 
     function testMint() public {
+        uint256 init_balance = 40 ether;
+        uint256 sbtPrice = 0.1 ether;
         address manA = address(0xa);
-        payable(manA).call{value: 40 ether}("");
+        payable(manA).call{value: init_balance}("");
 
         address manB = address(0xb);
-        payable(manB).call{value: 40 ether}("");
+        payable(manB).call{value: init_balance}("");
 
         address manC = address(0xc);
-        payable(manC).call{value: 40 ether}("");
+        payable(manC).call{value: init_balance}("");
 
         address manD = address(0xd);
-        payable(manD).call{value: 40 ether}("");
+        payable(manD).call{value: init_balance}("");
 
         address manE = address(0xe);
-        payable(manE).call{value: 40 ether}("");
+        payable(manE).call{value: init_balance}("");
 
         address manF = address(0xf);
-        payable(manF).call{value: 40 ether}("");
+        payable(manF).call{value: init_balance}("");
 
         address beef = address(0xbeef);
-        payable(beef).call{value: 40 ether}("");
+        payable(beef).call{value: init_balance}("");
 
         //mint
         vm.prank(manA);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         assertEq(sbt.ownerOf(1), manA);
         assertEq(sbt.tokenIdOf(manA), 1);
-        assertEq(20 ether, manA.balance);
-        assertEq(20 ether, address(sbt).balance);
+        assertEq(init_balance - sbtPrice, manA.balance);
+        assertEq(sbtPrice, address(sbt).balance);
 
         vm.prank(manB);
         address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
@@ -104,23 +108,23 @@ contract SbtTest is Test {
         // test add favo
         vm.prank(manA);
         address(sbt).call(
-            abi.encodeWithSignature("addFavos(address,uint8)", manB, 10)
+            abi.encodeWithSignature("addFavos(address,uint8)", manB, 5)
+        );
+        assertEq(sbt.favoOf(manA), 5);
+        assertEq(sbt.makiMemoryOf(manB), 25);
+
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manC, 4)
+        );
+        assertEq(sbt.favoOf(manA), 9);
+        assertEq(sbt.makiMemoryOf(manC), 20);
+
+        vm.prank(manA);
+        address(sbt).call(
+            abi.encodeWithSignature("addFavos(address,uint8)", manD, 2)
         );
         assertEq(sbt.favoOf(manA), 10);
-        assertEq(sbt.makiMemoryOf(manB), 50);
-
-        vm.prank(manA);
-        address(sbt).call(
-            abi.encodeWithSignature("addFavos(address,uint8)", manC, 9)
-        );
-        assertEq(sbt.favoOf(manA), 19);
-        assertEq(sbt.makiMemoryOf(manC), 45);
-
-        vm.prank(manA);
-        address(sbt).call(
-            abi.encodeWithSignature("addFavos(address,uint8)", manD, 3)
-        );
-        assertEq(sbt.favoOf(manA), 20);
         assertEq(sbt.makiMemoryOf(manD), 5);
 
         vm.expectRevert(bytes("favo num must be bigger than 0"));
@@ -133,9 +137,9 @@ contract SbtTest is Test {
         address(sbt).call(abi.encodeWithSignature("monthInit()"));
         assertEq(sbt.makiOf(manA), 1);
         assertEq(sbt.gradeOf(manA), 2);
-        assertEq(sbt.gradeOf(manB), 4);
-        assertEq(sbt.gradeOf(manC), 3);
-        assertEq(sbt.gradeOf(manD), 2);
+        assertEq(sbt.gradeOf(manB), 5);
+        assertEq(sbt.gradeOf(manC), 4);
+        assertEq(sbt.gradeOf(manD), 3);
         assertEq(sbt.gradeOf(manE), 1);
 
         // // test referral mint
@@ -147,15 +151,15 @@ contract SbtTest is Test {
             abi.encodeWithSignature("mintWithReferral(address)", manB)
         );
 
-        assertEq(address(manB).balance, 30 ether);
-        assertEq(address(beef).balance, 25 ether);
+        assertEq(address(manB).balance, init_balance - sbtPrice + sbtPrice / 4);
+        assertEq(address(beef).balance, init_balance - sbtPrice / 2);
 
         // check distance for addFavo is working.
         vm.prank(beef);
         address(sbt).call(
-            abi.encodeWithSignature("addFavos(address,uint8)", manB, 10)
+            abi.encodeWithSignature("addFavos(address,uint8)", manB, 1)
         );
-        assertEq(sbt.makiMemoryOf(manB), 60); // + 10
+        assertEq(sbt.makiMemoryOf(manB), 1); // + 10
     }
 
     // function testSetadmin() public {

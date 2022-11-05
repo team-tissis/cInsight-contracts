@@ -69,6 +69,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
             "ChainInsight",
             "SBT",
             "https://thechaininsight.github.io/sbt/",
+            20 ether,
             nftAddress,
             address(imp)
         );
@@ -90,7 +91,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
 
         address(proxy).call(
             abi.encodeWithSignature(
-                'propose(address[],uint256[],string[],bytes[],string)',
+                "propose(address[],uint256[],string[],bytes[],string)",
                 targets,
                 values,
                 signatures,

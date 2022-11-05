@@ -3,7 +3,6 @@ pragma solidity ^0.8.16;
 
 import "./../libs/SbtLib.sol";
 import "./../libs/DateTime.sol";
-import "./../libs/QuickSort.sol";
 import "./../skinnft/ISkinNft.sol";
 
 contract SbtImp {
@@ -112,6 +111,7 @@ contract SbtImp {
                 sbtstruct.makiMemorys[_address] +
                 (sbtstruct.makis[_address] * sbtstruct.makiDecayRate) /
                 100;
+            sbtstruct.makiMemorys[_address] = 0;
             if (
                 sbtstruct.favos[_address] == sbtstruct.monthlyDistributedFavoNum
             ) {
@@ -137,7 +137,7 @@ contract SbtImp {
                 count += 1;
             }
         }
-        makiSortedIndex = QuickSort.sort(makiArray, makiSortedIndex);
+        _quickSort(makiArray, makiSortedIndex, int(0), int(accountNum - 1));
         gradeNum--;
         for (j = 0; j < gradeNum; j++) {
             gradeThreshold[j] = accountNum * sbtstruct.gradeRate[j];
@@ -147,12 +147,12 @@ contract SbtImp {
         // burnされていない account 中の上位 x %を計算.
         for (uint256 i = 0; i < accountNum; i++) {
             address _address = sbtstruct.owners[makiSortedIndex[i]];
-            grade = 0;
+            grade = 1;
             for (j = 0; j < gradeNum; j++) {
-                grade++;
                 if (i * 100 >= gradeThreshold[j]) {
                     break;
                 }
+                grade++;
                 // set grade
             }
             sbtstruct.grades[_address] = grade;
@@ -263,5 +263,30 @@ contract SbtImp {
         );
         sbtstruct.referralMap[userTo] = msg.sender;
         sbtstruct.referrals[msg.sender] += 1;
+    }
+
+    // descending
+    function _quickSort(
+        uint32[] memory arr,
+        uint16[] memory ind,
+        int left,
+        int right
+    ) internal {
+        int i = left;
+        int j = right;
+        if (i == j) return;
+        uint pivot = arr[uint(left + (right - left) / 2)];
+        while (i <= j) {
+            while (arr[uint(i)] > pivot) i++;
+            while (pivot > arr[uint(j)]) j--;
+            if (i <= j) {
+                (arr[uint(i)], arr[uint(j)]) = (arr[uint(j)], arr[uint(i)]);
+                (ind[uint(i)], ind[uint(j)]) = (ind[uint(j)], ind[uint(i)]);
+                i++;
+                j--;
+            }
+        }
+        if (left < j) _quickSort(arr, ind, left, j);
+        if (i < right) _quickSort(arr, ind, i, right);
     }
 }
