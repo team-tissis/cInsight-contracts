@@ -39,7 +39,7 @@ contract cInsightScript is Script {
         executor = new ChainInsightExecutorV1(address(logic));
         sbt = new Sbt();
         sbtImp = new SbtImp();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/metadata/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
@@ -58,7 +58,7 @@ contract cInsightScript is Script {
             address(executor),
             "ChainInsight",
             "SBT",
-            string.concat(baseURL, "sbt/"),
+            string.concat(baseURL, "sbt/metadata/"),
             address(skinNft),
             address(sbtImp)
         );
