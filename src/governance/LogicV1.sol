@@ -16,13 +16,13 @@ contract ChainInsightLogicV1 is
     uint256 public constant MAX_EXECUTING_GRACE_PERIOD = 172_800; // About 30 days
 
     /// @notice The min setable executing delay
-    uint256 public constant MIN_EXECUTING_DELAY = 11_520;
+    uint256 public constant MIN_EXECUTING_DELAY = 240; // 11_520;
 
     /// @notice The max setable executing delay
     uint256 public constant MAX_EXECUTING_DELAY = 172_800;
 
     /// @notice The minimum setable voting period
-    uint256 public constant MIN_VOTING_PERIOD = 5_760; // About 24 hours
+    uint256 public constant MIN_VOTING_PERIOD = 240; //5_760; // About 24 hours
 
     /// @notice The max setable voting period
     uint256 public constant MAX_VOTING_PERIOD = 80_640; // Abount 2 weeks
