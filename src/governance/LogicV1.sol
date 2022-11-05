@@ -138,27 +138,15 @@ contract ChainInsightLogicV1 is
      * @return Proposal id of new proposal
      */
     function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        string[] memory signatures,
-        bytes[] memory calldatas,
+        address targets,
+        uint256 values,
+        string memory signatures,
+        bytes memory calldatas,
         string memory description
     ) public returns (uint256) {
         require(
             sbtContract.gradeOf(msg.sender) >= proposalThreshold,
             "LogicV1::propose: proposer must hold Bonfire SBT"
-        );
-
-        require(
-            targets.length == values.length &&
-                targets.length == signatures.length &&
-                targets.length == calldatas.length,
-            "LogicV1::propose: proposal function information arity mismatch"
-        );
-        require(targets.length != 0, "LogicV1::propose: must provide actions");
-        require(
-            targets.length <= proposalMaxOperations,
-            "LogicV1::propose: too many actions"
         );
 
         /// @notice Ensure that msg.sender currently does not have active or pending proposals
@@ -193,9 +181,10 @@ contract ChainInsightLogicV1 is
         newProposal.forVotes = 0;
         newProposal.againstVotes = 0;
         newProposal.abstainVotes = 0;
-        newProposal.canceled = false;
-        newProposal.executed = false;
-        newProposal.vetoed = false;
+        // newProposal.canceled = false;
+        // newProposal.executed = false;
+        // newProposal.vetoed = false;
+        newProposal.state = 0;
 
         latestProposalIds[msg.sender] = newProposal.id;
 
@@ -227,15 +216,13 @@ contract ChainInsightLogicV1 is
         Proposal storage proposal = proposals[proposalId];
 
         uint256 eta = block.number + executingDelay;
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            queueOrRevertInternal(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                eta
-            );
-        }
+        queueOrRevertInternal(
+            proposal.targets,
+            proposal.values,
+            proposal.signatures,
+            proposal.calldatas,
+            eta
+        );
         proposal.eta = eta;
         emit ProposalQueued(proposalId, eta);
     }
@@ -267,18 +254,17 @@ contract ChainInsightLogicV1 is
             "LogicV1::execute: proposal can only be executed if it is queued"
         );
         Proposal storage proposal = proposals[proposalId];
-        proposal.executed = true;
+        // proposal.executed = true;
+        proposal.state = 1;
 
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            IChainInsightExecutor(executor).executeTransaction(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                proposal.eta,
-                executingGracePeriod
-            );
-        }
+        IChainInsightExecutor(executor).executeTransaction(
+            proposal.targets,
+            proposal.values,
+            proposal.signatures,
+            proposal.calldatas,
+            proposal.eta,
+            executingGracePeriod
+        );
         emit ProposalExecuted(proposalId);
     }
 
@@ -298,16 +284,15 @@ contract ChainInsightLogicV1 is
             "LogicV1::cancel: only proposer can cancel proposal"
         );
 
-        proposal.canceled = true;
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            IChainInsightExecutor(executor).cancelTransaction(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                proposal.eta
-            );
-        }
+        // proposal.canceled = true;
+        proposal.state = 2;
+        IChainInsightExecutor(executor).cancelTransaction(
+            proposal.targets,
+            proposal.values,
+            proposal.signatures,
+            proposal.calldatas,
+            proposal.eta
+        );
 
         emit ProposalCanceled(proposalId);
     }
@@ -326,16 +311,15 @@ contract ChainInsightLogicV1 is
 
         Proposal storage proposal = proposals[proposalId];
 
-        proposal.vetoed = true;
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            IChainInsightExecutor(executor).cancelTransaction(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                proposal.eta
-            );
-        }
+        // proposal.vetoed = true;
+        proposal.state = 3;
+        IChainInsightExecutor(executor).cancelTransaction(
+            proposal.targets,
+            proposal.values,
+            proposal.signatures,
+            proposal.calldatas,
+            proposal.eta
+        );
 
         emit ProposalVetoed(proposalId);
     }
@@ -358,6 +342,74 @@ contract ChainInsightLogicV1 is
         return proposals[proposalId].receipts[voter];
     }
 
+    function getHasVoted(uint256 proposalId, address voter)
+        external
+        view
+        returns (bool)
+    {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getReceipt: invalid proposal id"
+        );
+        return proposals[proposalId].receipts[voter].hasVoted;
+    }
+
+    function getSupport(uint256 proposalId, address voter)
+        external
+        view
+        returns (uint8)
+    {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getReceipt: invalid proposal id"
+        );
+        return proposals[proposalId].receipts[voter].support;
+    }
+
+    function getVotes(uint256 proposalId, address voter)
+        external
+        view
+        returns (uint256)
+    {
+        require(
+            proposalCount >= proposalId,
+            "LogicV1::getReceipt: invalid proposal id"
+        );
+        return proposals[proposalId].receipts[voter].votes;
+    }
+
+    function getProposer(uint256 proposalId) external view returns(address) {
+        return proposals[proposalId].proposer;
+    }
+
+    function getTargets(uint256 proposalId) external view returns(address) {
+        return proposals[proposalId].targets;
+    }
+
+    function getValues(uint256 proposalId) external view returns(uint256) {
+        return proposals[proposalId].values;
+    }
+
+    function getSignatures(uint256 proposalId) external view returns(string memory) {
+        return proposals[proposalId].signatures;
+    }
+
+    function getCalldatas(uint256 proposalId) external view returns(bytes memory) {
+        return proposals[proposalId].calldatas;
+    }
+
+    function getForVotes(uint256 proposalId) external view returns(uint256) {
+        return proposals[proposalId].forVotes;
+    }
+
+    function getAgainstVotes(uint256 proposalId) external view returns(uint256) {
+        return proposals[proposalId].againstVotes;
+    }
+
+    function getAbstainVotes(uint256 proposalId) external view returns(uint256) {
+        return proposals[proposalId].abstainVotes;
+    }
+
     /**
      * @notice Gets the state of a proposal
      * @param proposalId The id of the proposal
@@ -370,9 +422,11 @@ contract ChainInsightLogicV1 is
         );
 
         Proposal storage proposal = proposals[proposalId];
-        if (proposal.vetoed) {
+        // if (proposal.vetoed) {
+        if (proposal.state == 3) {
             return ProposalState.Vetoed;
-        } else if (proposal.canceled) {
+        // } else if (proposal.canceled) {
+        } else if (proposal.state == 2) {
             return ProposalState.Canceled;
         } else if (block.number <= proposal.startBlock) {
             return ProposalState.Pending;
@@ -382,7 +436,8 @@ contract ChainInsightLogicV1 is
             return ProposalState.Defeated;
         } else if (proposal.eta == 0) {
             return ProposalState.Succeeded;
-        } else if (proposal.executed) {
+        // } else if (proposal.executed) {
+        } else if (proposal.state == 1) {
             return ProposalState.Executed;
         } else if (block.number >= proposal.eta + executingGracePeriod) {
             return ProposalState.Expired;
@@ -657,59 +712,35 @@ contract ChainInsightLogicV1 is
         return votes;
     }
 
-    function getProposalTargets(uint256 proposalId) external view returns (address[] memory) {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getProposalTargets: invalid proposal id"
-        );
-        return proposals[proposalId].targets;
-    }
+    //function getProposalTargets(uint256 proposalId) external view returns (address) {
+    //    require(
+    //        proposalCount >= proposalId,
+    //        "LogicV1::getProposalTargets: invalid proposal id"
+    //    );
+    //    return proposals[proposalId].targets;
+    //}
 
-    function getProposalValues(uint256 proposalId) external view returns (uint256[] memory) {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getProposalValues: invalid proposal id"
-        );
-        return proposals[proposalId].values;
-    }
+    //function getProposalValues(uint256 proposalId) external view returns (uint256) {
+    //    require(
+    //        proposalCount >= proposalId,
+    //        "LogicV1::getProposalValues: invalid proposal id"
+    //    );
+    //    return proposals[proposalId].values;
+    //}
 
-    function getProposalSignatures(uint256 proposalId) external view returns (string[] memory) {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getProposalSignatures: invalid proposal id"
-        );
-        return proposals[proposalId].signatures;
-    }
+    //function getProposalSignatures(uint256 proposalId) external view returns (string memory) {
+    //    require(
+    //        proposalCount >= proposalId,
+    //        "LogicV1::getProposalSignatures: invalid proposal id"
+    //    );
+    //    return proposals[proposalId].signatures;
+    //}
 
-    function getProposalCalldatas(uint256 proposalId) external view returns (bytes[] memory) {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getProposalCalldatas: invalid proposal id"
-        );
-        return proposals[proposalId].calldatas;
-    }
-
-    // function getProposalSignature(uint256 proposalId, uint256 index) external view returns (string memory) {
-    //     require(
-    //         proposalCount >= proposalId,
-    //         "LogicV1::getProposalSignature: invalid proposal id"
-    //     );
-    //     require(
-    //         proposals[proposalId].targets.length >= index,
-    //         "LogicV1::getProposalSignature: invalid index"
-    //     );
-    //     return proposals[proposalId].signatures[index];
-    // }
-
-    // function getProposalCalldata(uint256 proposalId, uint256 index) external view returns (bytes memory) {
-    //     require(
-    //         proposalCount >= proposalId,
-    //         "LogicV1::getProposalCalldata: invalid proposal id"
-    //     );
-    //     require(
-    //         proposals[proposalId].targets.length >= index,
-    //         "LogicV1::getProposalCalldata: invalid index"
-    //     );
-    //     return proposals[proposalId].calldatas[index];
-    // }
+    //function getProposalCalldatas(uint256 proposalId) external view returns (bytes memory) {
+    //    require(
+    //        proposalCount >= proposalId,
+    //        "LogicV1::getProposalCalldatas: invalid proposal id"
+    //    );
+    //    return proposals[proposalId].calldatas;
+    //}
 }
