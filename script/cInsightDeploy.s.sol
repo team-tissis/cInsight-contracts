@@ -22,7 +22,7 @@ contract cInsightScript is Script {
     uint256 votingPeriod = 150;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
-    string baseURL = "https://team-tissis.github.io/";
+    string baseURL = "https://team-tissis.github.io/cInsightAsset/";
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
