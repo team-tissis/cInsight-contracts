@@ -3,44 +3,44 @@
 pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
-import "./../../src/sbt/Sbt.sol";
-import "./../../src/sbt/SbtImp.sol";
+import "./../../src/bonfire/Bonfire.sol";
+import "./../../src/bonfire/BonfireImp.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
-contract SbtTest is Test {
+contract BonfireTest is Test {
     address admin = address(0xad000); //TODO: executor に変更
     string baseURL = "https://thechaininsight.github.io/";
-    Sbt internal sbt;
-    SbtImp internal sbtImp;
+    Bonfire internal bonfire;
+    BonfireImp internal bonfireImp;
     SkinNft internal skinNft;
     uint256 sbtPrice = 0.1 ether;
 
     function setUp() public {
-        sbt = new Sbt();
-        sbtImp = new SbtImp();
+        bonfire = new Bonfire();
+        bonfireImp = new BonfireImp();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
-        sbt.init(
+        bonfire.init(
             admin,
             "ChainInsight",
-            "SBT",
-            string.concat(baseURL, "sbt/metadata/"),
+            "BONFIRE",
+            string.concat(baseURL, "bonfire/metadata/"),
             sbtPrice,
             address(skinNft),
-            address(sbtImp)
+            address(bonfireImp)
         );
-        skinNft.init(address(sbt));
+        skinNft.init(address(bonfire));
     }
 
     function testInit() public {
-        assertEq(sbt.name(), "ChainInsight");
-        assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.executor(), admin);
+        assertEq(bonfire.name(), "ChainInsight");
+        assertEq(bonfire.symbol(), "BONFIRE");
+        assertEq(bonfire.executor(), admin);
     }
 
     function testSupportsInterface() public {
-        assertEq(sbt.supportsInterface(0x01ffc9a7), true);
-        assertEq(sbt.supportsInterface(0x5b5e139f), true);
+        assertEq(bonfire.supportsInterface(0x01ffc9a7), true);
+        assertEq(bonfire.supportsInterface(0x5b5e139f), true);
     }
 
     function testMint() public {
@@ -69,85 +69,93 @@ contract SbtTest is Test {
 
         //mint
         vm.prank(manA);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
-        assertEq(sbt.ownerOf(1), manA);
-        assertEq(sbt.tokenIdOf(manA), 1);
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
+        assertEq(bonfire.ownerOf(1), manA);
+        assertEq(bonfire.tokenIdOf(manA), 1);
         assertEq(init_balance - sbtPrice, manA.balance);
-        assertEq(sbtPrice, address(sbt).balance);
+        assertEq(sbtPrice, address(bonfire).balance);
 
         vm.prank(manB);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
-        assertEq(sbt.ownerOf(2), manB);
-        assertEq(sbt.tokenIdOf(manB), 2);
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
+        assertEq(bonfire.ownerOf(2), manB);
+        assertEq(bonfire.tokenIdOf(manB), 2);
 
         vm.prank(manC);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
         vm.prank(manD);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
         vm.prank(manE);
         bool zero;
         bytes memory retData;
-        (zero, retData) = address(sbt).call{value: 20 ether}(
+        (zero, retData) = address(bonfire).call{value: 20 ether}(
             abi.encodeWithSignature("mint()")
         );
         assertEq(abi.decode(retData, (uint256)), 5);
-        assertEq(sbt.mintedTokenNumber(), 5);
+        assertEq(bonfire.mintedTokenNumber(), 5);
 
         //tokenURI
         vm.expectRevert(
             bytes("ERC721URIStorage: URI query for nonexistent token")
         );
-        sbt.tokenURI(10);
+        bonfire.tokenURI(10);
 
-        string memory tokenuri = sbt.tokenURI(4);
+        string memory tokenuri = bonfire.tokenURI(4);
         assertEq(
             tokenuri,
-            "https://thechaininsight.github.io/sbt/metadata/0/1/4"
+            "https://thechaininsight.github.io/bonfire/metadata/0/1/4"
         );
 
         // test add favo
         vm.prank(manA);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manB, 5)
         );
-        assertEq(sbt.favoOf(manA), 5);
-        assertEq(sbt.makiMemoryOf(manB), 25);
+        assertEq(bonfire.favoOf(manA), 5);
+        assertEq(bonfire.makiMemoryOf(manB), 25);
 
         vm.prank(manA);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manC, 4)
         );
-        assertEq(sbt.favoOf(manA), 9);
-        assertEq(sbt.makiMemoryOf(manC), 20);
+        assertEq(bonfire.favoOf(manA), 9);
+        assertEq(bonfire.makiMemoryOf(manC), 20);
 
         vm.prank(manA);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manD, 2)
         );
-        assertEq(sbt.favoOf(manA), 10);
-        assertEq(sbt.makiMemoryOf(manD), 5);
+        assertEq(bonfire.favoOf(manA), 10);
+        assertEq(bonfire.makiMemoryOf(manD), 5);
 
         vm.expectRevert(bytes("favo num must be bigger than 0"));
         vm.prank(manA);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manC, 0)
         );
 
         //month init
-        address(sbt).call(abi.encodeWithSignature("monthInit()"));
-        assertEq(sbt.makiOf(manA), 1);
-        assertEq(sbt.gradeOf(manA), 2);
-        assertEq(sbt.gradeOf(manB), 5);
-        assertEq(sbt.gradeOf(manC), 4);
-        assertEq(sbt.gradeOf(manD), 3);
-        assertEq(sbt.gradeOf(manE), 1);
+        address(bonfire).call(abi.encodeWithSignature("monthInit()"));
+        assertEq(bonfire.makiOf(manA), 1);
+        assertEq(bonfire.gradeOf(manA), 2);
+        assertEq(bonfire.gradeOf(manB), 5);
+        assertEq(bonfire.gradeOf(manC), 4);
+        assertEq(bonfire.gradeOf(manD), 3);
+        assertEq(bonfire.gradeOf(manE), 1);
 
         // // test referral mint
 
         vm.prank(manB);
-        address(sbt).call(abi.encodeWithSignature("refer(address)", beef));
+        address(bonfire).call(abi.encodeWithSignature("refer(address)", beef));
         vm.prank(beef);
-        address(sbt).call{value: 20 ether}(
+        address(bonfire).call{value: 20 ether}(
             abi.encodeWithSignature("mintWithReferral(address)", manB)
         );
 
@@ -156,22 +164,22 @@ contract SbtTest is Test {
 
         // check distance for addFavo is working.
         vm.prank(beef);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manB, 1)
         );
-        assertEq(sbt.makiMemoryOf(manB), 1); // + 10
+        assertEq(bonfire.makiMemoryOf(manB), 1); // + 10
     }
 
     // function testSetadmin() public {
     //     address newOwner = address(3);
     //     vm.prank(owner);
-    //     (, bytes memory result) = address(sbt).call(
+    //     (, bytes memory result) = address(bonfire).call(
     //         abi.encodeWithSignature("setadmin(address)", newOwner)
     //     );
-    //     assertEq(sbt.admin(), newOwner);
+    //     assertEq(bonfire.admin(), newOwner);
 
     //     vm.expectRevert(bytes("OWNER ONLY"));
-    //     address(sbt).call(
+    //     address(bonfire).call(
     //         abi.encodeWithSignature("setadmin(address)", newOwner)
     //     );
     // }

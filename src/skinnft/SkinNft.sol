@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import "./ERC721AQueryable.sol";
 import "./ISkinNft.sol";
-import "./../sbt/ISbt.sol";
+import "./../bonfire/IBonfire.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
     string public baseURI;
@@ -14,18 +14,18 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
         baseURI = _baseURI;
     }
 
-    address sbtAddress;
-    ISbt internal sbt;
+    address bonfireAddress;
+    IBonfire internal bonfire;
     mapping(address => uint256) public freemintQuantity;
     mapping(address => uint256) public _icon;
 
-    function init(address _sbtAddress) external {
+    function init(address _bonfireAddress) external {
         require(
-            sbtAddress == address(0),
+            bonfireAddress == address(0),
             "The contract is already initialized"
         );
-        sbtAddress = _sbtAddress;
-        sbt = ISbt(_sbtAddress);
+        bonfireAddress = _bonfireAddress;
+        bonfire = IBonfire(_bonfireAddress);
     }
 
     // TODO: implemente mint function and auction.
@@ -47,11 +47,11 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
     }
 
     function IconURI(address _address) external view returns (string memory) {
-        require(sbt.gradeOf(_address) != 0, "address dosn't hold SBT");
+        require(bonfire.gradeOf(_address) != 0, "address dosn't hold SBT");
         uint256 iconId = _icon[_address];
         if (iconId == 0) {
-            uint256 sbtTokenId = sbt.tokenIdOf(_address);
-            return sbt.tokenURI(sbtTokenId);
+            uint256 bonfireTokenId = bonfire.tokenIdOf(_address);
+            return bonfire.tokenURI(bonfireTokenId);
         } else {
             return tokenURI(iconId);
         }
@@ -76,7 +76,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
 
     function setFreemintQuantity(address _address, uint256 quantity) external {
         require(
-            msg.sender == sbtAddress,
+            msg.sender == bonfireAddress,
             "SET FREEMINT IS ONLY ALLOWED TO SBT CONTRACT"
         );
         freemintQuantity[_address] += quantity;
@@ -106,7 +106,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
 
     function setBaseURI(string memory _newBaseURI) external {
         require(
-            msg.sender == sbtAddress,
+            msg.sender == bonfireAddress,
             "setBaseURI is only allowed to SBT CONTRACT"
         );
         baseURI = _newBaseURI;
@@ -114,7 +114,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
 
     function withdraw() external {
         require(
-            msg.sender == sbtAddress,
+            msg.sender == bonfireAddress,
             "WITHDRAW IS ONLY ALLOWED TO SBT CONTRACT"
         );
         payable(msg.sender).transfer(address(this).balance);

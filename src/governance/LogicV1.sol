@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import "./InterfacesV1.sol";
-import "../sbt/ISbt.sol";
+import "../bonfire/IBonfire.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -59,13 +59,13 @@ contract ChainInsightLogicV1 is
 
     /**
      * @notice Used to initialize the contract during delegator contructor
-     * @param sbtContract_ The address of the Sbt contract
+     * @param bonfireContract_ The address of the Bonfire contract
      * @param vetoer_ The address allowed to unilaterally veto proposals
      * @param votingPeriod_ The initial voting period
      * @param votingDelay_ The initial voting delay
      */
     function initialize(
-        address sbtContract_,
+        address bonfireContract_,
         address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
@@ -81,7 +81,7 @@ contract ChainInsightLogicV1 is
         require(msg.sender == deployer, "LogicV1::initialize: deployer only");
 
         require(
-            sbtContract_ != address(0),
+            bonfireContract_ != address(0),
             "LogicV1::initialize: invalid SBT contract address"
         );
 
@@ -123,7 +123,7 @@ contract ChainInsightLogicV1 is
         emit ProposalThresholdSet(proposalThreshold, proposalThreshold_);
 
         // IChainInsightExecutor(executor) = IChainInsightExecutor(executor_);
-        sbtContract = ISbt(sbtContract_);
+        bonfireContract = IBonfire(bonfireContract_);
         vetoer = vetoer_;
 
         executingGracePeriod = executingGracePeriod_;
@@ -150,7 +150,7 @@ contract ChainInsightLogicV1 is
         string memory description
     ) public returns (uint256) {
         require(
-            sbtContract.gradeOf(msg.sender) >= proposalThreshold,
+            bonfireContract.gradeOf(msg.sender) >= proposalThreshold,
             "LogicV1::propose: proposer must hold Bonfire SBT"
         );
 
@@ -741,7 +741,7 @@ contract ChainInsightLogicV1 is
 
     function getVotes(address voter) internal view returns (uint256) {
         // given vote number equals to his or her grade
-        uint256 votes = sbtContract.gradeOf(voter);
+        uint256 votes = bonfireContract.gradeOf(voter);
         return votes;
     }
 

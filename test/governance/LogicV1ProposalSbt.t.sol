@@ -4,8 +4,8 @@ import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
-import "../../src/sbt/Sbt.sol";
-import "../../src/sbt/SbtImp.sol";
+import "../../src/bonfire/Bonfire.sol";
+import "../../src/bonfire/BonfireImp.sol";
 import "../../src/skinnft/SkinNft.sol";
 
 // test skinnft setfreemintquantity can call via govenance logic
@@ -14,8 +14,8 @@ contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightLogicV1 internal logic;
     ChainInsightLogicV1 internal newLogic;
     ChainInsightExecutorV1 internal executor;
-    Sbt internal sbt;
-    SbtImp internal imp;
+    Bonfire internal bonfire;
+    BonfireImp internal imp;
     SkinNft internal skinNft;
 
     address admin = address(1);
@@ -49,18 +49,17 @@ contract ChainInsightLogicV1PropososalTest is Test {
         newLogic = new ChainInsightLogicV1();
         vm.prank(deployer);
         executor = new ChainInsightExecutorV1();
-        sbt = new Sbt();
-        imp = new SbtImp();
+        bonfire = new Bonfire();
+        imp = new BonfireImp();
         skinNft = new SkinNft("");
-        skinNft.init(address(sbt));
+        skinNft.init(address(bonfire));
 
-        targets = address(sbt);
+        targets = address(bonfire);
         calldatas = abi.encode(beef, 100);
-
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
-            address(sbt),
+            address(bonfire),
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -72,11 +71,11 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.prank(deployer);
         executor.setProxyAddress(address(proxy));
 
-        sbt.init(
+        bonfire.init(
             address(executor),
             "ChainInsight",
             "SBT",
-            "https://thechaininsight.github.io/sbt/",
+            "https://thechaininsight.github.io/bonfire/",
             20 ether,
             address(skinNft),
             address(imp)
@@ -85,15 +84,21 @@ contract ChainInsightLogicV1PropososalTest is Test {
         // mint SBT to obtain voting right
         vm.deal(proposer, 10000 ether);
         vm.prank(proposer);
-        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         vm.deal(voter, 10000 ether);
         vm.prank(voter);
-        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         vm.deal(beef, 10000 ether);
         vm.prank(beef);
-        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         // set block.number to 0
 
@@ -104,7 +109,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         address(proxy).call(
             abi.encodeWithSignature(
-                'propose(address,uint256,string,bytes,string)',
+                "propose(address,uint256,string,bytes,string)",
                 targets,
                 values,
                 signatures,
@@ -117,44 +122,24 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.roll(votingDelay + 1);
         vm.prank(voter);
         address(proxy).call(
-            abi.encodeWithSignature(
-                'castVote(uint256,uint8)',
-                1,
-                1
-            )
+            abi.encodeWithSignature("castVote(uint256,uint8)", 1, 1)
         );
 
         // voting ends
         vm.roll(votingDelay + votingPeriod + 1);
 
         // queue proposal
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'queue(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("queue(uint256)", 1));
         etas[0] = block.number + executingDelay;
         txHashs[0] = keccak256(
-            abi.encode(
-                targets,
-                values,
-                signatures,
-                calldatas,
-                etas[0]
-            )
+            abi.encode(targets, values, signatures, calldatas, etas[0])
         );
     }
 
     function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'execute(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("execute(uint256)", 1));
         assertEq(skinNft.ownerOf(1), beef);
     }
 

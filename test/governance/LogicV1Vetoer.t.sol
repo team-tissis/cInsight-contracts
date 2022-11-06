@@ -5,13 +5,13 @@ import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
 // import "../../src/governance/InterfacesV1.sol";
-import "../../src/sbt/Sbt.sol";
+import "../../src/bonfire/Bonfire.sol";
 
 contract ChainInsightLogicV1VetoerTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightExecutorV1 internal executor;
-    Sbt internal sbt;
+    Bonfire internal bonfire;
 
     address admin = address(1);
     address logicAdminTmp = address(0);
@@ -21,17 +21,17 @@ contract ChainInsightLogicV1VetoerTest is Test {
     uint256 votingPeriod = 5760;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
-    
+
     function setUp() public {
         logic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1();
-        sbt = new Sbt();
-        
+        bonfire = new Bonfire();
+
         vm.prank(admin);
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
-            address(sbt),
+            address(bonfire),
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -42,7 +42,7 @@ contract ChainInsightLogicV1VetoerTest is Test {
 
         vm.prank(logicAdminTmp);
         logic.initialize(
-            address(sbt),
+            address(bonfire),
             vetoer,
             executingGracePeriod,
             executingDelay,

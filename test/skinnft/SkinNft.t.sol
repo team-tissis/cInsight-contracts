@@ -3,49 +3,49 @@
 pragma solidity 0.8.16;
 
 import "forge-std/Test.sol";
-import "./../../src/sbt/Sbt.sol";
-import "./../../src/sbt/SbtImp.sol";
+import "./../../src/bonfire/Bonfire.sol";
+import "./../../src/bonfire/BonfireImp.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
 contract SkinNftTest is Test {
     address admin = address(0xad000);
-    Sbt internal sbt;
-    SbtImp internal imp;
+    Bonfire internal bonfire;
+    BonfireImp internal imp;
     SkinNft internal skinNft;
 
     function setUp() public {
         // admin = vm.addr(admin);
-        sbt = new Sbt();
-        imp = new SbtImp();
+        bonfire = new Bonfire();
+        imp = new BonfireImp();
         skinNft = new SkinNft("https://tissis.github.io/skinnft/");
 
-        sbt.init(
+        bonfire.init(
             admin,
             "ChainInsight",
             "SBT",
-            "https://tissis.github.io/sbt/metadata/",
+            "https://tissis.github.io/bonfire/metadata/",
             20 ether,
             address(skinNft),
             address(imp)
         );
-        skinNft.init(address(sbt));
+        skinNft.init(address(bonfire));
     }
 
     function testInit() public {
-        assertEq(sbt.name(), "ChainInsight");
-        assertEq(sbt.symbol(), "SBT");
-        assertEq(sbt.executor(), admin);
+        assertEq(bonfire.name(), "ChainInsight");
+        assertEq(bonfire.symbol(), "SBT");
+        assertEq(bonfire.executor(), admin);
     }
 
     function testSupportsInterface() public {
-        assertEq(sbt.supportsInterface(0x01ffc9a7), true);
-        assertEq(sbt.supportsInterface(0x5b5e139f), true);
+        assertEq(bonfire.supportsInterface(0x01ffc9a7), true);
+        assertEq(bonfire.supportsInterface(0x5b5e139f), true);
     }
 
     function testSetBaseURI() public {
         assertEq(skinNft.baseURI(), "https://tissis.github.io/skinnft/");
         vm.prank(admin);
-        sbt.setSkinnftBaseURI("https://newuri.github.io/skinnft/");
+        bonfire.setSkinnftBaseURI("https://newuri.github.io/skinnft/");
         assertEq(skinNft.baseURI(), "https://newuri.github.io/skinnft/");
     }
 
@@ -57,13 +57,17 @@ contract SkinNftTest is Test {
         vm.deal(pork, 10000 ether);
 
         vm.prank(beef);
-        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
         vm.prank(pork);
-        address(sbt).call{value: 20 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         assertEq(skinNft.getFreemintQuantity(beef), 0);
         vm.prank(admin);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature(
                 "setFreemintQuantity(address,uint256)",
                 address(beef),
@@ -72,7 +76,7 @@ contract SkinNftTest is Test {
         );
 
         vm.prank(admin);
-        address(sbt).call(
+        address(bonfire).call(
             abi.encodeWithSignature(
                 "setFreemintQuantity(address,uint256)",
                 address(pork),
@@ -106,8 +110,8 @@ contract SkinNftTest is Test {
         beefToken[1] = 1;
         assertEq(skinNft.tokensOfOwner(beef), beefToken);
         assertEq(
-            sbt.tokenURI(1),
-            "https://tissis.github.io/sbt/metadata/0/1/1"
+            bonfire.tokenURI(1),
+            "https://tissis.github.io/bonfire/metadata/0/1/1"
         );
     }
 }

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.16;
 import "./../skinnft/ISkinNft.sol";
 
-library SbtLib {
-    bytes32 constant SBT_STRUCT_POSITION = keccak256("chaininsight");
+library BonfireLib {
+    bytes32 constant BONFIRE_STRUCT_POSITION = keccak256("chaininsight");
 
-    struct SbtStruct {
+    struct BonfireStruct {
         address executor;
         address admin;
         string name;
@@ -37,14 +37,18 @@ library SbtLib {
 
     // get struct stored at posititon
     //https://solidity-by-example.org/app/write-to-any-slot/
-    function sbtStorage() internal pure returns (SbtStruct storage sbtstruct) {
+    function bonfireStorage()
+        internal
+        pure
+        returns (BonfireStruct storage bonfirestruct)
+    {
         /** メモ: @shion
          * slot: storageは32バイトの領域を確保するが，その領域をslotと呼ぶ
          * positionのstrunctを参照する
          */
-        bytes32 position = SBT_STRUCT_POSITION;
+        bytes32 position = BONFIRE_STRUCT_POSITION;
         assembly {
-            sbtstruct.slot := position
+            bonfirestruct.slot := position
         }
     }
 }

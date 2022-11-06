@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./../libs/SbtLib.sol";
-import "./ISbt.sol";
+import "./../libs/BonfireLib.sol";
+import "./IBonfire.sol";
 import "./../skinnft/ISkinNft.sol";
 
-contract Sbt is ISbt {
+contract Bonfire is IBonfire {
     modifier onlyExecutor() {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        require(msg.sender == BonfireStruct.executor, "EXECUTOR ONLY");
         _;
     }
 
@@ -21,33 +22,34 @@ contract Sbt is ISbt {
         address _nftAddress,
         address _impAddress
     ) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
         require(_executor != address(0), "_executor must not be address 0");
-        require(sbtstruct.executor == address(0), "INITIATED ALREADY");
-        sbtstruct.executor = _executor;
-        sbtstruct.admin = msg.sender;
-        sbtstruct.name = _name;
-        sbtstruct.symbol = _symbol;
-        sbtstruct.baseURI = _baseURI;
-        sbtstruct.nftAddress = _nftAddress;
-        sbtstruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
-        sbtstruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
-        sbtstruct.sbtPrice = _sbtPrice;
-        sbtstruct.sbtReferralPrice = _sbtPrice / 2;
-        sbtstruct.sbtReferralIncentive = _sbtPrice / 4;
-        sbtstruct.monthlyDistributedFavoNum = 10;
-        sbtstruct.lastUpdatedMonth = 0; //initial value for last updated month
-        sbtstruct.favoUseUpIncentive = 1;
-        sbtstruct.makiDecayRate = 90;
-        sbtstruct.gradeNum = 5; // currently grade num is immutable and is set 5. TODO: change to mutable
+        require(BonfireStruct.executor == address(0), "INITIATED ALREADY");
+        BonfireStruct.executor = _executor;
+        BonfireStruct.admin = msg.sender;
+        BonfireStruct.name = _name;
+        BonfireStruct.symbol = _symbol;
+        BonfireStruct.baseURI = _baseURI;
+        BonfireStruct.nftAddress = _nftAddress;
+        BonfireStruct.interfaces[(bytes4)(0x01ffc9a7)] = true; //ERC165
+        BonfireStruct.interfaces[(bytes4)(0x5b5e139f)] = true; //ERC721metadata
+        BonfireStruct.sbtPrice = _sbtPrice;
+        BonfireStruct.sbtReferralPrice = _sbtPrice / 2;
+        BonfireStruct.sbtReferralIncentive = _sbtPrice / 4;
+        BonfireStruct.monthlyDistributedFavoNum = 10;
+        BonfireStruct.lastUpdatedMonth = 0; //initial value for last updated month
+        BonfireStruct.favoUseUpIncentive = 1;
+        BonfireStruct.makiDecayRate = 90;
+        BonfireStruct.gradeNum = 5; // currently grade num is immutable and is set 5. TODO: change to mutable
         uint8[5] memory _referralRate = [1, 1, 1, 3, 5]; // grade 1,2,3,4,5
         uint8[5] memory _skinnftNumRate = [0, 0, 0, 1, 2]; // grade 1,2,3,4,5
         uint8[5] memory _gradeRate = [80, 60, 40, 20, 0]; // the percentage of grade 1,2,3,4,5
 
         for (uint256 i = 0; i < 5; i++) {
-            sbtstruct.referralRate.push(_referralRate[i]);
-            sbtstruct.skinnftNumRate.push(_skinnftNumRate[i]);
-            sbtstruct.gradeRate.push(_gradeRate[i]);
+            BonfireStruct.referralRate.push(_referralRate[i]);
+            BonfireStruct.skinnftNumRate.push(_skinnftNumRate[i]);
+            BonfireStruct.gradeRate.push(_gradeRate[i]);
         }
 
         bytes4[] memory sigs = new bytes4[](7);
@@ -73,8 +75,9 @@ contract Sbt is ISbt {
         bytes4[] calldata _sigs,
         address[] calldata _impAddress
     ) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.executor, "EXECUTOR ONLY");
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        require(msg.sender == BonfireStruct.executor, "EXECUTOR ONLY");
         require(_sigs.length == _impAddress.length, "INVALID LENGTH");
         for (uint256 i = 0; i < _sigs.length; i++) {
             unchecked {
@@ -85,13 +88,15 @@ contract Sbt is ISbt {
 
     // get functions
     function executor() external view returns (address) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.executor;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.executor;
     }
 
     function admin() external view returns (address) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.admin;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.admin;
     }
 
     // supportしているERCversionなど
@@ -100,36 +105,42 @@ contract Sbt is ISbt {
         view
         returns (bool)
     {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.interfaces[_interfaceID];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.interfaces[_interfaceID];
     }
 
     function name() external view returns (string memory) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.name;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.name;
     }
 
     //0x95d89b41
     function symbol() external view returns (string memory) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.symbol;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.symbol;
     }
 
     function tokenURI(uint256 _tokenId) external view returns (string memory) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        address _owner = sbtstruct.owners[_tokenId];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        address _owner = BonfireStruct.owners[_tokenId];
         require(
             _owner != address(0),
             "ERC721URIStorage: URI query for nonexistent token"
         );
-        uint256 skinNftTokenId = ISkinNft(sbtstruct.nftAddress).getIcon(_owner);
+        uint256 skinNftTokenId = ISkinNft(BonfireStruct.nftAddress).getIcon(
+            _owner
+        );
         return
             string(
                 abi.encodePacked(
-                    sbtstruct.baseURI,
+                    BonfireStruct.baseURI,
                     _toString(skinNftTokenId),
                     "/",
-                    _toString(sbtstruct.grades[_owner]),
+                    _toString(BonfireStruct.grades[_owner]),
                     "/",
                     _toString(_tokenId)
                 )
@@ -137,8 +148,9 @@ contract Sbt is ISbt {
     }
 
     function ownerOf(uint256 _tokenId) external view returns (address) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.owners[_tokenId];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.owners[_tokenId];
     }
 
     function tokenIdOf(address _address)
@@ -146,11 +158,12 @@ contract Sbt is ISbt {
         view
         returns (uint256 _tokenId)
     {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
         _tokenId = 0;
 
-        for (uint256 i = 1; i <= sbtstruct.mintIndex; i++) {
-            if (sbtstruct.owners[i] == _address) {
+        for (uint256 i = 1; i <= BonfireStruct.mintIndex; i++) {
+            if (BonfireStruct.owners[i] == _address) {
                 _tokenId = i;
                 break;
             }
@@ -158,80 +171,94 @@ contract Sbt is ISbt {
     }
 
     function favoOf(address _address) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.favos[_address];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.favos[_address];
     }
 
     function makiOf(address _address) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.makis[_address];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.makis[_address];
     }
 
     function gradeOf(address _address) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.grades[_address];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.grades[_address];
     }
 
     function makiMemoryOf(address _address) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.makiMemorys[_address];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.makiMemorys[_address];
     }
 
     function referralOf(address _address) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referrals[_address];
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.referrals[_address];
     }
 
     function monthlyDistributedFavoNum() external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.monthlyDistributedFavoNum;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.monthlyDistributedFavoNum;
     }
 
     function referralRate() external view returns (uint8[] memory) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.referralRate;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.referralRate;
     }
 
     function lastUpdatedMonth() external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.lastUpdatedMonth;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.lastUpdatedMonth;
     }
 
     function sbtPrice(bool isReferral) external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        if (!isReferral) return sbtstruct.sbtPrice;
-        else return sbtstruct.sbtReferralPrice;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        if (!isReferral) return BonfireStruct.sbtPrice;
+        else return BonfireStruct.sbtReferralPrice;
     }
 
     function mintedTokenNumber() external view returns (uint256) {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        return sbtstruct.mintIndex;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        return BonfireStruct.mintIndex;
     }
 
     // set functions
     function setExecutor(address _newContactOwner) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.executor = _newContactOwner;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        BonfireStruct.executor = _newContactOwner;
         emit executorChanged(_newContactOwner);
     }
 
     function setAdmin(address _admin) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.admin = _admin;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        BonfireStruct.admin = _admin;
         emit adminChanged(_admin);
     }
 
     function setBaseUri(string memory _newBaseURI) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.baseURI = _newBaseURI;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        BonfireStruct.baseURI = _newBaseURI;
     }
 
     function setMonthlyDistributedFavoNum(uint16 _monthlyDistributedFavoNum)
         external
         onlyExecutor
     {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.monthlyDistributedFavoNum = _monthlyDistributedFavoNum;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        BonfireStruct.monthlyDistributedFavoNum = _monthlyDistributedFavoNum;
     }
 
     function setGradePriseRates(
@@ -239,19 +266,20 @@ contract Sbt is ISbt {
         uint8[] memory _skinnftNumRate,
         uint8[] memory _gradeRate
     ) external onlyExecutor {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        uint256 gradeNum = sbtstruct.gradeNum;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        uint256 gradeNum = BonfireStruct.gradeNum;
         require(_referralRate.length == gradeNum, "INVALID LENGTH");
         require(_skinnftNumRate.length == gradeNum, "INVALID LENGTH");
         require(_gradeRate.length == gradeNum, "INVALID LENGTH");
         for (uint256 i = 0; i < gradeNum; i++) {
-            sbtstruct.referralRate[i] = _referralRate[i]; // referal rate. grade 1, 2, 3, 4, 5
-            sbtstruct.skinnftNumRate[i] = _skinnftNumRate[i]; // allocated skinnft for each grade. grade 1, 2, 3, 4, 5
-            sbtstruct.gradeRate[i] = _gradeRate[i]; // percentage of each grade. grade 1, 2, 3, 4, 5
+            BonfireStruct.referralRate[i] = _referralRate[i]; // referal rate. grade 1, 2, 3, 4, 5
+            BonfireStruct.skinnftNumRate[i] = _skinnftNumRate[i]; // allocated skinnft for each grade. grade 1, 2, 3, 4, 5
+            BonfireStruct.gradeRate[i] = _gradeRate[i]; // percentage of each grade. grade 1, 2, 3, 4, 5
         }
     }
 
-    function setSbtPrice(
+    function setBonfirePrice(
         uint256 _sbtPrice,
         uint256 _sbtReferralPrice,
         uint256 _sbtReferralIncentive
@@ -264,10 +292,11 @@ contract Sbt is ISbt {
             _sbtPrice >= _sbtReferralPrice,
             "SBT PRICE MUST BE BIGGER THAN REFERRAL PRICE"
         );
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        sbtstruct.sbtPrice = _sbtPrice;
-        sbtstruct.sbtReferralPrice = _sbtReferralPrice;
-        sbtstruct.sbtReferralIncentive = _sbtReferralIncentive;
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        BonfireStruct.sbtPrice = _sbtPrice;
+        BonfireStruct.sbtReferralPrice = _sbtReferralPrice;
+        BonfireStruct.sbtReferralIncentive = _sbtReferralIncentive;
     }
 
     // basic functions for skinnft
@@ -275,15 +304,17 @@ contract Sbt is ISbt {
         external
         onlyExecutor
     {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        ISkinNft(sbtstruct.nftAddress).setBaseURI(_newSkinnftBaseURI);
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        ISkinNft(BonfireStruct.nftAddress).setBaseURI(_newSkinnftBaseURI);
     }
 
     // basic functions for skinnft
-    function transferEthSkinnft2Sbt() external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
-        ISkinNft(sbtstruct.nftAddress).withdraw();
+    function transferEthSkinnft2Bonfire() external {
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        require(msg.sender == BonfireStruct.admin, "ADMIN ONLY");
+        ISkinNft(BonfireStruct.nftAddress).withdraw();
     }
 
     // utility function
@@ -329,8 +360,9 @@ contract Sbt is ISbt {
     }
 
     function withdraw(uint256 balance) external {
-        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
-        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
+        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
+            .bonfireStorage();
+        require(msg.sender == BonfireStruct.admin, "ADMIN ONLY");
         payable(msg.sender).call{value: balance}("");
     }
 

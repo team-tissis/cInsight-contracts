@@ -9,9 +9,8 @@ contract ChainInsightGovernanceProxyV1Test is Test {
     ChainInsightLogicV1 internal logic;
     ChainInsightLogicV1 internal newLogic;
 
-
     address executor = address(1);
-    address sbtContract = address(2); 
+    address bonfireContract = address(2);
     address deployer = address(3);
     address vetoer = address(4);
     address implementation = address(5);
@@ -27,7 +26,7 @@ contract ChainInsightGovernanceProxyV1Test is Test {
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             executor,
-            sbtContract,
+            bonfireContract,
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -55,5 +54,3 @@ contract ChainInsightGovernanceProxyV1Test is Test {
         assertEq(proxy.implementation(), address(newLogic));
     }
 }
-
-
