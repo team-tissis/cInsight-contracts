@@ -3,20 +3,20 @@
 pragma solidity 0.8.16;
 
 import "forge-std/Test.sol";
-import "./../../src/bonfire/Bonfire.sol";
-import "./../../src/bonfire/BonfireImp.sol";
+import "./../../src/bonfire/BonfireProxy.sol";
+import "./../../src/bonfire/BonfireLogic.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
 contract SkinNftTest is Test {
     address admin = address(0xad000);
     Bonfire internal bonfire;
-    BonfireImp internal imp;
+    BonfireLogic internal imp;
     SkinNft internal skinNft;
 
     function setUp() public {
         // admin = vm.addr(admin);
         bonfire = new Bonfire();
-        imp = new BonfireImp();
+        imp = new BonfireLogic();
         skinNft = new SkinNft("https://tissis.github.io/skinnft/");
 
         bonfire.init(

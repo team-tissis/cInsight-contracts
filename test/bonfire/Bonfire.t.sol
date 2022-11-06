@@ -3,21 +3,21 @@
 pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
-import "./../../src/bonfire/Bonfire.sol";
-import "./../../src/bonfire/BonfireImp.sol";
+import "./../../src/bonfire/BonfireProxy.sol";
+import "./../../src/bonfire/BonfireLogic.sol";
 import "./../../src/skinnft/SkinNft.sol";
 
 contract BonfireTest is Test {
     address admin = address(0xad000); //TODO: executor に変更
     string baseURL = "https://thechaininsight.github.io/";
     Bonfire internal bonfire;
-    BonfireImp internal bonfireImp;
+    BonfireLogic internal bonfireLogic;
     SkinNft internal skinNft;
     uint256 sbtPrice = 0.1 ether;
 
     function setUp() public {
         bonfire = new Bonfire();
-        bonfireImp = new BonfireImp();
+        bonfireLogic = new BonfireLogic();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         bonfire.init(
@@ -27,7 +27,7 @@ contract BonfireTest is Test {
             string.concat(baseURL, "bonfire/metadata/"),
             sbtPrice,
             address(skinNft),
-            address(bonfireImp)
+            address(bonfireLogic)
         );
         skinNft.init(address(bonfire));
     }

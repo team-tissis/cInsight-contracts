@@ -1,6 +1,6 @@
 pragma solidity ^0.8.16;
 
-import "../bonfire/IBonfire.sol";
+import "../bonfire/IBonfireProxy.sol";
 
 contract ChainInsightGovernanceEventsV1 {
     /// @notice An event emitted when a new proposal is created

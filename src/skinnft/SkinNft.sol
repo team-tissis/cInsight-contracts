@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import "./ERC721AQueryable.sol";
 import "./ISkinNft.sol";
-import "./../bonfire/IBonfire.sol";
+import "./../bonfire/IBonfireProxy.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
     string public baseURI;

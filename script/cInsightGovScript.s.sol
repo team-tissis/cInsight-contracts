@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import {ChainInsightLogicV1} from "src/governance/LogicV1.sol";
 import {ChainInsightExecutorV1} from "src/governance/ExecutorV1.sol";
 import {ChainInsightGovernanceProxyV1} from "src/governance/ProxyV1.sol";
-import {Bonfire} from "src/bonfire/Bonfire.sol";
-import {BonfireImp} from "src/bonfire/BonfireImp.sol";
+import {Bonfire} from "src/bonfire/BonfireProxy.sol";
+import {BonfireLogic} from "src/bonfire/BonfireLogic.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
 import {ISkinNft} from "src/skinnft/ISkinNft.sol";
 
@@ -15,7 +15,7 @@ contract cInsightGovScript is Script {
     ChainInsightExecutorV1 executor;
     ChainInsightGovernanceProxyV1 proxy;
     Bonfire bonfire;
-    BonfireImp bonfireImp;
+    BonfireLogic bonfireLogic;
     SkinNft skinNft;
 
     address admin = address(1);
@@ -55,7 +55,7 @@ contract cInsightGovScript is Script {
         logic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
-        bonfireImp = new BonfireImp();
+        bonfireLogic = new BonfireLogic();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
@@ -73,13 +73,13 @@ contract cInsightGovScript is Script {
         executor.setProxyAddress(address(proxy));
 
         console.log(
-            "address(proxy), address(logic), address(executor), address(bonfire), address(bonfireImp), address(skinNft)"
+            "address(proxy), address(logic), address(executor), address(bonfire), address(bonfireLogic), address(skinNft)"
         );
         console.log(address(proxy));
         console.log(address(logic));
         console.log(address(executor));
         console.log(address(bonfire));
-        console.log(address(bonfireImp));
+        console.log(address(bonfireLogic));
         console.log(address(skinNft));
         bonfire.init(
             address(executor),
@@ -88,7 +88,7 @@ contract cInsightGovScript is Script {
             string.concat(baseURL, "bonfire/"),
             20 ether,
             address(skinNft),
-            address(bonfireImp)
+            address(bonfireLogic)
         );
         skinNft.init(address(bonfire));
 

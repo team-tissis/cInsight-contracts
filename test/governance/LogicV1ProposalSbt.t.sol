@@ -4,8 +4,8 @@ import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
-import "../../src/bonfire/Bonfire.sol";
-import "../../src/bonfire/BonfireImp.sol";
+import "../../src/bonfire/BonfireProxy.sol";
+import "../../src/bonfire/BonfireLogic.sol";
 import "../../src/skinnft/SkinNft.sol";
 
 // test skinnft setfreemintquantity can call via govenance logic
@@ -15,7 +15,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
     ChainInsightLogicV1 internal newLogic;
     ChainInsightExecutorV1 internal executor;
     Bonfire internal bonfire;
-    BonfireImp internal imp;
+    BonfireLogic internal imp;
     SkinNft internal skinNft;
 
     address admin = address(1);
@@ -50,7 +50,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
         vm.prank(deployer);
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
-        imp = new BonfireImp();
+        imp = new BonfireLogic();
         skinNft = new SkinNft("");
         skinNft.init(address(bonfire));
 

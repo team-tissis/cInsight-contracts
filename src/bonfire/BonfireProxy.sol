@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "./../libs/BonfireLib.sol";
-import "./IBonfire.sol";
+import "./IBonfireProxy.sol";
 import "./../skinnft/ISkinNft.sol";
 
 contract Bonfire is IBonfire {

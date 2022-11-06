@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import "./InterfacesV1.sol";
-import "../bonfire/IBonfire.sol";
+import "../bonfire/IBonfireProxy.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,

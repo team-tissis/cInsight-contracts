@@ -5,7 +5,7 @@ import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
 // import "../../src/governance/InterfacesV1.sol";
-import "../../src/bonfire/Bonfire.sol";
+import "../../src/bonfire/BonfireProxy.sol";
 
 contract ChainInsightLogicV1VetoerTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;

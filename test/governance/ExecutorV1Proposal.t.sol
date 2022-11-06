@@ -4,8 +4,8 @@ import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
-import "../../src/bonfire/Bonfire.sol";
-import "../../src/bonfire/BonfireImp.sol";
+import "../../src/bonfire/BonfireProxy.sol";
+import "../../src/bonfire/BonfireLogic.sol";
 
 contract ChainInsightExecutorV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
@@ -13,7 +13,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
     ChainInsightLogicV1 internal newLogic;
     ChainInsightExecutorV1 internal executor;
     Bonfire internal bonfire;
-    BonfireImp internal imp;
+    BonfireLogic internal imp;
 
     address deployer = address(1);
     address vetoer = address(2);
@@ -44,7 +44,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         vm.prank(deployer);
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
-        imp = new BonfireImp();
+        imp = new BonfireLogic();
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),

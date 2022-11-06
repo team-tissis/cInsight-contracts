@@ -5,7 +5,7 @@ import "./../libs/BonfireLib.sol";
 import "./../libs/DateTime.sol";
 import "./../skinnft/ISkinNft.sol";
 
-contract BonfireImp {
+contract BonfireLogic {
     modifier onlyExecutor() {
         BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
         require(msg.sender == bs.executor, "EXECUTOR ONLY");

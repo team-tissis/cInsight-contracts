@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import {ChainInsightLogicV1} from "src/governance/LogicV1.sol";
 import {ChainInsightExecutorV1} from "src/governance/ExecutorV1.sol";
 import {ChainInsightGovernanceProxyV1} from "src/governance/ProxyV1.sol";
-import {Bonfire} from "src/bonfire/Bonfire.sol";
-import {BonfireImp} from "src/bonfire/BonfireImp.sol";
+import {Bonfire} from "src/bonfire/BonfireProxy.sol";
+import {BonfireLogic} from "src/bonfire/BonfireLogic.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
 import {ISkinNft} from "src/skinnft/ISkinNft.sol";
 
@@ -15,7 +15,7 @@ contract cInsightScript is Script {
     ChainInsightExecutorV1 executor;
     ChainInsightGovernanceProxyV1 proxy;
     Bonfire bonfire;
-    BonfireImp bonfireImp;
+    BonfireLogic bonfireLogic;
     SkinNft skinNft;
 
     address admin = address(1);
@@ -38,7 +38,7 @@ contract cInsightScript is Script {
         logic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
-        bonfireImp = new BonfireImp();
+        bonfireLogic = new BonfireLogic();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/metadata/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
@@ -62,7 +62,7 @@ contract cInsightScript is Script {
             string.concat(baseURL, "bonfire/metadata/"),
             20 ether,
             address(skinNft),
-            address(bonfireImp)
+            address(bonfireLogic)
         );
         skinNft.init(address(bonfire));
 
