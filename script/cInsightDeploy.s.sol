@@ -54,7 +54,7 @@ contract cInsightScript is Script {
 
         bonfire.init(
             address(executor),
-            "ChainInsight",
+            "Bonfire",
             "SBT",
             string.concat(baseURL, "sbt/metadata/"),
             0.1 ether,
