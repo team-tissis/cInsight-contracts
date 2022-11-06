@@ -27,7 +27,7 @@ contract cInsightGovScript is Script {
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
 
-    string baseURL = "https://thechaininsight.github.io/";
+    string baseURL = "https://team-tissis.github.io/cInsightAsset/";
 
     // --- newly added ---
     ChainInsightLogicV1 newLogic;
@@ -85,7 +85,7 @@ contract cInsightGovScript is Script {
             address(executor),
             "ChainInsight",
             "SBT",
-            string.concat(baseURL, "bonfire/"),
+            string.concat(baseURL, "sbt/metadata"),
             20 ether,
             address(skinNft),
             address(bonfireLogic)

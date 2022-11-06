@@ -27,7 +27,7 @@ contract cInsightScript is Script {
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
 
-    string baseURL = "https://thechaininsight.github.io/";
+    string baseURL = "https://team-tissis.github.io/cInsightAsset/";
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("DEPROYER_KEY");
@@ -39,7 +39,7 @@ contract cInsightScript is Script {
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
         bonfireLogic = new BonfireLogic();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/metadata/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(executor),
@@ -59,7 +59,7 @@ contract cInsightScript is Script {
             address(executor),
             "ChainInsight",
             "SBT",
-            string.concat(baseURL, "bonfire/metadata/"),
+            string.concat(baseURL, "sbt/metadata/"),
             20 ether,
             address(skinNft),
             address(bonfireLogic)
