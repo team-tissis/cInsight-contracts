@@ -1,6 +1,6 @@
 pragma solidity ^0.8.16;
 
-import '../sbt/ISbt.sol';
+import "../bonfire/IBonfireProxy.sol";
 
 contract ChainInsightGovernanceEventsV1 {
     /// @notice An event emitted when a new proposal is created
@@ -22,7 +22,13 @@ contract ChainInsightGovernanceEventsV1 {
     /// @param support Support value for the vote. 0=against, 1=for, 2=abstain
     /// @param votes Number of votes which were cast by the voter
     /// @param reason The reason given for the vote by the voter
-    event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 votes, string reason);
+    event VoteCast(
+        address indexed voter,
+        uint256 proposalId,
+        uint8 support,
+        uint256 votes,
+        string reason
+    );
 
     /// @notice An event emitted when a proposal has been canceled
     event ProposalCanceled(uint256 id);
@@ -37,22 +43,34 @@ contract ChainInsightGovernanceEventsV1 {
     event ProposalVetoed(uint256 id);
 
     /// @notice An event emitted when the executing delay is set
-    event ExecutingDelaySet(uint256 oldExecutingDelay, uint256 newExecutingDelay);
+    event ExecutingDelaySet(
+        uint256 oldExecutingDelay,
+        uint256 newExecutingDelay
+    );
 
     /// @notice An event emitted when the executing grace period is set
-    event ExecutingGracePeriodSet(uint256 oldExecutingGracePeriod, uint256 newExecutingGracePeriod);
+    event ExecutingGracePeriodSet(
+        uint256 oldExecutingGracePeriod,
+        uint256 newExecutingGracePeriod
+    );
 
     /// @notice An event emitted when the voting delay is set
     event VotingDelaySet(uint256 oldVotingDelay, uint256 newVotingDelay);
 
     /// @notice An event emitted when the proposal threshold is set
-    event ProposalThresholdSet(uint256 oldProposalThreshold, uint256 newProposalThreshold);
+    event ProposalThresholdSet(
+        uint256 oldProposalThreshold,
+        uint256 newProposalThreshold
+    );
 
     /// @notice An event emitted when the voting period is set
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
 
     /// @notice Emitted when implementation is changed
-    event NewImplementation(address oldImplementation, address newImplementation);
+    event NewImplementation(
+        address oldImplementation,
+        address newImplementation
+    );
 
     // /// @notice Emitted when pendingAdmin is changed
     // event NewPendingAdmin(address oldPendingAdmin, address newPendingAdmin);
@@ -66,7 +84,6 @@ contract ChainInsightGovernanceEventsV1 {
     /// @notice Emitted when vetoer is changed
     event NewVetoer(address oldVetoer, address newVetoer);
 }
-
 
 contract ChainInsightGovernanceProxyStorage {
     /// @notice deployer address for proxy contract
@@ -114,10 +131,10 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
     // IChainInsightExecutor public executorContract;
 
     /// @notice The address of ChainInsightExecutor
-    ISbt public sbtContract;
+    IBonfire public bonfireContract;
 
     /// @notice The latest proposal for each proposer
-    mapping(address => uint256) public latestProposalIds; 
+    mapping(address => uint256) public latestProposalIds;
 
     /// @notice The official record of all proposals ever proposed
     mapping(uint256 => Proposal) public proposals;
@@ -127,10 +144,8 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         uint256 id;
         /// @notice Creator of the proposal
         address proposer;
-
         /// @notice The timestamp that the proposal will be available for execution, set once the vote succeeds
         uint256 eta;
-
         /// @notice the ordered list of target addresses for calls to be made
         address targets;
         /// @notice The ordered list of values (i.e. msg.value) to be passed to the calls to be made
@@ -139,22 +154,16 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         string signatures;
         /// @notice The ordered list of calldata to be passed to each call
         bytes calldatas;
-
-
         /// @notice The block at which voting begins: holders must delegate their votes prior to this block
         uint256 startBlock;
         /// @notice The block at which voting ends: votes must be cast prior to this block
         uint256 endBlock;
-
         /// @notice Current number of votes in favor of this proposal
         uint256 forVotes;
-
         /// @notice Current number of votes in opposition to this proposal
         uint256 againstVotes;
-
         /// @notice Current number of votes for abstaining for this proposal
         uint256 abstainVotes;
-
         // TODO: stack too deep ...
         // /// @notice Flag marking whether the proposal has been canceled
         // bool canceled;
@@ -164,7 +173,6 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         // bool executed;
         // 0 -> no info, 1 -> executed, 2 -> canceled, 3 -> vetoed
         uint256 state;
-
         /// @notice Receipts of ballots for the entire set of voters
         mapping(address => Receipt) receipts;
     }
@@ -195,7 +203,7 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
 
 interface IChainInsightExecutor {
     // event NewProxyAddress(address indexed newProxyAddress);
-     event NewProxyAddress(address oldProxyAddress, address newProxyAddress);
+    event NewProxyAddress(address oldProxyAddress, address newProxyAddress);
 
     event CancelTransaction(
         bytes32 indexed txHash,

@@ -9,7 +9,7 @@ contract ChainInsightGovernanceProxyV1 is
     /**
      * @param implementation_ The address for implementaion for delegationcall.
      * @param executor_ The address for transaction executor contract which passed by votes.
-     * @param sbtContract_ The address for sbtContract(sbt.sol)
+     * @param bonfireContract_ The address for bonfireContract(bonfire.sol)
      * @param vetoer_ the address of person who has rights to veto proposal. TODO: This function shoud not be included.
      * @param executingGracePeriod_ the period proposal is lasting. The proposal transaction must be executed before this period is passed.
      * @param executingDelay_ the proposal is executed after queue function is called and this period is passed.
@@ -20,7 +20,7 @@ contract ChainInsightGovernanceProxyV1 is
     constructor(
         address implementation_,
         address executor_,
-        address sbtContract_,
+        address bonfireContract_,
         address vetoer_,
         uint256 executingGracePeriod_,
         uint256 executingDelay_,
@@ -39,7 +39,7 @@ contract ChainInsightGovernanceProxyV1 is
             implementation_,
             abi.encodeWithSignature(
                 "initialize(address,address,uint256,uint256,uint256,uint256,uint256)",
-                sbtContract_,
+                bonfireContract_,
                 vetoer_,
                 executingGracePeriod_,
                 executingDelay_,
@@ -53,7 +53,6 @@ contract ChainInsightGovernanceProxyV1 is
         // deployer is no longer used
         deployer = address(0);
         executor = executor_;
-
     }
 
     /**
@@ -62,9 +61,15 @@ contract ChainInsightGovernanceProxyV1 is
      */
     function _setImplementation(address implementation_) public {
         if (implementation == address(0)) {
-            require(msg.sender == deployer, "Proxy::_setImplementation: Call must come from deployer for the first time.");
+            require(
+                msg.sender == deployer,
+                "Proxy::_setImplementation: Call must come from deployer for the first time."
+            );
         } else {
-            require(msg.sender == executor, "Proxy::_setImplementation: executor only");
+            require(
+                msg.sender == executor,
+                "Proxy::_setImplementation: executor only"
+            );
         }
 
         require(
@@ -107,10 +112,7 @@ contract ChainInsightGovernanceProxyV1 is
      * @dev Admin function for pending admin to accept role and update admin
      */
     function _setExecutor(address newExecutor) external {
-        require(
-            msg.sender == executor,
-            "ProxyV1::_setExecutor: executor only"
-        );
+        require(msg.sender == executor, "ProxyV1::_setExecutor: executor only");
 
         // Save current values for inclusion in log
         address oldExecutor = executor;

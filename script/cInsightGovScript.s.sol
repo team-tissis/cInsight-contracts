@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import {ChainInsightLogicV1} from "src/governance/LogicV1.sol";
 import {ChainInsightExecutorV1} from "src/governance/ExecutorV1.sol";
 import {ChainInsightGovernanceProxyV1} from "src/governance/ProxyV1.sol";
-import {Sbt} from "src/sbt/Sbt.sol";
-import {SbtImp} from "src/sbt/SbtImp.sol";
+import {Bonfire} from "src/bonfire/BonfireProxy.sol";
+import {BonfireLogic} from "src/bonfire/BonfireLogic.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
 import {ISkinNft} from "src/skinnft/ISkinNft.sol";
 
@@ -14,8 +14,8 @@ contract cInsightGovScript is Script {
     ChainInsightLogicV1 logic;
     ChainInsightExecutorV1 executor;
     ChainInsightGovernanceProxyV1 proxy;
-    Sbt sbt;
-    SbtImp sbtImp;
+    Bonfire bonfire;
+    BonfireLogic bonfireLogic;
     SkinNft skinNft;
 
     address admin = address(1);
@@ -27,7 +27,7 @@ contract cInsightGovScript is Script {
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
 
-    string baseURL = "https://thechaininsight.github.io/";
+    string baseURL = "https://team-tissis.github.io/cInsightAsset/";
 
     // --- newly added ---
     ChainInsightLogicV1 newLogic;
@@ -54,14 +54,14 @@ contract cInsightGovScript is Script {
 
         logic = new ChainInsightLogicV1();
         executor = new ChainInsightExecutorV1();
-        sbt = new Sbt();
-        sbtImp = new SbtImp();
+        bonfire = new Bonfire();
+        bonfireLogic = new BonfireLogic();
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
-            address(sbt),
+            address(bonfire),
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -73,24 +73,24 @@ contract cInsightGovScript is Script {
         executor.setProxyAddress(address(proxy));
 
         console.log(
-            "address(proxy), address(logic), address(executor), address(sbt), address(sbtImp), address(skinNft)"
+            "address(proxy), address(logic), address(executor), address(bonfire), address(bonfireLogic), address(skinNft)"
         );
         console.log(address(proxy));
         console.log(address(logic));
         console.log(address(executor));
-        console.log(address(sbt));
-        console.log(address(sbtImp));
+        console.log(address(bonfire));
+        console.log(address(bonfireLogic));
         console.log(address(skinNft));
-        sbt.init(
+        bonfire.init(
             address(executor),
             "ChainInsight",
             "SBT",
-            string.concat(baseURL, "sbt/"),
+            string.concat(baseURL, "sbt/metadata"),
             20 ether,
             address(skinNft),
-            address(sbtImp)
+            address(bonfireLogic)
         );
-        skinNft.init(address(sbt));
+        skinNft.init(address(bonfire));
 
         // --- newly added ---
         newLogic = new ChainInsightLogicV1();
@@ -102,17 +102,19 @@ contract cInsightGovScript is Script {
         // // mint SBT to obtain voting right
         // vm.startBroadcast(address(proposer));
         // vm.deal(proposer, 10000 ether);
-        // // address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        // // address(bonfire).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         // vm.stopBroadcast();
 
         // vm.startBroadcast(address(voter));
         // vm.deal(voter, 10000 ether);
-        // address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        // address(bonfire).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
         // vm.stopBroadcast();
 
         // vm.startBroadcast(address(voter));
 
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         // // set block.number to 0
         // vm.roll(0);

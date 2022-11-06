@@ -4,16 +4,16 @@ import "forge-std/Test.sol";
 import "../../src/governance/ProxyV1.sol";
 import "../../src/governance/LogicV1.sol";
 import "../../src/governance/ExecutorV1.sol";
-import "../../src/sbt/Sbt.sol";
-import "../../src/sbt/SbtImp.sol";
+import "../../src/bonfire/BonfireProxy.sol";
+import "../../src/bonfire/BonfireLogic.sol";
 
 contract ChainInsightExecutorV1PropososalTest is Test {
     ChainInsightGovernanceProxyV1 internal proxy;
     ChainInsightLogicV1 internal logic;
     ChainInsightLogicV1 internal newLogic;
     ChainInsightExecutorV1 internal executor;
-    Sbt internal sbt;
-    SbtImp internal imp;
+    Bonfire internal bonfire;
+    BonfireLogic internal imp;
 
     address deployer = address(1);
     address vetoer = address(2);
@@ -43,13 +43,13 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         newLogic = new ChainInsightLogicV1();
         vm.prank(deployer);
         executor = new ChainInsightExecutorV1();
-        sbt = new Sbt();
-        imp = new SbtImp();
+        bonfire = new Bonfire();
+        imp = new BonfireLogic();
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
-            address(sbt),
+            address(bonfire),
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -64,11 +64,11 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         vm.prank(deployer);
         executor.setProxyAddress(address(proxy));
 
-        sbt.init(
+        bonfire.init(
             address(executor),
             "ChainInsight",
             "SBT",
-            "https://thechaininsight.github.io/sbt/",
+            "https://thechaininsight.github.io/bonfire/",
             20 ether,
             nftAddress,
             address(imp)
@@ -77,11 +77,15 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         // mint SBT to obtain voting right
         vm.deal(proposer, 10000 ether);
         vm.prank(proposer);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         vm.deal(voter, 10000 ether);
         vm.prank(voter);
-        address(sbt).call{value: 26 ether}(abi.encodeWithSignature("mint()"));
+        address(bonfire).call{value: 26 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
         // set block.number to 0
         vm.roll(0);
@@ -104,32 +108,17 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         vm.roll(votingDelay + 1);
         vm.prank(voter);
         address(proxy).call(
-            abi.encodeWithSignature(
-                'castVote(uint256,uint8)',
-                1,
-                1
-            )
+            abi.encodeWithSignature("castVote(uint256,uint8)", 1, 1)
         );
 
         // voting ends
         vm.roll(votingDelay + votingPeriod + 1);
 
         // queue proposal
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'queue(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("queue(uint256)", 1));
         etas[0] = block.number + executingDelay;
         txHashs[0] = keccak256(
-            abi.encode(
-                targets,
-                values,
-                signatures,
-                calldatas,
-                etas[0]
-            )
+            abi.encode(targets, values, signatures, calldatas, etas[0])
         );
     }
 
@@ -144,31 +133,26 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         assertTrue(executor.queuedTransactions(txHashs[0]));
     }
 
-     function testExecute() public {
+    function testExecute() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
         assertFalse(proxy.implementation() == address(newLogic));
         // {
-        // (, , , , , , , , , , , , uint256 oldExecuted) = 
+        // (, , , , , , , , , , , , uint256 oldExecuted) =
         // proxy.proposals(1);
         // assertFalse(oldExecuted == 1);
         // }
 
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'execute(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("execute(uint256)", 1));
 
-         assertFalse(executor.queuedTransactions(txHashs[0]));
-         assertTrue(proxy.implementation() == address(newLogic));
-         // {
-         // (, , , , , , , , , , , , uint256 newExecuted) = 
-         // proxy.proposals(1);
-         // assertTrue(newExecuted == 1);
-         // }
-     }
+        assertFalse(executor.queuedTransactions(txHashs[0]));
+        assertTrue(proxy.implementation() == address(newLogic));
+        // {
+        // (, , , , , , , , , , , , uint256 newExecuted) =
+        // proxy.proposals(1);
+        // assertTrue(newExecuted == 1);
+        // }
+    }
 
     function testCancel() public {
         assertTrue(executor.queuedTransactions(txHashs[0]));
@@ -176,14 +160,8 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         // (, , , , , , , , , , , , bool oldCanceled, ,) = proxy.proposals(1);
         // assertFalse(oldCanceled);
         // }
-
         vm.prank(proposer);
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'cancel(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("cancel(uint256)", 1));
 
         assertFalse(executor.queuedTransactions(txHashs[0]));
         // {
@@ -197,15 +175,11 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         // (, , , , , , , , , , , , , bool oldVetoed,) = proxy.proposals(1);
         // assertFalse(oldVetoed);
         // }
+
         assertTrue(executor.queuedTransactions(txHashs[0]));
 
         vm.prank(vetoer);
-        address(proxy).call(
-            abi.encodeWithSignature(
-                'veto(uint256)',
-                1 
-            )
-        );
+        address(proxy).call(abi.encodeWithSignature("veto(uint256)", 1));
 
         // {
         // (, , , , , , , , , , , , , bool newVetoed,) = proxy.proposals(1);

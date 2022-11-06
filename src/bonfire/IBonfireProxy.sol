@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-interface ISbt {
+interface IBonfire {
     event executorChanged(address _newOwner);
     event adminChanged(address _admin);
 
