@@ -57,7 +57,7 @@ contract BonfireImp {
         emit Transfer(address(0), msg.sender, bs.mintIndex);
 
         // referral incentive
-        bs.makiMemorys[msg.sender] += bs.referralSuccessIncentive;
+        bs.makiMemorys[referrer] += bs.referralSuccessIncentive;
         return bs.mintIndex;
     }
 

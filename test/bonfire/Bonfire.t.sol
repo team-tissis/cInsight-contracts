@@ -159,6 +159,7 @@ contract BonfireTest is Test {
             abi.encodeWithSignature("mintWithReferral(address)", manB)
         );
 
+        assertEq(bonfire.makiMemoryOf(manB), 10); // + 10
         assertEq(address(manB).balance, init_balance - sbtPrice + sbtPrice / 4);
         assertEq(address(beef).balance, init_balance - sbtPrice / 2);
 
@@ -167,7 +168,7 @@ contract BonfireTest is Test {
         address(bonfire).call(
             abi.encodeWithSignature("addFavos(address,uint8)", manB, 1)
         );
-        assertEq(bonfire.makiMemoryOf(manB), 1); // + 10
+        assertEq(bonfire.makiMemoryOf(manB), 11); // + 10
     }
 
     // function testSetadmin() public {
