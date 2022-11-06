@@ -106,12 +106,12 @@ contract SkinNftTest is Test {
         // skinNft.tokenURI(1);
 
         uint256[] memory beefToken = new uint256[](2);
-        beefToken[0] = 0;
-        beefToken[1] = 1;
+        beefToken[0] = 1;
+        beefToken[1] = 2;
         assertEq(skinNft.tokensOfOwner(beef), beefToken);
         assertEq(
             bonfire.tokenURI(1),
-            "https://tissis.github.io/bonfire/metadata/0/1/1"
+            "https://tissis.github.io/bonfire/metadata/1/1/1"
         );
     }
 }
