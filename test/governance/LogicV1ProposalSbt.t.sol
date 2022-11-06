@@ -34,10 +34,10 @@ contract ChainInsightLogicV1PropososalTest is Test {
     uint8 proposalThreshold = 1;
 
     // propose info
-    address[] targets; // will be set later
-    uint256[] values = [0];
-    bytes[] calldatas; // will be set later
-    string[] signatures = ["setFreemintQuantity(address,uint256)"];
+    address targets; // will be set later
+    uint256 values = 0;
+    bytes calldatas; // will be set later
+    string signatures = "setFreemintQuantity(address,uint256)";
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] etas = new uint256[](2);
@@ -54,8 +54,8 @@ contract ChainInsightLogicV1PropososalTest is Test {
         skinNft = new SkinNft("");
         skinNft.init(address(sbt));
 
-        targets = [address(sbt)];
-        calldatas = [abi.encode(beef, 100)];
+        targets = address(sbt);
+        calldatas = abi.encode(beef, 100);
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
@@ -104,7 +104,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         address(proxy).call(
             abi.encodeWithSignature(
-                'propose(address[],uint256[],string[],bytes[],string)',
+                'propose(address,uint256,string,bytes,string)',
                 targets,
                 values,
                 signatures,
@@ -137,10 +137,10 @@ contract ChainInsightLogicV1PropososalTest is Test {
         etas[0] = block.number + executingDelay;
         txHashs[0] = keccak256(
             abi.encode(
-                targets[0],
-                values[0],
-                signatures[0],
-                calldatas[0],
+                targets,
+                values,
+                signatures,
+                calldatas,
                 etas[0]
             )
         );

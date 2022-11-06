@@ -35,10 +35,10 @@ contract cInsightGovScript is Script {
     address proposer = address(3);
     address voter = address(4);
 
-    address[] targets; // will be set later
-    uint256[] values = [0];
-    bytes[] calldatas; // will be set later
-    string[] signatures = ["setLogicAddress(address)"];
+    address targets; // will be set later
+    uint256 values = 0;
+    bytes calldatas; // will be set later
+    string signatures = "setLogicAddress(address)";
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] proposalIds = new uint256[](2);
@@ -59,9 +59,9 @@ contract cInsightGovScript is Script {
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
+            address(logic),
             address(executor),
             address(sbt),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
@@ -94,8 +94,8 @@ contract cInsightGovScript is Script {
 
         // --- newly added ---
         newLogic = new ChainInsightLogicV1();
-        targets = [address(executor)];
-        calldatas = [abi.encode(address(newLogic))];
+        targets = address(executor);
+        calldatas = abi.encode(address(newLogic));
 
         // vm.stopBroadcast();
 
