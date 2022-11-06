@@ -42,9 +42,9 @@ contract cInsightScript is Script {
         skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
 
         proxy = new ChainInsightGovernanceProxyV1(
+            address(logic),
             address(executor),
             address(bonfire),
-            admin,
             vetoer,
             executingGracePeriod,
             executingDelay,
