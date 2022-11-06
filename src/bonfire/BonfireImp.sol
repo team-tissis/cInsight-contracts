@@ -7,9 +7,8 @@ import "./../skinnft/ISkinNft.sol";
 
 contract BonfireImp {
     modifier onlyExecutor() {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(msg.sender == BonfireStruct.executor, "EXECUTOR ONLY");
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(msg.sender == bs.executor, "EXECUTOR ONLY");
         _;
     }
 
@@ -20,21 +19,18 @@ contract BonfireImp {
     );
 
     function mint() public payable returns (uint256) {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(msg.value >= BonfireStruct.sbtPrice, "Need to send more ETH.");
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(msg.value >= bs.sbtPrice, "Need to send more ETH.");
         require(msg.sender != address(0));
-        require(BonfireStruct.grades[msg.sender] == 0, "ALREADY MINTED");
-        BonfireStruct.mintIndex++;
-        BonfireStruct.owners[BonfireStruct.mintIndex] = msg.sender;
-        BonfireStruct.grades[msg.sender] = 1;
-        if (msg.value > BonfireStruct.sbtPrice) {
-            payable(msg.sender).call{value: msg.value - BonfireStruct.sbtPrice}(
-                ""
-            );
+        require(bs.grades[msg.sender] == 0, "ALREADY MINTED");
+        bs.mintIndex++;
+        bs.owners[bs.mintIndex] = msg.sender;
+        bs.grades[msg.sender] = 1;
+        if (msg.value > bs.sbtPrice) {
+            payable(msg.sender).call{value: msg.value - bs.sbtPrice}("");
         }
-        emit Transfer(address(0), msg.sender, BonfireStruct.mintIndex);
-        return BonfireStruct.mintIndex;
+        emit Transfer(address(0), msg.sender, bs.mintIndex);
+        return bs.mintIndex;
     }
 
     function mintWithReferral(address referrer)
@@ -42,129 +38,107 @@ contract BonfireImp {
         payable
         returns (uint256)
     {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(BonfireStruct.grades[msg.sender] == 0, "ALREADY MINTED");
-        require(
-            msg.value >= BonfireStruct.sbtReferralPrice,
-            "Need to send more ETH."
-        );
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(bs.grades[msg.sender] == 0, "ALREADY MINTED");
+        require(msg.value >= bs.sbtReferralPrice, "Need to send more ETH.");
 
-        require(
-            BonfireStruct.referralMap[msg.sender] == referrer,
-            "INVALID ACCOUNT"
-        );
+        require(bs.referralMap[msg.sender] == referrer, "INVALID ACCOUNT");
 
-        BonfireStruct.mintIndex += 1;
-        BonfireStruct.owners[BonfireStruct.mintIndex] = msg.sender;
-        BonfireStruct.grades[msg.sender] = 1;
-        payable(referrer).call{value: BonfireStruct.sbtReferralIncentive}("");
+        bs.mintIndex += 1;
+        bs.owners[bs.mintIndex] = msg.sender;
+        bs.grades[msg.sender] = 1;
+        payable(referrer).call{value: bs.sbtReferralIncentive}("");
 
-        if (msg.value > BonfireStruct.sbtReferralPrice) {
-            payable(msg.sender).call{
-                value: msg.value - BonfireStruct.sbtReferralPrice
-            }("");
+        if (msg.value > bs.sbtReferralPrice) {
+            payable(msg.sender).call{value: msg.value - bs.sbtReferralPrice}(
+                ""
+            );
         }
-        emit Transfer(address(0), msg.sender, BonfireStruct.mintIndex);
-        return BonfireStruct.mintIndex;
+        emit Transfer(address(0), msg.sender, bs.mintIndex);
+
+        // referral incentive
+        bs.makiMemorys[msg.sender] += bs.referralSuccessIncentive;
+        return bs.mintIndex;
     }
 
     // set functions
 
     function burn(uint256 _tokenId) external {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(msg.sender == BonfireStruct.owners[_tokenId], "SBT OWNER ONLY");
-        address currentOwner = BonfireStruct.owners[_tokenId];
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(msg.sender == bs.owners[_tokenId], "SBT OWNER ONLY");
+        address currentOwner = bs.owners[_tokenId];
 
-        delete BonfireStruct.owners[_tokenId];
-        BonfireStruct.grades[msg.sender] = 0;
-        BonfireStruct.favos[msg.sender] = 0;
-        BonfireStruct.makiMemorys[msg.sender] = 0;
-        BonfireStruct.makis[msg.sender] = 0;
-        BonfireStruct.referrals[msg.sender] = 0;
-        BonfireStruct.burnNum += 1;
+        delete bs.owners[_tokenId];
+        bs.grades[msg.sender] = 0;
+        bs.favos[msg.sender] = 0;
+        bs.makiMemorys[msg.sender] = 0;
+        bs.makis[msg.sender] = 0;
+        bs.referrals[msg.sender] = 0;
+        bs.burnNum += 1;
 
         emit Transfer(currentOwner, address(0), _tokenId);
     }
 
     function setFreemintQuantity(address _address, uint256 quantity) public {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(
-            msg.sender == BonfireStruct.executor,
-            "ONLY EXECUTOR CAN SET FREEMINT"
-        );
-        ISkinNft(BonfireStruct.nftAddress).setFreemintQuantity(
-            _address,
-            quantity
-        );
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(msg.sender == bs.executor, "ONLY EXECUTOR CAN SET FREEMINT");
+        ISkinNft(bs.nftAddress).setFreemintQuantity(_address, quantity);
     }
 
     function monthInit() public {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
         require(
-            DateTime.getMonth(block.timestamp) !=
-                BonfireStruct.lastUpdatedMonth,
+            DateTime.getMonth(block.timestamp) != bs.lastUpdatedMonth,
             "monthInit is already executed for this month"
         );
 
-        _updatemaki(BonfireStruct);
-        _updateGrade(BonfireStruct);
+        _updatemaki(bs);
+        _updateGrade(bs);
         // burn されたアカウントも代入計算を行なっている．
         // TODO: sstore 0->0 はガス代がかなり安いらしいが，より良い実装はありうる．
     }
 
-    function _updatemaki(BonfireLib.BonfireStruct storage BonfireStruct)
-        internal
-    {
-        for (uint256 i = 1; i <= BonfireStruct.mintIndex; i++) {
-            address _address = BonfireStruct.owners[i];
-            BonfireStruct.makis[_address] =
-                BonfireStruct.makiMemorys[_address] +
-                (BonfireStruct.makis[_address] * BonfireStruct.makiDecayRate) /
+    function _updatemaki(BonfireLib.BonfireStruct storage bs) internal {
+        for (uint256 i = 1; i <= bs.mintIndex; i++) {
+            address _address = bs.owners[i];
+            bs.makis[_address] =
+                bs.makiMemorys[_address] +
+                (bs.makis[_address] * bs.makiDecayRate) /
                 100;
-            BonfireStruct.makiMemorys[_address] = 0;
-            if (
-                BonfireStruct.favos[_address] ==
-                BonfireStruct.monthlyDistributedFavoNum
-            ) {
-                BonfireStruct.makis[_address] += BonfireStruct
-                    .favoUseUpIncentive;
+            bs.makiMemorys[_address] = 0;
+            if (bs.favos[_address] == bs.monthlyDistributedFavoNum) {
+                bs.makis[_address] += bs.favoUseUpIncentive;
             }
         }
     }
 
-    function _updateGrade(BonfireLib.BonfireStruct storage BonfireStruct)
-        internal
-    {
-        uint256 accountNum = BonfireStruct.mintIndex - BonfireStruct.burnNum;
-        uint256 gradeNum = BonfireStruct.gradeNum;
+    function _updateGrade(BonfireLib.BonfireStruct storage bs) internal {
+        uint256 accountNum = bs.mintIndex - bs.burnNum;
+        uint256 gradeNum = bs.gradeNum;
         uint16[] memory makiSortedIndex = new uint16[](accountNum);
         uint32[] memory makiArray = new uint32[](accountNum);
         uint256[] memory gradeThreshold = new uint256[](gradeNum);
 
         uint256 count;
         uint256 j;
-        for (uint256 i = 1; i <= BonfireStruct.mintIndex; i++) {
-            address _address = BonfireStruct.owners[i];
+        for (uint256 i = 1; i <= bs.mintIndex; i++) {
+            address _address = bs.owners[i];
             if (_address != address(0)) {
                 makiSortedIndex[count] = uint16(i);
-                makiArray[count] = uint32(BonfireStruct.makis[_address]);
+                makiArray[count] = uint32(bs.makis[_address]);
                 count += 1;
             }
         }
         _quickSort(makiArray, makiSortedIndex, int(0), int(accountNum - 1));
         gradeNum--;
         for (j = 0; j < gradeNum; j++) {
-            gradeThreshold[j] = accountNum * BonfireStruct.gradeRate[j];
+            gradeThreshold[j] = accountNum * bs.gradeRate[j];
         }
         uint256 grade;
         uint256 skinnftQuantity;
         // burnされていない account 中の上位 x %を計算.
         for (uint256 i = 0; i < accountNum; i++) {
-            address _address = BonfireStruct.owners[makiSortedIndex[i]];
+            address _address = bs.owners[makiSortedIndex[i]];
             grade = 1;
             for (j = 0; j < gradeNum; j++) {
                 if (i * 100 >= gradeThreshold[j]) {
@@ -173,11 +147,11 @@ contract BonfireImp {
                 grade++;
                 // set grade
             }
-            BonfireStruct.grades[_address] = grade;
+            bs.grades[_address] = grade;
             // set skin nft freemint
-            skinnftQuantity = BonfireStruct.skinnftNumRate[grade - 1];
+            skinnftQuantity = bs.skinnftNumRate[grade - 1];
             if (skinnftQuantity > 0) {
-                ISkinNft(BonfireStruct.nftAddress).setFreemintQuantity(
+                ISkinNft(bs.nftAddress).setFreemintQuantity(
                     _address,
                     skinnftQuantity
                 );
@@ -185,8 +159,8 @@ contract BonfireImp {
 
             // initialize referral and favos
 
-            BonfireStruct.favos[_address] = 0;
-            BonfireStruct.referrals[_address] = 0;
+            bs.favos[_address] = 0;
+            bs.referrals[_address] = 0;
         }
     }
 
@@ -194,23 +168,18 @@ contract BonfireImp {
     function addFavos(address userTo, uint8 favo) external {
         require(favo > 0, "favo num must be bigger than 0");
 
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(
-            BonfireStruct.grades[msg.sender] != 0,
-            "SENDER: SBT HOLDER ONLY"
-        );
-        require(BonfireStruct.grades[userTo] != 0, "USERTO: SBT HOLDER ONLY");
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(bs.grades[msg.sender] != 0, "SENDER: SBT HOLDER ONLY");
+        require(bs.grades[userTo] != 0, "USERTO: SBT HOLDER ONLY");
         require(msg.sender != userTo, "CAN'T FAVO YOURSELF");
 
         uint256 addmonthlyDistributedFavoNum;
         require(
-            BonfireStruct.monthlyDistributedFavoNum >
-                BonfireStruct.favos[msg.sender],
+            bs.monthlyDistributedFavoNum > bs.favos[msg.sender],
             "INVALID ARGUMENT"
         );
-        uint256 remainFavo = BonfireStruct.monthlyDistributedFavoNum -
-            BonfireStruct.favos[msg.sender];
+        uint256 remainFavo = bs.monthlyDistributedFavoNum -
+            bs.favos[msg.sender];
 
         // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
         if (remainFavo <= favo) {
@@ -219,20 +188,16 @@ contract BonfireImp {
             addmonthlyDistributedFavoNum = favo;
         }
 
-        BonfireStruct.favos[msg.sender] += addmonthlyDistributedFavoNum;
+        bs.favos[msg.sender] += addmonthlyDistributedFavoNum;
 
         // makiMemoryの計算
         uint256 upperBound = 5;
         (uint256 _dist, bool connectFlag) = _distance(msg.sender, userTo);
 
         if (connectFlag && _dist < upperBound) {
-            BonfireStruct.makiMemorys[userTo] +=
-                _dist *
-                addmonthlyDistributedFavoNum;
+            bs.makiMemorys[userTo] += _dist * addmonthlyDistributedFavoNum;
         } else {
-            BonfireStruct.makiMemorys[userTo] +=
-                upperBound *
-                addmonthlyDistributedFavoNum;
+            bs.makiMemorys[userTo] += upperBound * addmonthlyDistributedFavoNum;
         }
     }
 
@@ -241,8 +206,7 @@ contract BonfireImp {
         view
         returns (uint256, bool)
     {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
 
         uint256 _dist1;
         uint256 _dist2;
@@ -256,16 +220,16 @@ contract BonfireImp {
                 connectFlag = true;
                 break;
             }
-            _node2 = BonfireStruct.referralMap[node2];
+            _node2 = bs.referralMap[node2];
             while (_node2 != address(0)) {
                 _dist2 += 1;
                 if (_node1 == _node2) {
                     connectFlag = true;
                     break;
                 }
-                _node2 = BonfireStruct.referralMap[_node2];
+                _node2 = bs.referralMap[_node2];
             }
-            _node1 = BonfireStruct.referralMap[_node1];
+            _node1 = bs.referralMap[_node1];
             _dist1 += 1;
             _dist2 = 0;
         }
@@ -273,23 +237,20 @@ contract BonfireImp {
     }
 
     function refer(address userTo) external {
-        BonfireLib.BonfireStruct storage BonfireStruct = BonfireLib
-            .bonfireStorage();
-        require(BonfireStruct.grades[userTo] == 0, "ALREADY MINTED");
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        require(bs.grades[userTo] == 0, "ALREADY MINTED");
         require(
-            BonfireStruct.referralMap[userTo] == address(0),
+            bs.referralMap[userTo] == address(0),
             "THIS USER HAS ALREADY REFERRED"
         );
         require(
-            BonfireStruct.grades[msg.sender] >= 1 &&
-                BonfireStruct.referrals[msg.sender] <
-                BonfireStruct.referralRate[
-                    BonfireStruct.grades[msg.sender] - 1
-                ],
+            bs.grades[msg.sender] >= 1 &&
+                bs.referrals[msg.sender] <
+                bs.referralRate[bs.grades[msg.sender] - 1],
             "REFER LIMIT EXCEEDED"
         );
-        BonfireStruct.referralMap[userTo] = msg.sender;
-        BonfireStruct.referrals[msg.sender] += 1;
+        bs.referralMap[userTo] = msg.sender;
+        bs.referrals[msg.sender] += 1;
     }
 
     // descending

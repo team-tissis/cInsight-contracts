@@ -32,23 +32,20 @@ library BonfireLib {
         uint8 gradeNum;
         uint8 lastUpdatedMonth;
         uint8 favoUseUpIncentive;
+        uint8 referralSuccessIncentive;
         uint8 makiDecayRate;
     }
 
     // get struct stored at posititon
     //https://solidity-by-example.org/app/write-to-any-slot/
-    function bonfireStorage()
-        internal
-        pure
-        returns (BonfireStruct storage bonfirestruct)
-    {
+    function bonfireStorage() internal pure returns (BonfireStruct storage bs) {
         /** メモ: @shion
          * slot: storageは32バイトの領域を確保するが，その領域をslotと呼ぶ
          * positionのstrunctを参照する
          */
         bytes32 position = BONFIRE_STRUCT_POSITION;
         assembly {
-            bonfirestruct.slot := position
+            bs.slot := position
         }
     }
 }
