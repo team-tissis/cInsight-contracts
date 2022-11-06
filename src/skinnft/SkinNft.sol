@@ -6,7 +6,7 @@ import "./ISkinNft.sol";
 import "./../sbt/ISbt.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
-    string baseURI;
+    string public baseURI;
 
     constructor(string memory _baseURI)
         ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")

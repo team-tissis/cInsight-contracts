@@ -270,6 +270,22 @@ contract Sbt is ISbt {
         sbtstruct.sbtReferralIncentive = _sbtReferralIncentive;
     }
 
+    // basic functions for skinnft
+    function setSkinnftBaseURI(string memory _newSkinnftBaseURI)
+        external
+        onlyExecutor
+    {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        ISkinNft(sbtstruct.nftAddress).setBaseURI(_newSkinnftBaseURI);
+    }
+
+    // basic functions for skinnft
+    function transferEthSkinnft2Sbt() external {
+        SbtLib.SbtStruct storage sbtstruct = SbtLib.sbtStorage();
+        require(msg.sender == sbtstruct.admin, "ADMIN ONLY");
+        ISkinNft(sbtstruct.nftAddress).withdraw();
+    }
+
     // utility function
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {

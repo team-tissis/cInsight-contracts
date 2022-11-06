@@ -10,19 +10,24 @@ contract ChainInsightLogicV1 is
     /// @notice The name of this contract
     string public constant name = "Chain Insight Governance";
 
+    // TODO: MIN_hoge variables are set short period due to hackathon demo. This should be fixed later
+
     /// @notice The minimum setable executing grace period
-    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 11_520; // About 2 days
+    // uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 11_520; // About 2 days
+    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 150; // About 5min
     /// @notice The maximum setable executing grace period
     uint256 public constant MAX_EXECUTING_GRACE_PERIOD = 172_800; // About 30 days
 
     /// @notice The min setable executing delay
-    uint256 public constant MIN_EXECUTING_DELAY = 11_520;
+    // uint256 public constant MIN_EXECUTING_DELAY = 11_520;
+    uint256 public constant MIN_EXECUTING_DELAY = 150; // About 5min
 
     /// @notice The max setable executing delay
     uint256 public constant MAX_EXECUTING_DELAY = 172_800;
 
     /// @notice The minimum setable voting period
-    uint256 public constant MIN_VOTING_PERIOD = 5_760; // About 24 hours
+    // uint256 public constant MIN_VOTING_PERIOD = 5_760; // About 4 hours
+    uint256 public constant MIN_VOTING_PERIOD = 150; // About 5 min
 
     /// @notice The max setable voting period
     uint256 public constant MAX_VOTING_PERIOD = 80_640; // Abount 2 weeks
@@ -241,7 +246,13 @@ contract ChainInsightLogicV1 is
             ),
             "LogicV1::queueOrRevertInternal: identical proposal action already queued at eta"
         );
-        IChainInsightExecutor(executor).queueTransaction(target, value, signature, data, eta);
+        IChainInsightExecutor(executor).queueTransaction(
+            target,
+            value,
+            signature,
+            data,
+            eta
+        );
     }
 
     /**
@@ -378,35 +389,51 @@ contract ChainInsightLogicV1 is
         return proposals[proposalId].receipts[voter].votes;
     }
 
-    function getProposer(uint256 proposalId) external view returns(address) {
+    function getProposer(uint256 proposalId) external view returns (address) {
         return proposals[proposalId].proposer;
     }
 
-    function getTargets(uint256 proposalId) external view returns(address) {
+    function getTargets(uint256 proposalId) external view returns (address) {
         return proposals[proposalId].targets;
     }
 
-    function getValues(uint256 proposalId) external view returns(uint256) {
+    function getValues(uint256 proposalId) external view returns (uint256) {
         return proposals[proposalId].values;
     }
 
-    function getSignatures(uint256 proposalId) external view returns(string memory) {
+    function getSignatures(uint256 proposalId)
+        external
+        view
+        returns (string memory)
+    {
         return proposals[proposalId].signatures;
     }
 
-    function getCalldatas(uint256 proposalId) external view returns(bytes memory) {
+    function getCalldatas(uint256 proposalId)
+        external
+        view
+        returns (bytes memory)
+    {
         return proposals[proposalId].calldatas;
     }
 
-    function getForVotes(uint256 proposalId) external view returns(uint256) {
+    function getForVotes(uint256 proposalId) external view returns (uint256) {
         return proposals[proposalId].forVotes;
     }
 
-    function getAgainstVotes(uint256 proposalId) external view returns(uint256) {
+    function getAgainstVotes(uint256 proposalId)
+        external
+        view
+        returns (uint256)
+    {
         return proposals[proposalId].againstVotes;
     }
 
-    function getAbstainVotes(uint256 proposalId) external view returns(uint256) {
+    function getAbstainVotes(uint256 proposalId)
+        external
+        view
+        returns (uint256)
+    {
         return proposals[proposalId].abstainVotes;
     }
 
@@ -425,7 +452,7 @@ contract ChainInsightLogicV1 is
         // if (proposal.vetoed) {
         if (proposal.state == 3) {
             return ProposalState.Vetoed;
-        // } else if (proposal.canceled) {
+            // } else if (proposal.canceled) {
         } else if (proposal.state == 2) {
             return ProposalState.Canceled;
         } else if (block.number <= proposal.startBlock) {
@@ -436,7 +463,7 @@ contract ChainInsightLogicV1 is
             return ProposalState.Defeated;
         } else if (proposal.eta == 0) {
             return ProposalState.Succeeded;
-        // } else if (proposal.executed) {
+            // } else if (proposal.executed) {
         } else if (proposal.state == 1) {
             return ProposalState.Executed;
         } else if (block.number >= proposal.eta + executingGracePeriod) {
@@ -604,7 +631,10 @@ contract ChainInsightLogicV1 is
      * @param newVotingDelay new voting delay, in blocks
      */
     function _setVotingDelay(uint256 newVotingDelay) external {
-        require(msg.sender == executor, "LogicV1::_setVotingDelay: executor only");
+        require(
+            msg.sender == executor,
+            "LogicV1::_setVotingDelay: executor only"
+        );
         require(
             newVotingDelay >= MIN_VOTING_DELAY &&
                 newVotingDelay <= MAX_VOTING_DELAY,
@@ -621,7 +651,10 @@ contract ChainInsightLogicV1 is
      * @param newVotingPeriod new voting period, in blocks
      */
     function _setVotingPeriod(uint256 newVotingPeriod) external {
-        require(msg.sender == executor, "LogicV1::_setVotingPeriod: executor only");
+        require(
+            msg.sender == executor,
+            "LogicV1::_setVotingPeriod: executor only"
+        );
         require(
             newVotingPeriod >= MIN_VOTING_PERIOD &&
                 newVotingPeriod <= MAX_VOTING_PERIOD,
@@ -712,7 +745,6 @@ contract ChainInsightLogicV1 is
         return votes;
     }
 
-    // function getEndBlock(uint256 proposalId) external view returns (uint256) {
     //     require(
     //         proposalCount >= proposalId,
     //         "LogicV1::getProposalTargets: invalid proposal id"

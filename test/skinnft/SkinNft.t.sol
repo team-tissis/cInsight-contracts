@@ -17,13 +17,13 @@ contract SkinNftTest is Test {
         // admin = vm.addr(admin);
         sbt = new Sbt();
         imp = new SbtImp();
-        skinNft = new SkinNft("https://thechaininsight.github.io/skinnft/");
+        skinNft = new SkinNft("https://tissis.github.io/skinnft/");
 
         sbt.init(
             admin,
             "ChainInsight",
             "SBT",
-            "https://thechaininsight.github.io/sbt/metadata/",
+            "https://tissis.github.io/sbt/metadata/",
             20 ether,
             address(skinNft),
             address(imp)
@@ -40,6 +40,13 @@ contract SkinNftTest is Test {
     function testSupportsInterface() public {
         assertEq(sbt.supportsInterface(0x01ffc9a7), true);
         assertEq(sbt.supportsInterface(0x5b5e139f), true);
+    }
+
+    function testSetBaseURI() public {
+        assertEq(skinNft.baseURI(), "https://tissis.github.io/skinnft/");
+        vm.prank(admin);
+        sbt.setSkinnftBaseURI("https://newuri.github.io/skinnft/");
+        assertEq(skinNft.baseURI(), "https://newuri.github.io/skinnft/");
     }
 
     function testMint() public {
@@ -100,7 +107,7 @@ contract SkinNftTest is Test {
         assertEq(skinNft.tokensOfOwner(beef), beefToken);
         assertEq(
             sbt.tokenURI(1),
-            "https://thechaininsight.github.io/sbt/metadata/0/1/1"
+            "https://tissis.github.io/sbt/metadata/0/1/1"
         );
     }
 }

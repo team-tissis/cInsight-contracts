@@ -17,9 +17,9 @@ contract cInsightScript is Script {
     Sbt sbt;
     SbtImp sbtImp;
     SkinNft skinNft;
-    uint256 executingGracePeriod = 11520;
-    uint256 executingDelay = 11520;
-    uint256 votingPeriod = 5760;
+    uint256 executingGracePeriod = 300;
+    uint256 executingDelay = 150;
+    uint256 votingPeriod = 150;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
     string baseURL = "https://thechaininsight.github.io/";
@@ -57,7 +57,7 @@ contract cInsightScript is Script {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/metadata/"),
-            20 ether,
+            0.05 ether,
             address(skinNft),
             address(sbtImp)
         );
