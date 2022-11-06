@@ -61,7 +61,6 @@ contract cInsightGovScript is Script {
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
-            address(sbt),
             address(bonfire),
             vetoer,
             executingGracePeriod,
