@@ -11,7 +11,9 @@ $ forge build
 $ anvil
 ```
 その次に，.envファイルにコンソールに出力された(0)番目のprivate keyを記述．
-`DEPROYER_KEY=hoge`
+```bash
+DEPLOYER_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
 
 Finally,
 ```bash

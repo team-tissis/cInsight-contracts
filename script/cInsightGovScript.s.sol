@@ -46,7 +46,7 @@ contract cInsightGovScript is Script {
     bytes32[] txHashs = new bytes32[](2);
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("DEPROYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
         address deployerAddress = vm.envAddress("CONTRACT_ADDRESS");
 
         // excute operations as a deployer account until stop broadcast
