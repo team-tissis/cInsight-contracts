@@ -87,10 +87,10 @@ contract BonfireLogic {
 
     function monthInit() public {
         BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
-        require(
-            DateTime.getMonth(block.timestamp) != bs.lastUpdatedMonth,
-            "monthInit is already executed for this month"
-        );
+        // require(
+        //     DateTime.getMonth(block.timestamp) != bs.lastUpdatedMonth,
+        //     "monthInit is already executed for this month"
+        // );
 
         _updatemaki(bs);
         _updateGrade(bs);
@@ -129,7 +129,12 @@ contract BonfireLogic {
                 count += 1;
             }
         }
-        _quickSort(makiArray, makiSortedIndex, int(0), int(accountNum - 1));
+        _quickSort(
+            makiArray,
+            makiSortedIndex,
+            int256(0),
+            int256(accountNum - 1)
+        );
         gradeNum--;
         for (j = 0; j < gradeNum; j++) {
             gradeThreshold[j] = accountNum * bs.gradeRate[j];
@@ -257,19 +262,25 @@ contract BonfireLogic {
     function _quickSort(
         uint32[] memory arr,
         uint16[] memory ind,
-        int left,
-        int right
+        int256 left,
+        int256 right
     ) internal {
-        int i = left;
-        int j = right;
+        int256 i = left;
+        int256 j = right;
         if (i == j) return;
-        uint pivot = arr[uint(left + (right - left) / 2)];
+        uint256 pivot = arr[uint256(left + (right - left) / 2)];
         while (i <= j) {
-            while (arr[uint(i)] > pivot) i++;
-            while (pivot > arr[uint(j)]) j--;
+            while (arr[uint256(i)] > pivot) i++;
+            while (pivot > arr[uint256(j)]) j--;
             if (i <= j) {
-                (arr[uint(i)], arr[uint(j)]) = (arr[uint(j)], arr[uint(i)]);
-                (ind[uint(i)], ind[uint(j)]) = (ind[uint(j)], ind[uint(i)]);
+                (arr[uint256(i)], arr[uint256(j)]) = (
+                    arr[uint256(j)],
+                    arr[uint256(i)]
+                );
+                (ind[uint256(i)], ind[uint256(j)]) = (
+                    ind[uint256(j)],
+                    ind[uint256(i)]
+                );
                 i++;
                 j--;
             }
