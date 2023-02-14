@@ -25,7 +25,7 @@ contract cInsightScript is Script {
     string baseURL = "https://team-tissis.github.io/cInsightAsset/";
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
 
         // excute operations as a deployer account until stop broadcast
         vm.startBroadcast(deployerPrivateKey);
