@@ -10,7 +10,7 @@ import {BonfireLogic} from "src/bonfire/BonfireLogic.sol";
 import {SkinNft} from "src/skinnft/SkinNft.sol";
 import {ISkinNft} from "src/skinnft/ISkinNft.sol";
 
-contract cInsightScript is Script {
+contract cInsightDeploy is Script {
     ChainInsightLogicV1 logic;
     ChainInsightExecutorV1 executor;
     ChainInsightGovernanceProxyV1 proxy;
