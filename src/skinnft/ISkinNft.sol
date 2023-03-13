@@ -9,4 +9,6 @@ interface ISkinNft {
     function setFreemintQuantity(address _address, uint256 quantity) external;
 
     function withdraw() external;
+
+    function _colorNum() external view returns (uint256);
 }

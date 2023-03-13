@@ -7,17 +7,19 @@ import "./../bonfire/IBonfireProxy.sol";
 
 contract SkinNft is ERC721AQueryable, ISkinNft {
     string public baseURI;
+    uint256 colorNum;
 
-    constructor(string memory _baseURI)
+    constructor(string memory _baseURI, uint256 _colorNum)
         ERC721A("ChainInsightSkin", "CHAIN_INSIGHT_SKIN")
     {
         baseURI = _baseURI;
+        colorNum = _colorNum;
     }
 
     address bonfireAddress;
     IBonfire internal bonfire;
     mapping(address => uint256) public freemintQuantity;
-    mapping(address => uint256) public _icon;
+    mapping(address => uint256) public _icon; // NFT ホルダーのアドレス <-> NFT の token id
 
     function init(address _bonfireAddress) external {
         require(
@@ -122,5 +124,9 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
             "WITHDRAW IS ONLY ALLOWED TO SBT CONTRACT"
         );
         payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function _colorNum() external view returns (uint256) {
+        return colorNum;
     }
 }
