@@ -28,6 +28,7 @@ contract cInsightGovScript is Script {
     uint8 proposalThreshold = 1;
 
     string baseURL = "https://team-tissis.github.io/cInsightAsset/";
+    uint256 nftColorNum = 5;
 
     // --- newly added ---
     ChainInsightLogicV1 newLogic;
@@ -56,7 +57,7 @@ contract cInsightGovScript is Script {
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
         bonfireLogic = new BonfireLogic();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"), nftColorNum);
 
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),

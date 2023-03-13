@@ -51,7 +51,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
         imp = new BonfireLogic();
-        skinNft = new SkinNft("");
+        skinNft = new SkinNft("", 5);
         skinNft.init(address(bonfire));
 
         targets = address(bonfire);

@@ -23,6 +23,7 @@ contract cInsightDeploy is Script {
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
     string baseURL = "https://team-tissis.github.io/cInsightAsset/";
+    uint256 nftColorNum = 5;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -34,7 +35,7 @@ contract cInsightDeploy is Script {
         executor = new ChainInsightExecutorV1();
         bonfire = new Bonfire();
         bonfireLogic = new BonfireLogic();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"), nftColorNum);
         address admin = tx.origin;
         address vetoer = address(0);
 

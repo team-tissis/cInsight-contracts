@@ -10,15 +10,16 @@ import "./../../src/skinnft/SkinNft.sol";
 contract BonfireTest is Test {
     address admin = address(0xad000); //TODO: executor に変更
     string baseURL = "https://thechaininsight.github.io/";
+    uint256 nftColorNum = 5;
     Bonfire internal bonfire;
     BonfireLogic internal bonfireLogic;
     SkinNft internal skinNft;
-    uint256 sbtPrice = 0.1 ether;
+    uint256 sbtPrice = 0.001 ether;
 
     function setUp() public {
         bonfire = new Bonfire();
         bonfireLogic = new BonfireLogic();
-        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"));
+        skinNft = new SkinNft(string.concat(baseURL, "skinnft/"), nftColorNum);
 
         bonfire.init(
             admin,
@@ -45,7 +46,7 @@ contract BonfireTest is Test {
 
     function testMint() public {
         uint256 init_balance = 40 ether;
-        uint256 sbtPrice = 0.1 ether;
+        uint256 sbtPrice = 0.001 ether;
         address manA = address(0xa);
         payable(manA).call{value: init_balance}("");
 
@@ -112,6 +113,7 @@ contract BonfireTest is Test {
             tokenuri,
             "https://thechaininsight.github.io/bonfire/metadata/0/1/4"
         );
+
 
         // test add favo
         vm.prank(manA);
