@@ -60,7 +60,7 @@ contract cInsightScript is Script {
             "ChainInsight",
             "SBT",
             string.concat(baseURL, "sbt/metadata/"),
-            0.1 ether,
+            0.001 ether,
             address(skinNft),
             address(bonfireLogic)
         );
