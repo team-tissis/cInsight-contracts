@@ -4,6 +4,8 @@ pragma solidity ^0.8.16;
 interface IBonfire {
     event executorChanged(address _newOwner);
     event adminChanged(address _admin);
+    event checkBonfireNftAddress(address _nftAddress);
+    event checkBonfireTokenAddress(address _tokenAddress);
 
     function setImplementation(
         bytes4[] calldata _sigs,

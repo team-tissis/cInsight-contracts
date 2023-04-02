@@ -35,6 +35,7 @@ contract Bonfire is IBonfire {
         bs.sbtPrice = _sbtPrice;
         bs.sbtReferralPrice = _sbtPrice / 2;
         bs.sbtReferralIncentive = _sbtPrice / 4;
+        // bs.monthlyDistributedFavoNum = 10;
         bs.monthlyDistributedFavoNum = 10;
         bs.lastUpdatedMonth = 0; //initial value for last updated month
         bs.favoUseUpIncentive = 1;

@@ -164,6 +164,52 @@ contract BonfireLogic {
         }
     }
 
+
+    // functions for frontend
+    function addFavosFromMultipleUsers(address[] memory usersFrom, uint8[] memory favoAmounts) external {
+
+        require(usersFrom.length == favoAmounts.length, "request is not valid");
+
+        for (uint i = 0; i < usersFrom.length; i++) {
+            address userFrom = usersFrom[i];
+            uint8 favo = favoAmounts[i];
+
+            require(favo > 0, "favo num must be bigger than 0");
+
+            BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+            require(bs.grades[msg.sender] != 0, "SENDER: SBT HOLDER ONLY");
+            require(bs.grades[userFrom] != 0, "USERTO: SBT HOLDER ONLY");
+            require(msg.sender != userFrom, "CAN'T FAVO YOURSELF");
+
+            uint256 addmonthlyDistributedFavoNum;
+            require(
+                bs.monthlyDistributedFavoNum > bs.favos[msg.sender],
+                "INVALID ARGUMENT"
+            );
+            uint256 remainFavo = bs.monthlyDistributedFavoNum -
+                bs.favos[msg.sender];
+
+            // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
+            if (remainFavo <= favo) {
+                addmonthlyDistributedFavoNum = remainFavo;
+            } else {
+                addmonthlyDistributedFavoNum = favo;
+            }
+
+            bs.favos[msg.sender] += addmonthlyDistributedFavoNum;
+
+            // makiMemoryの計算
+            uint256 upperBound = 5;
+            (uint256 _dist, bool connectFlag) = _distance(msg.sender, userFrom);
+
+            if (connectFlag && _dist < upperBound) {
+                bs.makiMemorys[userFrom] += _dist * addmonthlyDistributedFavoNum;
+            } else {
+                bs.makiMemorys[userFrom] += upperBound * addmonthlyDistributedFavoNum;
+            }
+        }
+    }
+
     // functions for frontend
     function addFavos(address userTo, uint8 favo) external {
         require(favo > 0, "favo num must be bigger than 0");
