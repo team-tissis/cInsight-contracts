@@ -2,6 +2,7 @@ pragma solidity ^0.8.16;
 
 import "./InterfacesV1.sol";
 import "../bonfire/IBonfireProxy.sol";
+import "forge-std/Test.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -156,6 +157,10 @@ contract ChainInsightLogicV1 is
 
         /// @notice Ensure that msg.sender currently does not have active or pending proposals
         uint256 latestProposalId = latestProposalIds[msg.sender];
+
+        console.log("IF START");
+        console.log(latestProposalId);
+
         if (latestProposalId != 0) {
             ProposalState proposersLatestProposalState = state(
                 latestProposalId
@@ -206,6 +211,7 @@ contract ChainInsightLogicV1 is
             description
         );
 
+        console.log("Proposal function END");
         return newProposal.id;
     }
 
