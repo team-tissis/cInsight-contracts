@@ -143,10 +143,10 @@ contract ChainInsightLogicV1 is
      * @return Proposal id of new proposal
      */
     function propose(
-        address targets,
-        uint256 values,
-        string memory signatures,
-        bytes memory calldatas,
+        address[] memory targets,
+        uint256[] memory values,
+        string[] memory signatures,
+        bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
         require(
@@ -221,13 +221,15 @@ contract ChainInsightLogicV1 is
         Proposal storage proposal = proposals[proposalId];
 
         uint256 eta = block.number + executingDelay;
-        queueOrRevertInternal(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            queueOrRevertInternal(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                eta
+            );
+        }
         proposal.eta = eta;
         emit ProposalQueued(proposalId, eta);
     }
@@ -268,14 +270,16 @@ contract ChainInsightLogicV1 is
         // proposal.executed = true;
         proposal.state = 1;
 
-        IChainInsightExecutor(executor).executeTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta,
-            executingGracePeriod
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).executeTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta,
+                executingGracePeriod
+            );
+        }
         emit ProposalExecuted(proposalId);
     }
 
@@ -297,13 +301,15 @@ contract ChainInsightLogicV1 is
 
         // proposal.canceled = true;
         proposal.state = 2;
-        IChainInsightExecutor(executor).cancelTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).cancelTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta
+            );
+        }
 
         emit ProposalCanceled(proposalId);
     }
@@ -324,13 +330,15 @@ contract ChainInsightLogicV1 is
 
         // proposal.vetoed = true;
         proposal.state = 3;
-        IChainInsightExecutor(executor).cancelTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).cancelTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta
+            );
+        }
 
         emit ProposalVetoed(proposalId);
     }
@@ -393,18 +401,18 @@ contract ChainInsightLogicV1 is
         return proposals[proposalId].proposer;
     }
 
-    function getTargets(uint256 proposalId) external view returns (address) {
+    function getTargets(uint256 proposalId) external view returns (address[] memory) {
         return proposals[proposalId].targets;
     }
 
-    function getValues(uint256 proposalId) external view returns (uint256) {
+    function getValues(uint256 proposalId) external view returns (uint256[] memory) {
         return proposals[proposalId].values;
     }
 
     function getSignatures(uint256 proposalId)
         external
         view
-        returns (string memory)
+        returns (string[] memory)
     {
         return proposals[proposalId].signatures;
     }
@@ -412,7 +420,7 @@ contract ChainInsightLogicV1 is
     function getCalldatas(uint256 proposalId)
         external
         view
-        returns (bytes memory)
+        returns (bytes[] memory)
     {
         return proposals[proposalId].calldatas;
     }

@@ -7,10 +7,10 @@ contract ChainInsightGovernanceEventsV1 {
     event ProposalCreated(
         uint256 id,
         address proposer,
-        address targets,
-        uint256 values,
-        string signatures,
-        bytes calldatas,
+        address[] targets,
+        uint256[] values,
+        string[] signatures,
+        bytes[] calldatas,
         uint256 startBlock,
         uint256 endBlock,
         string description
@@ -147,13 +147,13 @@ contract ChainInsightGovernanceStorageV1 is ChainInsightGovernanceProxyStorage {
         /// @notice The timestamp that the proposal will be available for execution, set once the vote succeeds
         uint256 eta;
         /// @notice the ordered list of target addresses for calls to be made
-        address targets;
+        address[] targets;
         /// @notice The ordered list of values (i.e. msg.value) to be passed to the calls to be made
-        uint256 values;
+        uint256[] values;
         /// @notice The ordered list of function signatures to be called
-        string signatures;
+        string[] signatures;
         /// @notice The ordered list of calldata to be passed to each call
-        bytes calldatas;
+        bytes[] calldatas;
         /// @notice The block at which voting begins: holders must delegate their votes prior to this block
         uint256 startBlock;
         /// @notice The block at which voting ends: votes must be cast prior to this block
