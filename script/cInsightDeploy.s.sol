@@ -17,9 +17,9 @@ contract cInsightDeploy is Script {
     Bonfire bonfire;
     BonfireLogic bonfireLogic;
     SkinNft skinNft;
-    uint256 executingGracePeriod = 300;
-    uint256 executingDelay = 150;
-    uint256 votingPeriod = 150;
+    uint256 executingGracePeriod = 172800;
+    uint256 executingDelay = 30;
+    uint256 votingPeriod = 300;
     uint256 votingDelay = 1;
     uint8 proposalThreshold = 1;
     string baseURL = "https://team-tissis.github.io/cInsightAsset/";
