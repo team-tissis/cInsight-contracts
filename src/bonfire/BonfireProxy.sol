@@ -51,14 +51,15 @@ contract Bonfire is IBonfire {
             bs.gradeRate.push(_gradeRate[i]);
         }
 
-        bytes4[] memory sigs = new bytes4[](7);
+        bytes4[] memory sigs = new bytes4[](8);
         sigs[0] = bytes4(keccak256("mint()"));
         sigs[1] = bytes4(keccak256("mintWithReferral(address)"));
         sigs[2] = bytes4(keccak256("burn(uint)"));
         sigs[3] = bytes4(keccak256("setFreemintQuantity(address,uint256)"));
         sigs[4] = bytes4(keccak256("monthInit()"));
         sigs[5] = bytes4(keccak256("addFavos(address,uint8)"));
-        sigs[6] = bytes4(keccak256("refer(address)"));
+        sigs[6] = bytes4(keccak256("addFavosFromMultipleUsers(address[], uint8[])"));
+        sigs[7] = bytes4(keccak256("refer(address)"));
 
         for (uint256 i = 0; i < sigs.length; i++) {
             unchecked {
