@@ -28,10 +28,10 @@ contract ChainInsightExecutorV1PropososalTest is Test {
     uint8 proposalThreshold = 1;
 
     // propose info
-    address targets; // will be set later
-    uint256 values = 0;
-    bytes calldatas; // will be set later
-    string signatures = "_setImplementation(address)";
+    address[] targets; // will be set later
+    uint256[] values = [0];
+    bytes[] calldatas; // will be set later
+    string[] signatures = ["_setImplementation(address)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] etas = new uint256[](2);
@@ -58,8 +58,8 @@ contract ChainInsightExecutorV1PropososalTest is Test {
             proposalThreshold
         );
 
-        targets = address(proxy);
-        calldatas = abi.encode(address(newLogic));
+        targets = [address(proxy)];
+        calldatas = [abi.encode(address(newLogic))];
 
         vm.prank(deployer);
         executor.setProxyAddress(address(proxy));
@@ -95,7 +95,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
 
         address(proxy).call(
             abi.encodeWithSignature(
-                "propose(address,uint256,string,bytes,string)",
+                "propose(address[],uint256[],string[],bytes[],string)",
                 targets,
                 values,
                 signatures,
@@ -118,7 +118,7 @@ contract ChainInsightExecutorV1PropososalTest is Test {
         address(proxy).call(abi.encodeWithSignature("queue(uint256)", 1));
         etas[0] = block.number + executingDelay;
         txHashs[0] = keccak256(
-            abi.encode(targets, values, signatures, calldatas, etas[0])
+            abi.encode(targets[0], values[0], signatures[0], calldatas[0], etas[0])
         );
     }
 

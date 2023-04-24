@@ -15,13 +15,13 @@ contract ChainInsightLogicV1 is
 
     /// @notice The minimum setable executing grace period
     // uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 11_520; // About 2 days
-    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 150; // About 5min
+    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 150; // About 5 min
     /// @notice The maximum setable executing grace period
     uint256 public constant MAX_EXECUTING_GRACE_PERIOD = 172_800; // About 30 days
 
     /// @notice The min setable executing delay
     // uint256 public constant MIN_EXECUTING_DELAY = 11_520;
-    uint256 public constant MIN_EXECUTING_DELAY = 150; // About 5min
+    uint256 public constant MIN_EXECUTING_DELAY = 30; // About 1 min
 
     /// @notice The max setable executing delay
     uint256 public constant MAX_EXECUTING_DELAY = 172_800;
@@ -391,17 +391,17 @@ contract ChainInsightLogicV1 is
         return proposals[proposalId].receipts[voter].support;
     }
 
-    function getVotes(uint256 proposalId, address voter)
-        external
-        view
-        returns (uint256)
-    {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getReceipt: invalid proposal id"
-        );
-        return proposals[proposalId].receipts[voter].votes;
-    }
+    // function getVotes(uint256 proposalId, address voter)
+    //     external
+    //     view
+    //     returns (uint256)
+    // {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getReceipt: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].receipts[voter].votes;
+    // }
 
     function getProposer(uint256 proposalId) external view returns (address) {
         return proposals[proposalId].proposer;
@@ -753,7 +753,7 @@ contract ChainInsightLogicV1 is
         return chainId;
     }
 
-    function getVotes(address voter) internal view returns (uint256) {
+    function getVotes(address voter) public view returns (uint256) {
         // given vote number equals to his or her grade
         uint256 votes = bonfireContract.gradeOf(voter);
         return votes;
@@ -766,21 +766,21 @@ contract ChainInsightLogicV1 is
     //     return proposals[proposalId].endBlock;
     // }
 
-    //function getProposalTargets(uint256 proposalId) external view returns (address) {
-    //    require(
-    //        proposalCount >= proposalId,
-    //        "LogicV1::getProposalTargets: invalid proposal id"
-    //    );
-    //    return proposals[proposalId].targets;
-    //}
+    // function getProposalTargets(uint256 proposalId) external view returns (address) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalTargets: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].targets;
+    // }
 
-    //function getProposalValues(uint256 proposalId) external view returns (uint256) {
-    //    require(
-    //        proposalCount >= proposalId,
-    //        "LogicV1::getProposalValues: invalid proposal id"
-    //    );
-    //    return proposals[proposalId].values;
-    //}
+    // function getProposalValues(uint256 proposalId) external view returns (uint256) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalValues: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].values;
+    // }
 
     //function getProposalSignatures(uint256 proposalId) external view returns (string memory) {
     //    require(

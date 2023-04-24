@@ -7,6 +7,7 @@ import "../../src/governance/ExecutorV1.sol";
 import "../../src/bonfire/BonfireProxy.sol";
 import "../../src/bonfire/BonfireLogic.sol";
 import "../../src/skinnft/SkinNft.sol";
+import "../../src/libs/BonfireLib.sol";
 
 // test skinnft setfreemintquantity can call via govenance logic
 contract ChainInsightLogicV1PropososalTest is Test {
@@ -34,10 +35,10 @@ contract ChainInsightLogicV1PropososalTest is Test {
     uint8 proposalThreshold = 1;
 
     // propose info
-    address targets; // will be set later
-    uint256 values = 0;
-    bytes calldatas; // will be set later
-    string signatures = "setFreemintQuantity(address,uint256)";
+    address [] targets; // will be set later
+    uint256 [] values = [0, 0];
+    bytes [] calldatas; // will be set later
+    string [] signatures = ["setFreemintQuantity(address,uint256)", "setMonthlyDistributedFavoNum(uint16)"];
     string description =
         "ChainInsightExecutorV1: Change address of logic contract";
     uint256[] etas = new uint256[](2);
@@ -54,8 +55,8 @@ contract ChainInsightLogicV1PropososalTest is Test {
         skinNft = new SkinNft("", 5);
         skinNft.init(address(bonfire));
 
-        targets = address(bonfire);
-        calldatas = abi.encode(beef, 100);
+        targets = [address(bonfire), address(bonfire)];
+        calldatas = [abi.encode(beef, 100), abi.encode(20)];
         proxy = new ChainInsightGovernanceProxyV1(
             address(logic),
             address(executor),
@@ -109,7 +110,7 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         address(proxy).call(
             abi.encodeWithSignature(
-                "propose(address,uint256,string,bytes,string)",
+                "propose(address[],uint256[],string[],bytes[],string)",
                 targets,
                 values,
                 signatures,
@@ -130,17 +131,25 @@ contract ChainInsightLogicV1PropososalTest is Test {
 
         // queue proposal
         address(proxy).call(abi.encodeWithSignature("queue(uint256)", 1));
-        etas[0] = block.number + executingDelay;
+        etas = [block.number + executingDelay, block.number + executingDelay];
         txHashs[0] = keccak256(
-            abi.encode(targets, values, signatures, calldatas, etas[0])
+            abi.encode(targets[0], values[0], signatures[0], calldatas[0], etas[0])
         );
+        txHashs[1] = keccak256(
+            abi.encode(targets[1], values[1], signatures[1], calldatas[1], etas[1])
+        );
+
     }
 
     function testExecute() public {
+        assertEq(bonfire.monthlyDistributedFavoNum(), 10);
+
         assertTrue(executor.queuedTransactions(txHashs[0]));
+        assertTrue(executor.queuedTransactions(txHashs[1]));
         vm.roll(votingDelay + votingPeriod + executingDelay + 1);
         address(proxy).call(abi.encodeWithSignature("execute(uint256)", 1));
         assertEq(skinNft.ownerOf(1), beef);
+        assertEq(bonfire.monthlyDistributedFavoNum(), 20);
     }
 
     receive() external payable {}
