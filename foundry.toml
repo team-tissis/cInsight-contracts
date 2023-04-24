@@ -9,3 +9,6 @@ gas_reports = ["*"]
 [rpc_endpoints]
 goerli = "${MUMBAI_RPC_URL}"
 
+[etherscan]
+goerli = { key = "${ETHERSCAN_API_KEY}" }
+
