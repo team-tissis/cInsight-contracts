@@ -58,7 +58,7 @@ contract Bonfire is IBonfire {
         sigs[3] = bytes4(keccak256("setFreemintQuantity(address,uint256)"));
         sigs[4] = bytes4(keccak256("monthInit()"));
         sigs[5] = bytes4(keccak256("addFavos(address,uint8)"));
-        sigs[6] = bytes4(keccak256("addFavosFromMultipleUsers(address[], uint8[])"));
+        sigs[6] = bytes4(keccak256("addFavosFromMultipleUsers(address[],uint8[])"));
         sigs[7] = bytes4(keccak256("refer(address)"));
 
         for (uint256 i = 0; i < sigs.length; i++) {
@@ -315,7 +315,7 @@ contract Bonfire is IBonfire {
 
     fallback() external payable {
         address _imp = implementations[msg.sig];
-        require(_imp != address(0), "Function does not exist");
+        require(_imp != address(0), "Bonfire::fallback: Function does not exist");
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result := delegatecall(gas(), _imp, 0, calldatasize(), 0, 0)
