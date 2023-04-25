@@ -17,8 +17,6 @@
 
 - 続いて、.env.sample を参考に、.env ファイルにコンソールに出力された(0)番目のプライベートキーを PRIVATE_KEY と DEPLOYER_KEY に記述してください:
 
-  - これによって、アプリ立ち上げ時のユーザーとデプロイヤーが同一視されます。
-
   ```bash
   PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
   DEPLOYER_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
