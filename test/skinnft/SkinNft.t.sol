@@ -120,4 +120,27 @@ contract SkinNftTest is Test {
             "https://tissis.github.io/bonfire/metadata/1/1/1"
         );
     }
+
+    function testTokenIdsOf() public {
+        address beef = address(0xBEEF);
+        vm.deal(beef, 10000 ether);
+
+        vm.prank(beef);
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
+
+        vm.prank(admin);
+        address(bonfire).call(
+            abi.encodeWithSignature(
+                "setFreemintQuantity(address,uint256)",
+                address(beef),
+                uint256(2)
+            )
+        );
+
+        vm.prank(beef);
+        console.log(skinNft.tokenIdsOf(beef)[0] == 1);
+        console.log(skinNft.tokenIdsOf(beef)[1] == 2);
+    }
 }
