@@ -124,11 +124,12 @@ contract Bonfire is IBonfire {
             "ERC721URIStorage: URI query for nonexistent token"
         );
         uint256 skinNftTokenId = ISkinNft(bs.nftAddress).getIcon(_owner);
+        uint256 skinNftColorNum = ISkinNft(bs.nftAddress)._colorNum();
         return
             string(
                 abi.encodePacked(
                     bs.baseURI,
-                    _toString(skinNftTokenId),
+                    _toString(skinNftTokenId % skinNftColorNum),
                     "/",
                     _toString(bs.grades[_owner]),
                     "/",

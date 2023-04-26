@@ -2,6 +2,7 @@ pragma solidity ^0.8.16;
 
 import "./InterfacesV1.sol";
 import "../bonfire/IBonfireProxy.sol";
+import "forge-std/Test.sol";
 
 contract ChainInsightLogicV1 is
     ChainInsightGovernanceStorageV1,
@@ -14,13 +15,13 @@ contract ChainInsightLogicV1 is
 
     /// @notice The minimum setable executing grace period
     // uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 11_520; // About 2 days
-    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 150; // About 5min
+    uint256 public constant MIN_EXECUTING_GRACE_PERIOD = 150; // About 5 min
     /// @notice The maximum setable executing grace period
     uint256 public constant MAX_EXECUTING_GRACE_PERIOD = 172_800; // About 30 days
 
     /// @notice The min setable executing delay
     // uint256 public constant MIN_EXECUTING_DELAY = 11_520;
-    uint256 public constant MIN_EXECUTING_DELAY = 150; // About 5min
+    uint256 public constant MIN_EXECUTING_DELAY = 30; // About 1 min
 
     /// @notice The max setable executing delay
     uint256 public constant MAX_EXECUTING_DELAY = 172_800;
@@ -143,10 +144,10 @@ contract ChainInsightLogicV1 is
      * @return Proposal id of new proposal
      */
     function propose(
-        address targets,
-        uint256 values,
-        string memory signatures,
-        bytes memory calldatas,
+        address[] memory targets,
+        uint256[] memory values,
+        string[] memory signatures,
+        bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
         require(
@@ -156,6 +157,7 @@ contract ChainInsightLogicV1 is
 
         /// @notice Ensure that msg.sender currently does not have active or pending proposals
         uint256 latestProposalId = latestProposalIds[msg.sender];
+        
         if (latestProposalId != 0) {
             ProposalState proposersLatestProposalState = state(
                 latestProposalId
@@ -221,13 +223,15 @@ contract ChainInsightLogicV1 is
         Proposal storage proposal = proposals[proposalId];
 
         uint256 eta = block.number + executingDelay;
-        queueOrRevertInternal(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            queueOrRevertInternal(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                eta
+            );
+        }
         proposal.eta = eta;
         emit ProposalQueued(proposalId, eta);
     }
@@ -268,14 +272,16 @@ contract ChainInsightLogicV1 is
         // proposal.executed = true;
         proposal.state = 1;
 
-        IChainInsightExecutor(executor).executeTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta,
-            executingGracePeriod
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).executeTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta,
+                executingGracePeriod
+            );
+        }
         emit ProposalExecuted(proposalId);
     }
 
@@ -297,13 +303,15 @@ contract ChainInsightLogicV1 is
 
         // proposal.canceled = true;
         proposal.state = 2;
-        IChainInsightExecutor(executor).cancelTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).cancelTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta
+            );
+        }
 
         emit ProposalCanceled(proposalId);
     }
@@ -324,13 +332,15 @@ contract ChainInsightLogicV1 is
 
         // proposal.vetoed = true;
         proposal.state = 3;
-        IChainInsightExecutor(executor).cancelTransaction(
-            proposal.targets,
-            proposal.values,
-            proposal.signatures,
-            proposal.calldatas,
-            proposal.eta
-        );
+        for (uint256 i = 0; i < proposal.targets.length; i++) {
+            IChainInsightExecutor(executor).cancelTransaction(
+                proposal.targets[i],
+                proposal.values[i],
+                proposal.signatures[i],
+                proposal.calldatas[i],
+                proposal.eta
+            );
+        }
 
         emit ProposalVetoed(proposalId);
     }
@@ -377,34 +387,34 @@ contract ChainInsightLogicV1 is
         return proposals[proposalId].receipts[voter].support;
     }
 
-    function getVotes(uint256 proposalId, address voter)
-        external
-        view
-        returns (uint256)
-    {
-        require(
-            proposalCount >= proposalId,
-            "LogicV1::getReceipt: invalid proposal id"
-        );
-        return proposals[proposalId].receipts[voter].votes;
-    }
+    // function getVotes(uint256 proposalId, address voter)
+    //     external
+    //     view
+    //     returns (uint256)
+    // {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getReceipt: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].receipts[voter].votes;
+    // }
 
     function getProposer(uint256 proposalId) external view returns (address) {
         return proposals[proposalId].proposer;
     }
 
-    function getTargets(uint256 proposalId) external view returns (address) {
+    function getTargets(uint256 proposalId) external view returns (address[] memory) {
         return proposals[proposalId].targets;
     }
 
-    function getValues(uint256 proposalId) external view returns (uint256) {
+    function getValues(uint256 proposalId) external view returns (uint256[] memory) {
         return proposals[proposalId].values;
     }
 
     function getSignatures(uint256 proposalId)
         external
         view
-        returns (string memory)
+        returns (string[] memory)
     {
         return proposals[proposalId].signatures;
     }
@@ -412,7 +422,7 @@ contract ChainInsightLogicV1 is
     function getCalldatas(uint256 proposalId)
         external
         view
-        returns (bytes memory)
+        returns (bytes[] memory)
     {
         return proposals[proposalId].calldatas;
     }
@@ -739,7 +749,7 @@ contract ChainInsightLogicV1 is
         return chainId;
     }
 
-    function getVotes(address voter) internal view returns (uint256) {
+    function getVotes(address voter) public view returns (uint256) {
         // given vote number equals to his or her grade
         uint256 votes = bonfireContract.gradeOf(voter);
         return votes;
@@ -752,21 +762,21 @@ contract ChainInsightLogicV1 is
     //     return proposals[proposalId].endBlock;
     // }
 
-    //function getProposalTargets(uint256 proposalId) external view returns (address) {
-    //    require(
-    //        proposalCount >= proposalId,
-    //        "LogicV1::getProposalTargets: invalid proposal id"
-    //    );
-    //    return proposals[proposalId].targets;
-    //}
+    // function getProposalTargets(uint256 proposalId) external view returns (address) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalTargets: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].targets;
+    // }
 
-    //function getProposalValues(uint256 proposalId) external view returns (uint256) {
-    //    require(
-    //        proposalCount >= proposalId,
-    //        "LogicV1::getProposalValues: invalid proposal id"
-    //    );
-    //    return proposals[proposalId].values;
-    //}
+    // function getProposalValues(uint256 proposalId) external view returns (uint256) {
+    //     require(
+    //         proposalCount >= proposalId,
+    //         "LogicV1::getProposalValues: invalid proposal id"
+    //     );
+    //     return proposals[proposalId].values;
+    // }
 
     //function getProposalSignatures(uint256 proposalId) external view returns (string memory) {
     //    require(

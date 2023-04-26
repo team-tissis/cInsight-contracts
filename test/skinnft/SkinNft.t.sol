@@ -13,11 +13,13 @@ contract SkinNftTest is Test {
     BonfireLogic internal imp;
     SkinNft internal skinNft;
 
+    uint256 nftColorNum = 5;
+
     function setUp() public {
         // admin = vm.addr(admin);
         bonfire = new Bonfire();
         imp = new BonfireLogic();
-        skinNft = new SkinNft("https://tissis.github.io/skinnft/");
+        skinNft = new SkinNft("https://tissis.github.io/skinnft/", nftColorNum);
 
         bonfire.init(
             admin,
@@ -47,6 +49,10 @@ contract SkinNftTest is Test {
         vm.prank(admin);
         bonfire.setSkinnftBaseURI("https://newuri.github.io/skinnft/");
         assertEq(skinNft.baseURI(), "https://newuri.github.io/skinnft/");
+    }
+
+    function testColorNum() public {
+        assertEq(skinNft._colorNum(), nftColorNum);
     }
 
     function testMint() public {
