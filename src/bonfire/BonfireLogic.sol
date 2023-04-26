@@ -187,7 +187,7 @@ contract BonfireLogic {
                 "INVALID ARGUMENT"
             );
             uint256 remainFavo = bs.monthlyDistributedFavoNum -
-                bs.favos[msg.sender];
+                bs.favos[userFrom];
 
             // 付与するfavoが残りfavo数より大きい場合は，残りfavoを全て付与する．
             if (remainFavo <= favo) {
@@ -196,16 +196,16 @@ contract BonfireLogic {
                 addmonthlyDistributedFavoNum = favo;
             }
 
-            bs.favos[msg.sender] += addmonthlyDistributedFavoNum;
+            bs.favos[userFrom] += addmonthlyDistributedFavoNum;
 
             // makiMemoryの計算
             uint256 upperBound = 5;
             (uint256 _dist, bool connectFlag) = _distance(msg.sender, userFrom);
 
             if (connectFlag && _dist < upperBound) {
-                bs.makiMemorys[userFrom] += _dist * addmonthlyDistributedFavoNum;
+                bs.makiMemorys[msg.sender] += _dist * addmonthlyDistributedFavoNum;
             } else {
-                bs.makiMemorys[userFrom] += upperBound * addmonthlyDistributedFavoNum;
+                bs.makiMemorys[msg.sender] += upperBound * addmonthlyDistributedFavoNum;
             }
         }
     }
