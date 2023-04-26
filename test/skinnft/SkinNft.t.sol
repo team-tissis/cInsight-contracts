@@ -139,7 +139,7 @@ contract SkinNftTest is Test {
             )
         );
 
-        vm.prank(beef);
+        console.log(skinNft.tokenIdsOf(beef).length == 2);
         console.log(skinNft.tokenIdsOf(beef)[0] == 1);
         console.log(skinNft.tokenIdsOf(beef)[1] == 2);
     }
