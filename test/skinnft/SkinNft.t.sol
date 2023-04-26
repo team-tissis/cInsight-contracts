@@ -124,12 +124,20 @@ contract SkinNftTest is Test {
     function testTokenIdsOf() public {
         address beef = address(0xBEEF);
         vm.deal(beef, 10000 ether);
+        address pork = address(409);
+        vm.deal(pork, 10000 ether);
 
+        // mint SBT
         vm.prank(beef);
         address(bonfire).call{value: 20 ether}(
             abi.encodeWithSignature("mint()")
         );
+        vm.prank(pork);
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
 
+        // mint NFT
         vm.prank(admin);
         address(bonfire).call(
             abi.encodeWithSignature(
@@ -138,9 +146,23 @@ contract SkinNftTest is Test {
                 uint256(2)
             )
         );
+        vm.prank(admin);
+        address(bonfire).call(
+            abi.encodeWithSignature(
+                "setFreemintQuantity(address,uint256)",
+                address(pork),
+                uint256(3)
+            )
+        );
 
-        console.log(skinNft.tokenIdsOf(beef).length == 2);
+        vm.prank(pork);
+        address(bonfire).call{value: 20 ether}(
+            abi.encodeWithSignature("mint()")
+        );
+
+        console.log(skinNft.tokenIdsOf(beef).length == 3);
         console.log(skinNft.tokenIdsOf(beef)[0] == 1);
         console.log(skinNft.tokenIdsOf(beef)[1] == 2);
+        console.log(skinNft.tokenIdsOf(pork)[0] == 3);
     }
 }
