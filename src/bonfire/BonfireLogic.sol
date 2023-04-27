@@ -183,7 +183,7 @@ contract BonfireLogic {
 
             uint256 addmonthlyDistributedFavoNum;
             require(
-                bs.monthlyDistributedFavoNum > bs.favos[msg.sender],
+                bs.monthlyDistributedFavoNum > bs.favos[userFrom],
                 "INVALID ARGUMENT"
             );
             uint256 remainFavo = bs.monthlyDistributedFavoNum -
