@@ -41,10 +41,13 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
     }
 
     function setIcon(uint256 tokenId) external {
-        require(
-            ownerOf(tokenId) == msg.sender,
-            "THE TOKEN IS OWNED BY OTHER PERSON"
-        );
+        // tokenId = 0 のときは、スキンが初期値に戻るため、無条件でパス
+        if (tokenId != 0) {
+            require(
+                ownerOf(tokenId) == msg.sender,
+                "THE TOKEN IS OWNED BY OTHER PERSON"
+            );
+        }
         _icon[msg.sender] = tokenId;
     }
 
