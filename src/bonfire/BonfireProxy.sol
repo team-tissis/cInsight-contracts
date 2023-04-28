@@ -189,6 +189,11 @@ contract Bonfire is IBonfire {
         return bs.monthlyDistributedFavoNum;
     }
 
+    function remainFavoNumOf(address _address) external view returns (uint256) {
+        BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
+        return bs.monthlyDistributedFavoNum - bs.favos[_address];
+    }
+
     function referralRate() external view returns (uint8[] memory) {
         BonfireLib.BonfireStruct storage bs = BonfireLib.bonfireStorage();
         return bs.referralRate;
