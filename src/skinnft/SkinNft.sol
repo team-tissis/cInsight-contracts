@@ -35,7 +35,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
     //     // `_mint`'s second argument now takes in a `quantity`, not a `tokenId`.
     //     _mint(msg.sender, quantity);
     // }
-
+    // NFT が発行されていないアドレスに対しては、0 が返される。
     function getIcon(address _address) external view returns (uint256) {
         return _icon[_address];
     }
@@ -93,7 +93,7 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
         return;
     }
 
-    function _startTokenId() internal view override returns (uint256) {
+    function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 
@@ -128,5 +128,30 @@ contract SkinNft is ERC721AQueryable, ISkinNft {
 
     function _colorNum() external view returns (uint256) {
         return colorNum;
+    }
+
+
+    /**
+     * @notice Gets the token ids owned by address
+     * @param _address Target address
+     * @return uint256[] memory
+     */
+    function tokenIdsOf(address _address) public view returns (uint256[] memory) {
+        uint256 totalTokenNum = _nextTokenId() - 1;
+        uint256[] memory tokenIds = new uint256[](totalTokenNum);
+        uint256 counter = 0;
+        for (uint256 tokenId = 1; tokenId < totalTokenNum + 1; tokenId++) {
+            if (_address == ownerOf(tokenId)) {
+                tokenIds[counter] = tokenId;
+                counter++;
+            }
+        }
+
+        // resize array
+        uint256[] memory resultTokenIds = new uint256[](counter);
+        for (uint256 i = 0; i < counter; i++) {
+            resultTokenIds[i] = tokenIds[i];
+        }
+        return resultTokenIds;
     }
 }
