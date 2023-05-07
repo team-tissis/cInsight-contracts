@@ -1,8 +1,12 @@
 # cInsightContracts
 
-- ChainInsight に使用されているスマートコントラクトを管理するレポジトリです。
+- cInsight DAO に使用されているスマートコントラクトを管理するレポジトリです。
 
-# Localnet deploy
+## スマートコントラクト全体構成
+
+<img src="https://user-images.githubusercontent.com/34847784/200167730-a41fe5da-6881-4b02-8164-95ff33bb1cc1.png" width=800px>
+
+## ローカルネットへのデプロイ
 
 - 以下の URL を参考に、foundry をインストールしてください:
 
@@ -28,9 +32,13 @@
   $ forge script script/cInsightScript.s.sol --fork-url http://localhost:8545 --broadcast
   ```
 
-# Script for governance
+## シェルスクリプト
 
-- 以下のようにしてシェルスクリプトを実行することで、投票から実行までをデモンストレーションすることができます。
+- 投票から実行までのデモンストレーション
   ```
   sh shell/vote_to_execute.sh <Address of ChainInsightGovernanceProxy>
+  ```
+- 月次のグレード更新
+  ```
+  sh shell/month_init.sh <Address of Bonfire>
   ```
