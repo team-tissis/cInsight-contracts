@@ -320,7 +320,7 @@ contract Bonfire is IBonfire {
 
     fallback() external payable {
         address _imp = implementations[msg.sig];
-        require(_imp != address(0), "Function does not exist");
+        require(_imp != address(0), "Bonfire::fallback: Function does not exist");
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result := delegatecall(gas(), _imp, 0, calldatasize(), 0, 0)
